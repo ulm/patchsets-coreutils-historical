@@ -228,7 +228,7 @@ diff -urN coreutils-5.2.0.orig/src/copy.c coreutils-5.2.0/src/copy.c
 +
 +        strftime(etabuf, sizeof etabuf, "%H:%M.%S", 
 +                 gmtime(&t_temp));
-+        printf (_("%s | %3d%% | %9s | %9s/s | ETA %s\r"), shortname,
++        printf (_("%s | %3d%% | %9s | %9s/s | ETA %s\r"), shortname,
 +                (int)(n_read_total * 100 / src_open_sb.st_size),
 +                str_size, str_speed, etabuf);
 +        fflush (stdout);
