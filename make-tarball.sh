@@ -16,7 +16,7 @@ rm -rf tmp
 rm -f coreutils-${cver}-*.tar.bz2
 
 mkdir -p tmp/patch/excluded
-cp -r ${cver}/* tmp/patch/
+cp -r ../README* ${cver}/* tmp/patch/
 find tmp/patch -name CVS -type d | xargs rm -r
 
 tar -jcf coreutils-${cver}-patches-${pver}.tar.bz2 \
