@@ -1,0 +1,47 @@
+Index: coreutils-5.1.2/ChangeLog
+===================================================================
+--- coreutils-5.1.2.orig/ChangeLog
++++ coreutils-5.1.2/ChangeLog
+@@ -1,0 +1,42 @@
++	* Add support for access control lists and extended attributes
++	  (see below).
++	
++	* lib/acl.h: Remove HAVE_ACL symbol; <sys/acl.h> is needed for POSIX
++	  ACLs even if there is no acl system call.
++	
++	* lib/acl.c (file_has_acl, copy_acl, set_acl): Add Linux/POSIX ACL
++	  implementation.
++	
++	* src/copy.c (get_dest_mode): Remove, no longer correct with acls.
++	
++	* src/copy.c (copy_internal): Check effective permissions after
++	  mkdir(). Add S_IRWXU only after saving the default permissions,
++	  so that the default permissions can be restored. This is needed
++	  with POSIX 1003.1e draft 17 acls.  Add dst_mode and dst_mode_valid,
++	  which are set when the destination file mode is changed
++	  temporarily. Remove obsolete ran_chown.
++	
++	* src/copy.c (copy_internal): Use copy_acl and set_acl instead of
++	  chmod.
++
++	* src/copy.c: Add --attributes option for controlling which extended
++	  attributes to copy.
++
++	* src/cp.c (make_path_private): Remove the mode parameter. Pass in
++	  cp_options, instead of cp_options->xstat only. Stat the source dir,
++	  and create the destination dir with the source dir's mode as create
++	  mode (see analog change to src/copy.c (copy_internal)). Check if the
++	  effective permissions include S_IRWXU. Remember the original mode
++	  only if needed later.
++	
++	* src/cp.c, src/install.c, src/mv.c, src/copy.h: Remove umask_kill,
++	  and never change the startup umask. The functions creating files
++	  need the original umask to create the correct permissions inside
++	  directories with default ACLs.
++	
++	* src/cp.c (struct dir_attr, re_protect, make_path_private): Replace
++	  is_new_dir by mode and mode_valid variables.
++	
++	* src/ls.c: change `HAVE_ACL' to `USE_ACL' for POSIX ACLs: POSIX ACLs
++	  have no acl syscall.
++

@@ -1,0 +1,41 @@
+--- coreutils-5.2.1/src/tail.c.orig	2004-10-07 21:35:28.606999816 -0400
++++ coreutils-5.2.1/src/tail.c	2004-10-07 21:37:33.184061224 -0400
+@@ -1352,7 +1352,7 @@
+   const char *p = argv[1];
+   const char *n_string = NULL;
+   const char *n_string_end;
+-  bool obsolete_usage;
++  bool obsolete_usage, obsolete_usage_posixly_correct;
+ 
+   int t_from_start;
+   int t_count_lines;
+@@ -1364,12 +1364,13 @@
+   if (argc < 2)
+     return 0;
+ 
+-  obsolete_usage = (posix2_version () < 200112) || !getenv ("POSIXLY_CORRECT");
++  obsolete_usage = (posix2_version () < 200112);
++  obsolete_usage_posixly_correct = !getenv ("POSIXLY_CORRECT");
+ 
+   /* If P starts with `+' and the POSIX version predates 1003.1-2001,
+      or if P starts with `-N' (where N is a digit), or `-l', then it
+      is obsolescent.  Return zero otherwise.  */
+-  if (! ((p[0] == '+' && obsolete_usage)
++  if (! ((p[0] == '+')
+ 	 || (p[0] == '-' && (p[1] == 'l' || ISDIGIT (p[1])))))
+     return 0;
+ 
+@@ -1486,10 +1487,11 @@
+ 
+       if (! obsolete_usage)
+ 	{
+-	  error (0, 0, _("`%s' option is obsolete; use `%s-%c %.*s'"),
++	  error (0, 0, _("`%s' option is obsolete; use `%s-%c %.*s' since this will be removed in the future"),
+ 		 argv[1], t_forever ? " -f" : "", t_count_lines ? 'n' : 'c',
+ 		 (int) (n_string_end - n_string), n_string);
+-	  usage (EXIT_FAILURE);
++	if (!obsolete_usage_posixly_correct)
++		  usage (EXIT_FAILURE);
+ 	}
+ 
+       /* Set globals.  */

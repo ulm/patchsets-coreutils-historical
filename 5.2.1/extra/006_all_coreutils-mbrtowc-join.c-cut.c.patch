@@ -1,0 +1,26 @@
+diff -urN coreutils-5.2.1.orig/src/cut.c coreutils-5.2.1/src/cut.c
+--- coreutils-5.2.1.orig/src/cut.c	2004-05-16 10:59:42.000000000 -0700
++++ coreutils-5.2.1/src/cut.c	2004-05-16 11:11:25.000000000 -0700
+@@ -1198,8 +1198,8 @@
+       mbdelim[0] = '\t';
+       mbdelim[1] = '\0';
+       delimlen = 1;
+-    }
+ #endif
++    }
+ 
+   if (output_delimiter_string == NULL)
+     {
+diff -urN coreutils-5.2.1.orig/src/join.c coreutils-5.2.1/src/join.c
+--- coreutils-5.2.1.orig/src/join.c	2004-05-16 10:59:42.000000000 -0700
++++ coreutils-5.2.1/src/join.c	2004-05-16 11:12:43.000000000 -0700
+@@ -1032,8 +1032,8 @@
+ 		tablen = 1;
+ 	    }
+ 	  else
+-	    {
+ #endif
++	    {
+ 	      tablen = 1;
+ 	    }
+ 	  break;

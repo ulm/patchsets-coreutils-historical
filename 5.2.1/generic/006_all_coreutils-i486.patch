@@ -1,0 +1,20 @@
+######
+# shred uses the rdtsc instruction, which will not compile
+# on any machine less than i586.
+#
+# i486 is the only architecture supported by gentoo affected.
+# 	- taviso@gentoo.org
+#
+# http://bugs.gentoo.org/show_bug.cgi?id=32429
+#########################
+--- coreutils-5.0.91/src/shred.c	2003-07-23 08:26:48.000000000 +0100
++++ coreutils-5.0.91/src/shred.c	2004-02-27 21:28:15.000000000 +0000
+@@ -518,7 +518,7 @@
+ #define ISAAC_SEED(s,x) isaac_seed_data (s, &(x), sizeof (x))
+ 
+ 
+-#if __GNUC__ >= 2 && (__i386__ || __alpha__)
++#if __GNUC__ >= 2 && (__i386__ || __alpha__) && !(__i486__)
+ /*
+  * Many processors have very-high-resolution timer registers,
+  * The timer registers can be made inaccessible, so we have to deal with the

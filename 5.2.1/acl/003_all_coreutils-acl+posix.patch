@@ -1,0 +1,282 @@
+2002-08-15  Andreas Gruenbacher <agruen@suse.de>
+
+	* m4/acl.m4: Add POSIX/Linux ACL tests.
+	* lib/acl.c: Add POSIX/Linux ACL support.
+
+Index: coreutils-5.1.2/m4/acl.m4
+===================================================================
+--- coreutils-5.1.2.orig/m4/acl.m4
++++ coreutils-5.1.2/m4/acl.m4
+@@ -22,5 +22,22 @@ AC_DEFUN([AC_FUNC_ACL],
+ [
+   dnl Prerequisites of lib/acl.c.
+   AC_CHECK_HEADERS(sys/acl.h)
++  if test "$ac_cv_header_sys_acl_h" = yes; then
++    use_acl=1
++  else
++    use_acl=0
++  fi
++  AC_DEFINE_UNQUOTED(USE_ACL, $use_acl,
++		     [Define if you want access control list support.])
+   AC_CHECK_FUNCS(acl)
++  ac_save_LIBS="$LIBS"
++  AC_SEARCH_LIBS(acl_get_file, acl,
++  		 [test "$ac_cv_search_acl_get_file" = "none required" ||
++		  LIB_ACL=$ac_cv_search_acl_get_file])
++  AC_SUBST(LIB_ACL)
++  AC_CHECK_HEADERS(acl/libacl.h)
++  AC_CHECK_FUNCS(acl_get_file acl_set_file acl_free acl_to_text \
++		 acl_from_text acl_delete_def_file \
++		 acl_entries acl_extended_file)
++  LIBS="$ac_save_LIBS"
+ ])
+Index: coreutils-5.1.2/lib/acl.c
+===================================================================
+--- coreutils-5.1.2.orig/lib/acl.c
++++ coreutils-5.1.2/lib/acl.c
+@@ -28,12 +28,21 @@
+ # define S_ISLNK(Mode) 0
+ #endif
+ 
++#include "error.h"
++#include "quote.h"
+ #include "acl.h"
+ 
++#ifdef HAVE_ACL_LIBACL_H
++# include <acl/libacl.h>
++#endif
++
+ #include <errno.h>
+ #ifndef ENOSYS
+ # define ENOSYS (-1)
+ #endif
++#ifndef ENOTSUP
++# define ENOTSUP (-1)
++#endif
+ 
+ #if ENABLE_NLS
+ # include <libintl.h>
+@@ -52,20 +61,31 @@
+ int
+ file_has_acl (char const *path, struct stat const *pathstat)
+ {
+-  /* FIXME: This implementation should work on recent-enough versions
+-     of HP-UX, Solaris, and Unixware, but it simply returns 0 with
+-     POSIX 1003.1e (draft 17 -- abandoned), AIX, GNU/Linux, Irix, and
+-     Tru64.  Please see Samba's source/lib/sysacls.c file for
+-     fix-related ideas.  */
++#if USE_ACL && HAVE_ACL && defined GETACLCNT
++  /* This implementation should work on recent-enough versions of HP-UX,
++     Solaris, and Unixware.  */
+ 
+-#if HAVE_ACL && defined GETACLCNT
+   if (! S_ISLNK (pathstat->st_mode))
+     {
+       int n = acl (path, GETACLCNT, 0, NULL);
+       return n < 0 ? (errno == ENOSYS ? 0 : -1) : (MIN_ACL_ENTRIES < n);
+     }
++#elif USE_ACL && HAVE_ACL_EXTENDED_FILE
++  /* Linux specific version.  */
++
++  if (! S_ISLNK (pathstat->st_mode))
++    {
++      int ret = acl_extended_file (path);
++      if (ret < 0)
++	return (errno == ENOSYS || errno == ENOTSUP) ? 0 : -1;
++      return ret;
++    }
+ #endif
+ 
++  /* FIXME: Add support for POSIX 1003.1e (draft 17 -- abandoned), AIX, Irix,
++     and Tru64.  Please see Samba's source/lib/sysacls.c file for fix-related
++     ideas.  */
++
+   return 0;
+ }
+ 
+@@ -75,18 +95,164 @@ file_has_acl (char const *path, struct s
+ int
+ copy_acl (char const *src_path, char const *dst_path, mode_t mode)
+ {
++#if USE_ACL && HAVE_ACL_GET_FILE && HAVE_ACL_SET_FILE && \
++    HAVE_ACL_FREE && HAVE_ACL_ENTRIES
++  /* Linux specific. Will work on all POSIX 1003.1e draft 17 (abandoned)
++     systems if the Linux specific acl_entries() function is substituted.  */
++
++  acl_t acl = acl_get_file (src_path, ACL_TYPE_ACCESS);
++  if (acl == NULL)
++    {
++      if (errno == ENOSYS || errno == ENOTSUP)
++	return set_acl (dst_path, mode);
++      else
++        {
++	  error (0, errno, "%s", quote (src_path));
++	  return -1;
++	}
++    }
++
++  if (acl_set_file (dst_path, ACL_TYPE_ACCESS, acl))
++    {
++      int saved_errno = errno;
++
++      if (errno == ENOSYS || errno == ENOTSUP)
++        {
++	  int n = acl_entries (acl);
++
++	  acl_free (acl);
++	  if (n == 3)
++	    {
++	      if (chmod (dst_path, mode))
++		saved_errno = errno;
++	      else
++		return 0;
++	    }
++	  else
++	    chmod (dst_path, mode);
++	}
++      else
++	{
++	  acl_free (acl);
++	  chmod (dst_path, mode);
++	}
++      error (0, saved_errno, _("preserving permissions for %s"),
++	     quote (dst_path));
++      return -1;
++    }
++  else
++    acl_free (acl);
++
++  if (mode & (S_ISUID | S_ISGID | S_ISVTX))
++    {
++      /* We did not call chmod so far, so the special bits have not yet
++         been set.  */
++
++      if (chmod (dst_path, mode))
++	{
++	  error (0, errno, _("preserving permissions for %s"),
++	  	 quote (dst_path));
++	  return -1;
++	}
++    }
++
++  if (S_ISDIR (mode))
++    {
++      acl = acl_get_file (src_path, ACL_TYPE_DEFAULT);
++      if (acl == NULL)
++	{
++	  error (0, errno, "%s", quote (src_path));
++	  return -1;
++	}
++
++      if (acl_set_file (dst_path, ACL_TYPE_DEFAULT, acl))
++	{
++	  error (0, errno, _("preserving permissions for %s"),
++		 quote (dst_path));
++	  acl_free(acl);
++	  return -1;
++	}
++      else
++        acl_free(acl);
++    }
++  return 0;
++#else
+   int ret = chmod (dst_path, mode);
+   if (ret)
+     error (0, errno, _("preserving permissions for %s"), quote (dst_path));
+   return ret;
++#endif
+ }
+ 
+ /* Set the access control list of path to the permissions defined by mode.  */
+ int
+ set_acl (char const *path, mode_t mode)
+ {
++#if USE_ACL && HAVE_ACL_FROM_TEXT && HAVE_ACL_SET_FILE && HAVE_ACL_FREE && \
++    HAVE_ACL_DELETE_DEF_FILE
++  /* POSIX 1003.1e draft 17 (abandoned) specific version.  */
++
++  char acl_text[] = "u::---,g::---,o::---";
++  acl_t acl;
++
++  if (mode & S_IRUSR) acl_text[ 3] = 'r';
++  if (mode & S_IWUSR) acl_text[ 4] = 'w';
++  if (mode & S_IXUSR) acl_text[ 5] = 'x';
++  if (mode & S_IRGRP) acl_text[10] = 'r';
++  if (mode & S_IWGRP) acl_text[11] = 'w';
++  if (mode & S_IXGRP) acl_text[12] = 'x';
++  if (mode & S_IROTH) acl_text[17] = 'r';
++  if (mode & S_IWOTH) acl_text[18] = 'w';
++  if (mode & S_IXOTH) acl_text[19] = 'x';
++
++  acl = acl_from_text(acl_text);
++  if (!acl)
++    {
++      error (0, errno, "%s", quote (path));
++      return -1;
++    }
++
++  if (acl_set_file(path, ACL_TYPE_ACCESS, acl))
++    {
++      int saved_errno = errno;
++      acl_free (acl);
++
++      if (errno == ENOTSUP || errno == ENOSYS)
++	{
++	  if (chmod (path, mode))
++	    saved_errno = errno;
++	  else
++	    return 0;
++	}
++      error (0, saved_errno, _("setting permissions for %s"), quote (path));
++      return -1;
++    }
++  else
++    acl_free (acl);
++
++  if (mode & (S_ISUID | S_ISGID | S_ISVTX))
++    {
++      /* We did not call chmod so far, so the special bits have not yet
++         been set.  */
++
++      if (chmod (path, mode))
++	{
++	  error (0, errno, _("preserving permissions for %s"),
++	  	 quote (path));
++	  return -1;
++	}
++    }
++
++  if (S_ISDIR (mode) && acl_delete_def_file (path))
++    {
++      error (0, errno, _("setting permissions for %s"), quote (path));
++      return -1;
++    }
++  return 0;
++#else
+   int ret = chmod (path, mode);
+   if (ret)
+     error (0, errno, _("setting permissions for %s"), quote (path));
+   return ret;
++#endif
+ }
+Index: coreutils-5.1.2/src/Makefile.am
+===================================================================
+--- coreutils-5.1.2.orig/src/Makefile.am
++++ coreutils-5.1.2/src/Makefile.am
+@@ -32,10 +32,13 @@ AM_CPPFLAGS = -I.. -I$(srcdir) -I$(top_s
+ # replacement functions defined in libfetish.a.
+ LDADD = ../lib/libfetish.a $(LIBINTL) ../lib/libfetish.a
+ 
+-dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
+-ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
++dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
++ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
+ shred_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
+-vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
++vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
++cp_LDADD = $(LDADD) $(LIB_ACL)
++mv_LDADD = $(LDADD) $(LIB_ACL)
++ginstall_LDADD = $(LDADD) $(LIB_ACL)
+ 
+ ## If necessary, add -lm to resolve use of pow in lib/strtod.c.
+ sort_LDADD = $(LDADD) $(POW_LIB)
