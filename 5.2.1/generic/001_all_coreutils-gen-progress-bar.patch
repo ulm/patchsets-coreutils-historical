@@ -21,14 +21,11 @@ diff -urN coreutils-5.2.0.orig/src/copy.c coreutils-5.2.0/src/copy.c
  #include "system.h"
  #include "backupfile.h"
  #include "copy.h"
-@@ -41,6 +47,7 @@
+@@ -41,3 +47,4 @@
  #include "savedir.h"
  #include "utimens.h"
- #include "xreadlink.h"
 +#include "xstrtol.h"
- 
- #define DO_CHOWN(Chown, File, New_uid, New_gid)				\
-   (Chown (File, New_uid, New_gid)					\
+ #include "xreadlink.h"
 @@ -76,6 +83,9 @@
  /* Initial size of the above hash table.  */
  #define DEST_INFO_INITIAL_CAPACITY 61
@@ -261,12 +258,11 @@ diff -urN coreutils-5.2.0.orig/src/copy.c coreutils-5.2.0/src/copy.c
 diff -urN coreutils-5.2.0.orig/src/copy.h coreutils-5.2.0/src/copy.h
 --- coreutils-5.2.0.orig/src/copy.h	2004-02-07 08:00:59.000000000 -0800
 +++ coreutils-5.2.0/src/copy.h	2004-02-21 14:41:30.000000000 -0800
-@@ -153,6 +153,16 @@
+@@ -153,6 +153,15 @@
    /* If nonzero, display the names of the files before copying them. */
    int verbose;
  
-+  /* If nonzero, display a progress bar when the following conditions are
-+   * met:
++  /* If nonzero, display a progress bar when the following conditions are met:
 +     - pbar_delay defines how many seconds to wait before considering to
 +	   display the progress bar
 +	 - pbar_min_est defines how many seconds estimated operation complete
