@@ -1,0 +1,44 @@
+The Linux kernel now offers a tty input flag IUTF8 which tells the kernel
+that input is encoded in UTF-8, for proper editing support in canonical
+input mode.
+
+http://lists.gnu.org/archive/html/bug-coreutils/2004-04/msg00021.html
+http://bugs.gentoo.org/show_bug.cgi?id=77633
+
+Index: src/stty.c
+===================================================================
+RCS file: /cvsroot/coreutils/coreutils/src/stty.c,v
+retrieving revision 1.123
+retrieving revision 1.124
+diff -u -r1.123 -r1.124
+--- src/stty.c	22 Jan 2004 20:58:59 -0000	1.123
++++ src/stty.c	7 Apr 2004 09:52:22 -0000	1.124
+@@ -232,6 +232,9 @@
+ #ifdef IMAXBEL
+   {"imaxbel", input, SANE_SET | REV, IMAXBEL, 0},
+ #endif
++#ifdef IUTF8
++  {"iutf8", input, SANE_UNSET | REV, IUTF8, 0},
++#endif
+ 
+   {"opost", output, SANE_SET | REV, OPOST, 0},
+ #ifdef OLCUC
+@@ -581,6 +584,9 @@
+    [-]istrip     clear high (8th) bit of input characters\n\
+ "), stdout);
+       fputs (_("\
++ * [-]iutf8      assume input characters are UTF-8 encoded\n\
++"), stdout);
++      fputs (_("\
+  * [-]iuclc      translate uppercase characters to lowercase\n\
+  * [-]ixany      let any character restart output, not only start character\n\
+    [-]ixoff      enable sending of start/stop characters\n\
+@@ -682,7 +688,7 @@
+    -raw          same as cooked\n\
+ "), stdout);
+       fputs (_("\
+-   sane          same as cread -ignbrk brkint -inlcr -igncr icrnl\n\
++   sane          same as cread -ignbrk brkint -inlcr -igncr icrnl -iutf8\n\
+                  -ixoff -iuclc -ixany imaxbel opost -olcuc -ocrnl onlcr\n\
+                  -onocr -onlret -ofill -ofdel nl0 cr0 tab0 bs0 vt0 ff0\n\
+                  isig icanon iexten echo echoe echok -echonl -noflsh\n\
