@@ -5,14 +5,14 @@ diff -urN coreutils-5.2.0.orig/README coreutils-5.2.0/README
  
    [ basename cat chgrp chmod chown chroot cksum comm cp csplit cut date dd
    df dir dircolors dirname du echo env expand expr factor false fmt fold
--  ginstall groups head id join kill link ln logname ls md5sum mkdir mkfifo
-+  ginstall head id join link ln logname ls md5sum mkdir mkfifo
-   mknod mv nice nl nohup od paste pathchk pinky pr printenv printf ptx pwd
--  readlink rm rmdir seq sha1sum shred sleep sort split stat stty su sum
-+  readlink rm rmdir seq sha1sum shred sleep sort split stat stty sum
-   sync tac tail tee test touch tr true tsort tty uname unexpand uniq
--  unlink uptime users vdir wc who whoami yes
-+  unlink users vdir wc who whoami yes
+-  ginstall groups head hostid hostname id join kill link ln logname ls
++  ginstall head hostid hostname id join link ln logname ls
+   md5sum mkdir mkfifo mknod mv nice nl nohup od paste pathchk pinky pr
+   printenv printf ptx pwd readlink rm rmdir seq sha1sum shred sleep sort
+-  split stat stty su sum sync tac tail tee test touch tr true tsort tty
++  split stat stty sum sync tac tail tee test touch tr true tsort tty
+-  uname unexpand uniq unlink uptime users vdir wc who whoami yes
++  uname unexpand uniq unlink users vdir wc who whoami yes
  
  See the file NEWS for a list of major changes in the current release.
  
