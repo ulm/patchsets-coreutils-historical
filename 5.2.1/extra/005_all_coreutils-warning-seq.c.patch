@@ -48,3 +48,14 @@ diff -urN coreutils-5.2.0.orig/src/seq.c coreutils-5.2.0/src/seq.c
    if (format_str == NULL)
      {
        if (equal_width)
+--- coreutils-5.2.1/tests/seq/basic.orig	2005-01-08 04:29:19.869695048 -0500
++++ coreutils-5.2.1/tests/seq/basic	2005-01-08 04:29:21.095508696 -0500
+@@ -24,8 +24,6 @@
+ 
+ my @Tests =
+   (
+-   ['onearg-1',	qw(10),		{OUT => [(1..10)]}],
+-   ['onearg-2',	qw(-1)],
+    ['neg-1',	qw(-10 10 10),	{OUT => [qw(-10 0 10)]}],
+    ['neg-2',	qw(-.1 .1 .1),	{OUT => [qw(-0.1 0 0.1)]}],
+    ['neg-3',	qw(1 -1 0),	{OUT => [qw(1 0)]}],
