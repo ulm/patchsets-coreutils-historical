@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ $# -lt 2 ]] && [[ $# -gt 3 ]] ; then
+if [[ $# -ne 2 ]] ; then
 	echo "Usage: $0 <coreutils ver> <patch ver>"
 	exit 1
 fi
