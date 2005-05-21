@@ -1,0 +1,12 @@
+diff -urN coreutils-5.1.2/lib/acl.c coreutils-5.1.2.new/lib/acl.c
+--- coreutils-5.1.2/lib/acl.c	2004-02-14 16:33:19.000000000 -0800
++++ coreutils-5.1.2.new/lib/acl.c	2004-02-14 16:35:11.000000000 -0800
+@@ -28,6 +28,8 @@
+ # define S_ISLNK(Mode) 0
+ #endif
+ 
++#include <stddef.h>
++
+ #include "error.h"
+ #include "quote.h"
+ #include "acl.h"

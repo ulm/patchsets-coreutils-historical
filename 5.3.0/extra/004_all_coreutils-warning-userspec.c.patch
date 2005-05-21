@@ -1,0 +1,26 @@
+diff -urN 3/lib/userspec.c 4/lib/userspec.c
+--- 3/lib/userspec.c	2004-10-05 17:42:29.000000000 +0000
++++ 4/lib/userspec.c	2005-03-30 14:56:20.000000000 +0000
+@@ -264,7 +264,7 @@
+   char const *error_msg =
+     parse_with_separator (spec, colon, uid, gid, username, groupname);
+ 
+-  if (!colon && error_msg)
++  if (!colon && error_msg && (!getenv("POSIXLY_CORRECT") || posix2_version() < 200112))
+     {
+       /* If there's no colon but there is a dot, and if looking up the
+ 	 whole spec failed (i.e., the spec is not a owner name that
+@@ -273,6 +273,13 @@
+ 	 the POSIX-required behavior is always tried first.  */
+ 
+       char const *dot = strchr (spec, '.');
++
++      if (dot)
++        {
++	  if (! posix2_version() < 200112)
++	    error (0,0,_("`%s' syntax is obsolete; use `:' since this will be removed in future"), spec);
++	}
++
+       if (dot
+ 	  && ! parse_with_separator (spec, dot, uid, gid, username, groupname))
+ 	error_msg = NULL;
