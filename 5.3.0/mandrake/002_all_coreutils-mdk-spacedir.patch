@@ -1,5 +1,5 @@
---- fileutils-4.0/src/df.c.gafton	Wed Jul 28 22:40:10 1999
-+++ fileutils-4.0/src/df.c	Wed Jul 28 22:44:35 1999
+--- fileutils-4.0/src/df.c
++++ fileutils-4.0/src/df.c
 @@ -204,6 +204,35 @@
  	  : human_readable (n, buf, from_block_size, t_output_block_size));
  }
@@ -49,7 +49,7 @@
        else if (strncmp ("/tmp_mnt/", mount_point, 9) == 0)
  	mount_point += 8;
  #endif
-+      /* at this point mount_point should ba already decoded */
++      /* mount_point should be already decoded here */
        printf (" %s", mount_point);
      }
    putchar ('\n');
