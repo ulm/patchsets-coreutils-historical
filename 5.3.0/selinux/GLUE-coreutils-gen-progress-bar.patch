@@ -1,0 +1,46 @@
+--- generic/001_all_coreutils-gen-progress-bar.patch
++++ generic/001_all_coreutils-gen-progress-bar.patch
+@@ -321,15 +321,18 @@
+    x->dest_info = NULL;
+    x->src_info = NULL;
+  }
+-@@ -817,7 +833,7 @@
+-      we'll actually use backup_suffix_string.  */
++@@ -817,9 +833,9 @@
+    backup_suffix_string = getenv ("SIMPLE_BACKUP_SUFFIX");
+  
++ #ifdef WITH_SELINUX
++-  while ((c = getopt_long (argc, argv, "abcdfHilLprst:uvxPRS:TV:X:Z:",
+++  while ((c = getopt_long (argc, argv, "abcdfgHilLprst:uvxPRS:TV:X:Z:",
++ #else
+ -  while ((c = getopt_long (argc, argv, "abdfHilLprst:uvxPRS:TV:",
+ +  while ((c = getopt_long (argc, argv, "abdfgHilLprst:uvxPRS:TV:",
++ #endif
+  			   long_opts, NULL))
+  	 != -1)
+-     {
+ @@ -887,6 +903,10 @@
+  	case NO_PRESERVE_ATTRIBUTES_OPTION:
+  	  decode_preserve_arg (optarg, &x, false);
+@@ -397,15 +400,18 @@
+    char *backup_suffix_string;
+    char *version_control_string = NULL;
+    struct cp_options x;
+-@@ -379,7 +397,7 @@
+-      we'll actually use backup_suffix_string.  */
++@@ -379,9 +397,9 @@
+    backup_suffix_string = getenv ("SIMPLE_BACKUP_SUFFIX");
+  
++ #ifdef WITH_SELINUX
++-  while ((c = getopt_long (argc, argv, "bcfit:uvS:TV:", long_options, NULL))
+++  while ((c = getopt_long (argc, argv, "bcfgit:uvS:TV:", long_options, NULL))
++ #else
+ -  while ((c = getopt_long (argc, argv, "bfit:uvS:TV:", long_options, NULL))
+ +  while ((c = getopt_long (argc, argv, "bfgit:uvS:TV:", long_options, NULL))
++ #endif
+  	 != -1)
+      {
+-       switch (c)
+ @@ -399,6 +417,9 @@
+  	case 'f':
+  	  x.interactive = I_ALWAYS_YES;
