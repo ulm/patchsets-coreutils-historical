@@ -2,9 +2,6 @@ two of the touch tests (not-owner / fail-diag) will attempt to mess
 with stuff in / (which is normally OK), but in our case, it pisses 
 off sandbox.  so we just disable them ;).
 
-The expand test fails for unrelated reasons:
-../../src/expand: input line is too long
-
 --- tests/touch/Makefile.am
 +++ tests/touch/Makefile.am
 @@ -3,9 +3,8 @@
@@ -18,14 +15,3 @@ The expand test fails for unrelated reasons:
  EXTRA_DIST = $(TESTS)
  TESTS_ENVIRONMENT = \
    host_triplet=$(host_triplet) \
---- tests/help-version
-+++ tests/help-version
-@@ -160,7 +160,7 @@
- 
- for i in $all_programs; do
-   # Skip these.
--  case $i in chroot|stty|tty|false) continue;; esac
-+  case $i in chroot|stty|tty|false|expand) continue;; esac
- 
-   rm -rf $tmp_in $tmp_in2 $tmp_dir $tmp_out
-   echo > $tmp_in
