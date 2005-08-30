@@ -8,7 +8,7 @@
 +static double
 +physmem_cap (double mem)
 +{
-+  double max = 1 << (sizeof(void *)*8 - 4);
++  double max = 1L << (sizeof(void *)*8 - 4);
 +  return mem > max ? max : mem;
 +}
 +
