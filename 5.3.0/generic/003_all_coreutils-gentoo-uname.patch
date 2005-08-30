@@ -1,6 +1,7 @@
-diff -urN coreutils-5.2.1.orig/src/uname.c coreutils-5.2.1/src/uname.c
---- coreutils-5.2.1.orig/src/uname.c	2004-01-21 14:27:02.000000000 -0800
-+++ coreutils-5.2.1/src/uname.c	2004-07-13 00:02:23.000000000 -0700
+On linux platforms, grok /proc/cpuinfo for the CPU/vendor info.
+
+--- coreutils-5.2.1/src/uname.c
++++ coreutils-5.2.1/src/uname.c
 @@ -44,6 +44,11 @@
  # endif
  #endif
@@ -13,7 +14,7 @@ diff -urN coreutils-5.2.1.orig/src/uname.c coreutils-5.2.1/src/uname.c
  #include "system.h"
  #include "error.h"
  
-@@ -129,6 +134,86 @@
+@@ -129,6 +134,90 @@
    exit (status);
  }
  
@@ -66,11 +67,15 @@ diff -urN coreutils-5.2.1.orig/src/uname.c coreutils-5.2.1/src/uname.c
 +					"Processor", "Hardware"
 +				#elif defined(__s390__) || defined(__s390x__)
 +					"Type", "Manufacturer"
++				#elif defined(__sh__)
++					"cpu family", "Machine"
++				#elif defined(__m68k__)
++					"CPU", "???"
 +				#else
 +					"???", "???"
 +				#endif
 +			};
-+				
++
 +			if(!retr)
 +			{
 +				if (!strcmp(cstr, sdata[x])) 
