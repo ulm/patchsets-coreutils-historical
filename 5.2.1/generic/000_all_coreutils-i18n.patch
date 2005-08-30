@@ -1,5 +1,7 @@
---- coreutils-5.1.3/lib/linebuffer.h.i18n	2003-06-18 07:58:01.000000000 +0100
-+++ coreutils-5.1.3/lib/linebuffer.h	2004-02-16 15:36:40.000000000 +0000
+http://www.openi18n.org/download/utildev/coreutils-5.2.0-i18n-0.1.patch
+
+--- coreutils/lib/linebuffer.h
++++ coreutils/lib/linebuffer.h
 @@ -22,6 +22,11 @@
  
  # include <stdio.h>
@@ -22,8 +24,8 @@
  };
  
  /* Initialize linebuffer LINEBUFFER for use. */
---- coreutils-5.1.3/src/cut.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/cut.c	2004-02-16 15:45:41.000000000 +0000
+--- coreutils/src/cut.c
++++ coreutils/src/cut.c
 @@ -29,6 +29,11 @@
  #include <assert.h>
  #include <getopt.h>
@@ -624,8 +626,8 @@
      }
  
    if (optind == argc)
---- coreutils-5.1.3/src/pr.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/pr.c	2004-02-16 15:36:40.000000000 +0000
+--- coreutils/src/pr.c
++++ coreutils/src/pr.c
 @@ -314,12 +314,50 @@
  #include <stdio.h>
  #include <getopt.h>
@@ -1351,8 +1353,8 @@
  /* We've just printed some files and need to clean up things before
     looking for more options and printing the next batch of files.
  
---- coreutils-5.2.1/src/sort.c	2004-12-15 14:10:01.347312694 +0000
-+++ coreutils-5.2.1/src/sort.c	2005-02-09 07:34:40.000000000 -0500
+--- coreutils/src/sort.c
++++ coreutils/src/sort.c
 @@ -23,10 +23,31 @@
  
  #include <config.h>
@@ -2375,8 +2377,8 @@
  	  }
  	  break;
  
---- coreutils-5.1.3/src/uniq.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/uniq.c	2004-02-16 15:36:40.000000000 +0000
+--- coreutils/src/uniq.c
++++ coreutils/src/uniq.c
 @@ -23,6 +23,16 @@
  #include <getopt.h>
  #include <sys/types.h>
@@ -2744,8 +2746,8 @@
    skip_chars = 0;
    skip_fields = 0;
    check_chars = SIZE_MAX;
---- coreutils-5.1.3/src/expand.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/expand.c	2004-02-16 15:36:40.000000000 +0000
+--- coreutils/src/expand.c
++++ coreutils/src/expand.c
 @@ -38,12 +38,29 @@
  #include <stdio.h>
  #include <getopt.h>
@@ -2955,8 +2957,8 @@
  
    if (have_read_stdin && fclose (stdin) == EOF)
      error (EXIT_FAILURE, errno, "-");
---- coreutils-5.1.3/src/fold.c	2004-02-16 15:36:40.000000000 +0000
-+++ coreutils-5.2.1/src/fold.c	2004-10-18 22:28:41.114883456 +0100
+--- coreutils/src/fold.c
++++ coreutils/src/fold.c
 @@ -23,31 +23,74 @@
  #include <getopt.h>
  #include <sys/types.h>
@@ -3368,8 +3370,8 @@
  	  break;
  
  	case 's':		/* Break at word boundaries. */
---- coreutils-5.1.3/src/join.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/join.c	2004-02-16 15:36:40.000000000 +0000
+--- coreutils/src/join.c
++++ coreutils/src/join.c
 @@ -24,16 +24,30 @@
  #include <sys/types.h>
  #include <getopt.h>
@@ -3840,8 +3842,8 @@
  	  break;
  
  	case 1:		/* Non-option argument.  */
---- coreutils-5.1.3/src/unexpand.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/unexpand.c	2004-02-16 15:36:40.000000000 +0000
+--- coreutils/src/unexpand.c
++++ coreutils/src/unexpand.c
 @@ -40,10 +40,27 @@
  #include <stdio.h>
  #include <getopt.h>
@@ -4105,8 +4107,8 @@
  
    if (have_read_stdin && fclose (stdin) == EOF)
      error (EXIT_FAILURE, errno, "-");
---- coreutils-5.2.1/tests/sort/sort-mb-tests.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/sort-mb-tests	2005-02-09 07:34:40.000000000 -0500
+--- coreutils/tests/sort/sort-mb-tests
++++ coreutils/tests/sort/sort-mb-tests
 @@ -0,0 +1,58 @@
 +#! /bin/sh
 +case $# in
@@ -4166,36 +4168,36 @@
 +fi
 +test $errors = 0 || errors=1
 +exit $errors
---- coreutils-5.2.1/tests/sort/mb1.I.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/mb1.I	2005-02-09 07:34:40.000000000 -0500
+--- coreutils/tests/sort/mb1.I
++++ coreutils/tests/sort/mb1.I
 @@ -0,0 +1,4 @@
 +Apple＠10
 +Banana＠5
 +Citrus＠20
 +Cherry＠30
---- coreutils-5.2.1/tests/sort/mb2.I.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/mb2.I	2005-02-09 07:34:40.000000000 -0500
+--- coreutils/tests/sort/mb2.I
++++ coreutils/tests/sort/mb2.I
 @@ -0,0 +1,4 @@
 +Apple＠ＡＡ10＠＠20
 +Banana＠ＡＡ5＠＠30
 +Citrus＠ＡＡ20＠＠5
 +Cherry＠ＡＡ30＠＠10
---- coreutils-5.2.1/tests/sort/mb1.X.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/mb1.X	2005-02-09 07:34:40.000000000 -0500
+--- coreutils/tests/sort/mb1.X
++++ coreutils/tests/sort/mb1.X
 @@ -0,0 +1,4 @@
 +Banana＠5
 +Apple＠10
 +Citrus＠20
 +Cherry＠30
---- coreutils-5.2.1/tests/sort/mb2.X.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/mb2.X	2005-02-09 07:34:40.000000000 -0500
+--- coreutils/tests/sort/mb2.X
++++ coreutils/tests/sort/mb2.X
 @@ -0,0 +1,4 @@
 +Citrus＠ＡＡ20＠＠5
 +Cherry＠ＡＡ30＠＠10
 +Apple＠ＡＡ10＠＠20
 +Banana＠ＡＡ5＠＠30
---- coreutils-5.2.1/tests/sort/Makefile.am.jj	2004-02-11 06:54:14.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/Makefile.am	2005-02-09 07:36:20.000000000 -0500
+--- coreutils/tests/sort/Makefile.am
++++ coreutils/tests/sort/Makefile.am
 @@ -43,12 +43,14 @@ o-no-file1.E create-empty.O create-empty
  nul-nls.E use-nl.O use-nl.E o2.O o2.E nul-tab.O nul-tab.E
  ##test-files-end
@@ -4214,8 +4216,8 @@
  
  mk_script = $(srcdir)/../mk-script
  $(srcdir)/$x-tests: $(mk_script) Test.pm
---- coreutils-5.2.1/tests/sort/Makefile.in.jj	2004-03-11 03:58:06.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/Makefile.in	2005-02-09 07:36:50.000000000 -0500
+--- coreutils/tests/sort/Makefile.in
++++ coreutils/tests/sort/Makefile.in
 @@ -301,10 +301,13 @@ n10b.E n11a.O n11a.E n11b.O n11b.E 01a.O
  o-no-file1.E create-empty.O create-empty.E neg-nls.O neg-nls.E nul-nls.O \
  nul-nls.E use-nl.O use-nl.E o2.O o2.E nul-tab.O nul-tab.E
