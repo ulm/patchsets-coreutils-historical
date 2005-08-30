@@ -288,10 +288,10 @@ Index: coreutils-5.1.2/src/Makefile.am
 ===================================================================
 --- coreutils-5.1.2.orig/src/Makefile.am
 +++ coreutils-5.1.2/src/Makefile.am
-@@ -36,9 +36,9 @@ dir_LDADD = $(LDADD) -lncurses $(LIB_CLO
- ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
+@@ -36,9 +36,9 @@ dir_LDADD = $(LDADD) $(LIB_CLO
+ ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_ACL)
  shred_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
- vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
+ vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_ACL)
 -cp_LDADD = $(LDADD) $(LIB_ACL)
 -mv_LDADD = $(LDADD) $(LIB_ACL)
 -ginstall_LDADD = $(LDADD) $(LIB_ACL)

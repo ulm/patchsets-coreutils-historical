@@ -267,13 +267,13 @@ Index: coreutils-5.1.2/src/Makefile.am
  # replacement functions defined in libfetish.a.
  LDADD = ../lib/libfetish.a $(LIBINTL) ../lib/libfetish.a
  
--dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
--ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
-+dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
-+ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
+-dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
+-ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
++dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_ACL)
++ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_ACL)
  shred_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
--vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
-+vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
+-vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
++vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_ACL)
 +cp_LDADD = $(LDADD) $(LIB_ACL)
 +mv_LDADD = $(LDADD) $(LIB_ACL)
 +ginstall_LDADD = $(LDADD) $(LIB_ACL)
