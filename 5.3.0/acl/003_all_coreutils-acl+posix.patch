@@ -255,20 +255,30 @@ diff -urN 2-acl/m4/acl.m4 3-acl/m4/acl.m4
 diff -urN 2-acl/src/Makefile.am 3-acl/src/Makefile.am
 --- 2-acl/src/Makefile.am	2005-03-25 17:14:48.000000000 +0000
 +++ 3-acl/src/Makefile.am	2005-03-25 18:41:08.000000000 +0000
-@@ -44,10 +44,13 @@
+@@ -33,9 +33,9 @@
+ LDADD = ../lib/libfetish.a $(LIBINTL) ../lib/libfetish.a
+ 
+ # for eaccess in lib/euidaccess.c.
+-cp_LDADD = $(LDADD) $(LIB_EACCESS)
+-ginstall_LDADD = $(LDADD) $(LIB_EACCESS)
+-mv_LDADD = $(LDADD) $(LIB_EACCESS)
++cp_LDADD = $(LDADD) $(LIB_EACCESS) $(LIB_ACL)
++ginstall_LDADD = $(LDADD) $(LIB_EACCESS) $(LIB_ACL)
++mv_LDADD = $(LDADD) $(LIB_EACCESS) $(LIB_ACL)
+ pathchk_LDADD = $(LDADD) $(LIB_EACCESS)
+ rm_LDADD = $(LDADD) $(LIB_EACCESS)
+ test_LDADD = $(LDADD) $(LIB_EACCESS)
+@@ -44,10 +44,10 @@
  
  # for clock_gettime and fdatasync
  dd_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_FDATASYNC)
--dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
--ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
-+dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
-+ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
+-dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
+-ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
++dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_ACL)
++ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_ACL)
  shred_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_FDATASYNC)
--vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
-+vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
-+cp_LDADD = $(LDADD) $(LIB_ACL)
-+mv_LDADD = $(LDADD) $(LIB_ACL)
-+ginstall_LDADD = $(LDADD) $(LIB_ACL)
+-vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
++vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_ACL)
  
  ## If necessary, add -lm to resolve use of pow in lib/strtod.c.
  sort_LDADD = $(LDADD) $(POW_LIB)

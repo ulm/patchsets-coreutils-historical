@@ -78,19 +78,19 @@ diff -urN 3-acl/m4/xattr.m4 4-acl/m4/xattr.m4
 diff -urN 3-acl/src/Makefile.am 4-acl/src/Makefile.am
 --- 3-acl/src/Makefile.am	2005-03-25 18:41:08.000000000 +0000
 +++ 4-acl/src/Makefile.am	2005-03-25 20:48:58.000000000 +0000
-@@ -48,9 +48,9 @@
- ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
- shred_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) $(LIB_FDATASYNC)
- vdir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses $(LIB_ACL)
--cp_LDADD = $(LDADD) $(LIB_ACL)
--mv_LDADD = $(LDADD) $(LIB_ACL)
--ginstall_LDADD = $(LDADD) $(LIB_ACL)
-+cp_LDADD = $(LDADD) $(LIB_ACL) $(LIB_XATTR)
-+mv_LDADD = $(LDADD) $(LIB_ACL) $(LIB_XATTR)
-+ginstall_LDADD = $(LDADD) $(LIB_ACL) $(LIB_XATTR)
+@@ -33,9 +33,9 @@
+ LDADD = ../lib/libfetish.a $(LIBINTL) ../lib/libfetish.a
  
- ## If necessary, add -lm to resolve use of pow in lib/strtod.c.
- sort_LDADD = $(LDADD) $(POW_LIB)
+ # for eaccess in lib/euidaccess.c.
+-cp_LDADD = $(LDADD) $(LIB_EACCESS) $(LIB_ACL)
+-ginstall_LDADD = $(LDADD) $(LIB_EACCESS) $(LIB_ACL)
+-mv_LDADD = $(LDADD) $(LIB_EACCESS) $(LIB_ACL)
++cp_LDADD = $(LDADD) $(LIB_EACCESS) $(LIB_ACL) $(LIB_XATTR)
++ginstall_LDADD = $(LDADD) $(LIB_EACCESS) $(LIB_ACL) $(LIB_XATTR)
++mv_LDADD = $(LDADD) $(LIB_EACCESS) $(LIB_ACL) $(LIB_XATTR)
+ pathchk_LDADD = $(LDADD) $(LIB_EACCESS)
+ rm_LDADD = $(LDADD) $(LIB_EACCESS)
+ test_LDADD = $(LDADD) $(LIB_EACCESS)
 diff -urN 3-acl/src/copy.c 4-acl/src/copy.c
 --- 3-acl/src/copy.c	2005-03-25 17:34:17.000000000 +0000
 +++ 4-acl/src/copy.c	2005-03-25 20:48:58.000000000 +0000
