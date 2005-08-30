@@ -1,5 +1,8 @@
---- coreutils-5.1.3/lib/linebuffer.h.i18n	2003-06-18 07:58:01.000000000 +0100
-+++ coreutils-5.1.3/lib/linebuffer.h	2004-02-16 15:36:40.000000000 +0000
+http://www.openi18n.org/download/utildev/coreutils-5.3.0-i18n-0.1.patch
+
+diff -uprN coreutils-5.3.0.orig/lib/linebuffer.h coreutils-5.3.0/lib/linebuffer.h
+--- coreutils-5.3.0.orig/lib/linebuffer.h	2003-06-18 16:39:36.000000000 +0900
++++ coreutils-5.3.0/lib/linebuffer.h	2005-07-01 19:10:53.261705096 +0900
 @@ -22,6 +22,11 @@
  
  # include <stdio.h>
@@ -12,7 +15,7 @@
  /* A `struct linebuffer' holds a line of text. */
  
  struct linebuffer
-@@ -29,6 +34,9 @@
+@@ -29,6 +34,9 @@ struct linebuffer
    size_t size;			/* Allocated. */
    size_t length;		/* Used. */
    char *buffer;
@@ -22,61 +25,59 @@
  };
  
  /* Initialize linebuffer LINEBUFFER for use. */
---- coreutils-5.1.3/src/cut.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/cut.c	2004-02-16 15:45:41.000000000 +0000
-@@ -29,6 +29,11 @@
+diff -uprN coreutils-5.3.0.orig/src/cut.c coreutils-5.3.0/src/cut.c
+--- coreutils-5.3.0.orig/src/cut.c	2004-12-04 22:32:36.000000000 +0900
++++ coreutils-5.3.0/src/cut.c	2005-07-01 19:10:53.263704792 +0900
+@@ -29,6 +29,12 @@
  #include <assert.h>
  #include <getopt.h>
  #include <sys/types.h>
 +
-+/* Get mbstate_t, mbrtowc().  */
++/* Get mbstate_t, mbrtowc(). */
 +#if HAVE_WCHAR_H
 +# include <wchar.h>
 +#endif
++
  #include "system.h"
  
  #include "error.h"
-@@ -37,6 +42,18 @@
+@@ -37,6 +43,13 @@
  #include "quote.h"
  #include "xstrndup.h"
  
 +/* MB_LEN_MAX is incorrectly defined to be 1 in at least one GCC
-+   installation; work around this configuration error.	*/
++   installation; work around this configuration error. */
 +#if !defined MB_LEN_MAX || MB_LEN_MAX < 2
 +# undef MB_LEN_MAX
 +# define MB_LEN_MAX 16
 +#endif
 +
-+/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
-+#if HAVE_MBRTOWC && defined mbstate_t
-+# define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
-+#endif
-+
  /* The official name of this program (e.g., no `g' prefix).  */
  #define PROGRAM_NAME "cut"
  
-@@ -67,6 +84,52 @@
-     }									\
-   while (0)
+@@ -73,6 +86,54 @@ struct range_pair
+     size_t hi;
+   };
  
-+/* Refill the buffer BUF to get a multibyte character. */
++/* Refill the buffer BUF. */
 +#define REFILL_BUFFER(BUF, BUFPOS, BUFLEN, STREAM)			\
 +  do									\
-+    {									\
++    { 									\
 +      if (BUFLEN < MB_LEN_MAX && !feof (STREAM) && !ferror (STREAM))	\
 +	{								\
 +	  memmove (BUF, BUFPOS, BUFLEN);				\
-+	  BUFLEN += fread (BUF + BUFLEN, sizeof(char), BUFSIZ, STREAM); \
++	  BUFLEN += fread (BUF + BUFLEN, sizeof(char), BUFSIZ, STREAM);	\
 +	  BUFPOS = BUF;							\
 +	}								\
 +    }									\
 +  while (0)
 +
-+/* Get wide character on BUFPOS. BUFPOS is not included after that.
-+   If byte sequence is not valid as a character, CONVFAIL is 1. Otherwise 0. */ 
++/* Get wide character which starts at BUFPOS. If the byte sequence is
++   not valid as a character, CONVFAIL is 1. Otherwise 0. */
 +#define GET_NEXT_WC_FROM_BUFFER(WC, BUFPOS, BUFLEN, MBLENGTH, STATE, CONVFAIL) \
 +  do									\
 +    {									\
++      wchar_t   tmp;							\
 +      mbstate_t state_bak;						\
 +									\
 +      if (BUFLEN < 1)							\
@@ -88,15 +89,16 @@
 +      /* Get a wide character. */					\
 +      CONVFAIL = 0;							\
 +      state_bak = STATE;						\
-+      MBLENGTH = mbrtowc ((wchar_t *)&WC, BUFPOS, BUFLEN, &STATE);	\
++      MBLENGTH = mbrtowc (&tmp, BUFPOS, BUFLEN, &STATE);		\
++      WC = tmp;								\
 +									\
 +      switch (MBLENGTH)							\
 +	{								\
 +	case (size_t)-1:						\
 +	case (size_t)-2:						\
-+	  CONVFAIL++;							\
++	  ++CONVFAIL;							\
 +	  STATE = state_bak;						\
-+	  /* Fall througn. */						\
++	    /* Fall througn. */						\
 +									\
 +	case 0:								\
 +	  MBLENGTH = 1;							\
@@ -105,19 +107,19 @@
 +    }									\
 +  while (0)
 +
- struct range_pair
-   {
-     size_t lo;
-@@ -85,7 +148,7 @@
+ /* This buffer is used to support the semantics of the -s option
+    (or lack of same) when the specified field list includes (does
+    not include) the first field.  In both of those cases, the entire
+@@ -85,7 +146,7 @@ static char *field_1_buffer;
  /* The number of bytes allocated for FIELD_1_BUFFER.  */
  static size_t field_1_bufsize;
  
 -/* The largest field or byte index used as an endpoint of a closed
-+/* The largest byte, character or field index used as an endpoint of a closed
++/* The largest field, character or byte index used as an endpoint of a closed
     or degenerate range specification;  this doesn't include the starting
     index of right-open-ended ranges.  For example, with either range spec
     `2-5,9-', `2-3,5,9-' this variable would be set to 5.  */
-@@ -97,10 +160,11 @@
+@@ -97,10 +158,11 @@ static size_t eol_range_start;
  
  /* This is a bit vector.
     In byte mode, which bytes to output.
@@ -131,12 +133,12 @@
     (K <= MAX_RANGE_ENDPOINT and is_printable_field(K))
      || (EOL_RANGE_START > 0 && K >= EOL_RANGE_START).  */
  static unsigned char *printable_field;
-@@ -109,9 +173,12 @@
+@@ -109,9 +171,12 @@ enum operating_mode
    {
      undefined_mode,
  
 -    /* Output characters that are in the given bytes. */
-+    /* Output bytes that are at the given positions. */
++    /* Output bytes that are in the given bytes. */
      byte_mode,
  
 +    /* Output characters that are at the given positions. */
@@ -145,21 +147,21 @@
      /* Output the given delimeter-separated fields. */
      field_mode
    };
-@@ -121,6 +188,13 @@
+@@ -121,6 +186,13 @@ char *program_name;
  
  static enum operating_mode operating_mode;
  
-+/* If nonzero, when in byte mode, don't split multibyte characters.  */
-+static int byte_mode_character_aware;
-+
-+/* If nonzero, the function for single byte locale is work
++/* If true, when in byte mode, don't split multibyte characters.  */
++static bool byte_mode_character_aware;
++ 
++/* If true, the function for single byte locale is work
 +   if this program runs on multibyte locale. */
-+static int force_singlebyte_mode;
++static bool force_singlebyte_mode;
 +
  /* If true do not output lines containing no delimeter characters.
     Otherwise, all such lines are printed.  This option is valid only
     with field mode.  */
-@@ -128,6 +202,9 @@
+@@ -132,6 +204,9 @@ static bool complement;
  
  /* The delimeter character for field mode. */
  static unsigned char delim;
@@ -169,16 +171,16 @@
  
  /* True if the --output-delimiter=STRING option was specified.  */
  static bool output_delimiter_specified;
-@@ -199,7 +276,7 @@
-   -f, --fields=LIST       output only these fields;  also print any line\n\
+@@ -205,7 +280,7 @@ Mandatory arguments to long options are 
+   -f, --fields=LIST       select only these fields;  also print any line\n\
                              that contains no delimiter character, unless\n\
                              the -s option is specified\n\
 -  -n                      (ignored)\n\
 +  -n                      with -b: don't split multibyte characters\n\
  "), stdout);
        fputs (_("\
-   -s, --only-delimited    do not print lines not containing delimiters\n\
-@@ -327,7 +404,7 @@
+       --complement        complement the set of selected bytes, characters\n\
+@@ -360,7 +435,7 @@ set_fields (const char *fieldstr)
  	  in_digits = false;
  	  /* Starting a range. */
  	  if (dash_found)
@@ -187,12 +189,12 @@
  	  dash_found = true;
  	  fieldstr++;
  
-@@ -352,14 +429,16 @@
+@@ -385,14 +460,16 @@ set_fields (const char *fieldstr)
  	      if (value == 0)
  		{
  		  /* `n-'.  From `initial' to end of line. */
 -		  eol_range_start = initial;
-+		  if (eol_range_start == 0 ||
++		  if(eol_range_start == 0 ||
 +		      (eol_range_start != 0 && eol_range_start > initial))
 +		    eol_range_start = initial;
  		  field_found = true;
@@ -206,17 +208,7 @@
  
  		  /* Is there already a range going to end of line? */
  		  if (eol_range_start != 0)
-@@ -434,6 +513,9 @@
- 	      if (operating_mode == byte_mode)
- 		error (0, 0,
- 		       _("byte offset %s is too large"), quote (bad_num));
-+	      else if (operating_mode == character_mode)
-+		error (0, 0,
-+		       _("character offset %s is too large"), quote (bad_num));
- 	      else
- 		error (0, 0,
- 		       _("field number %s is too large"), quote (bad_num));
-@@ -445,7 +527,7 @@
+@@ -478,7 +555,7 @@ set_fields (const char *fieldstr)
  	  fieldstr++;
  	}
        else
@@ -225,33 +217,28 @@
      }
  
    max_range_endpoint = 0;
-@@ -515,7 +597,7 @@
-   print_delimiter = false;
-   while (1)
-     {
--      register int c;		/* Each character from the file. */
-+      int c;		/* Each character from the file. */
- 
-       c = getc (stream);
- 
-@@ -549,6 +631,63 @@
+@@ -571,6 +648,81 @@ cut_bytes (FILE *stream)
      }
  }
  
 +#if HAVE_MBRTOWC
 +/* This function is in use for the following case.
-+
-+   1. Read from the stream STREAM, printing to standard output any selected
-+   characters. 
-+
-+   2. Read from stream STREAM, printing to standard output any selected bytes,
-+   without splitting multibyte characters.  */
 + 
++   1. Read from the stream STREAM, printing to standard output any selected
++      characters. 
++ 
++   2. Read from stream STREAM, printing to standard output any selected bytes,
++      without splitting multibyte characters.  */
++
 +static void
 +cut_characters_or_cut_bytes_no_split (FILE *stream)
 +{
-+  int idx;		/* number of bytes or characters in the line so far. */
-+  char buf[MB_LEN_MAX + BUFSIZ];  /* For spooling a read byte sequence. */
++  size_t idx;		/* Number of bytes or characters in the line so far. */
++  /* Whether to begin printing delimiters between ranges for the current line.
++     Set after we've begun printing data corresponding to the first range.  */
++  bool print_delimiter;
++
++  char buf[MB_LEN_MAX + BUFSIZ];	/* For spooling a read byte sequence. */
 +  char *bufpos;		/* Next read position of BUF. */
 +  size_t buflen;	/* The length of the byte sequence in buf. */
 +  wint_t wc;		/* A gotten wide character. */
@@ -260,7 +247,9 @@
 +  mbstate_t state;	/* State of the stream. */
 +  int convfail;		/* 1, when conversion is failed. Otherwise 0. */
 +
++
 +  idx = 0;
++  print_delimiter = false;
 +  buflen = 0;
 +  bufpos = buf;
 +  memset (&state, '\0', sizeof(mbstate_t));
@@ -281,12 +270,24 @@
 +	{
 +	  putchar ('\n');
 +	  idx = 0;
++	  print_delimiter = false;
 +	}
 +      else
 +	{
++	  bool range_start;
++	  bool *rs = output_delimiter_specified ? &range_start : NULL;
++
 +	  idx += (operating_mode == byte_mode) ? mblength : 1;
-+	  if (print_kth (idx, NULL))
-+	    fwrite (bufpos, mblength, sizeof(char), stdout);
++	  if (print_kth (idx, rs))
++	    {
++	      if (rs && *rs && print_delimiter)
++		{
++		  fwrite (output_delimiter_string, sizeof (char),
++			  output_delimiter_length, stdout);
++		}
++	      print_delimiter = true;
++	      fwrite (bufpos, mblength, sizeof(char), stdout);
++	    }
 +	}
 +
 +      buflen -= mblength;
@@ -294,11 +295,11 @@
 +    }
 +}
 +#endif
-+		   
++
  /* Read from stream STREAM, printing to standard output any selected fields.  */
  
  static void
-@@ -669,13 +808,192 @@
+@@ -692,13 +844,190 @@ cut_fields (FILE *stream)
      }
  }
  
@@ -307,21 +308,19 @@
 +cut_fields_mb (FILE *stream)
 +{
 +  int c;
-+  unsigned int field_idx;
-+  int found_any_selected_field;
-+  int buffer_first_field;
++  size_t field_idx = 1;
++  bool found_any_selected_field = false;
++  bool buffer_first_field;
 +  int empty_input;
-+  char buf[MB_LEN_MAX + BUFSIZ];  /* For spooling a read byte sequence. */
++  char buf[MB_LEN_MAX + BUFSIZ];     	/* For spooling a read byte sequence. */
 +  char *bufpos;		/* Next read position of BUF. */
 +  size_t buflen;	/* The length of the byte sequence in buf. */
-+  wint_t wc = 0;	/* A gotten wide character. */
++  wint_t wc;		/* A gotten wide character. */
 +  size_t mblength;	/* The byte size of a multibyte character which shows
 +			   as same character as WC. */
 +  mbstate_t state;	/* State of the stream. */
 +  int convfail;		/* 1, when conversion is failed. Otherwise 0. */
 +
-+  found_any_selected_field = 0;
-+  field_idx = 1;
 +  bufpos = buf;
 +  buflen = 0;
 +  memset (&state, '\0', sizeof(mbstate_t));
@@ -345,7 +344,7 @@
 +    {
 +      if (field_idx == 1 && buffer_first_field)
 +	{
-+	  int len = 0;
++	  size_t n_bytes = 0;
 +
 +	  while (1)
 +	    {
@@ -357,9 +356,9 @@
 +	      if (wc == WEOF)
 +		break;
 +
-+	      field_1_buffer = xrealloc (field_1_buffer, len + mblength);
-+	      memcpy (field_1_buffer + len, bufpos, mblength);
-+	      len += mblength;
++	      field_1_buffer = xrealloc (field_1_buffer, n_bytes + mblength);
++	      memcpy (field_1_buffer + n_bytes, bufpos, mblength);
++	      n_bytes += mblength;
 +	      buflen -= mblength;
 +	      bufpos += mblength;
 +
@@ -377,11 +376,11 @@
 +	    {
 +	      if (suppress_non_delimited)
 +		{
-+		  /* Empty.	*/
++		  /* Empty.     */
 +		}
 +	      else
 +		{
-+		  fwrite (field_1_buffer, sizeof (char), len, stdout);
++		  fwrite (field_1_buffer, sizeof (char), n_bytes, stdout);
 +		  /* Make sure the output line is newline terminated.  */
 +		  if (convfail || (!convfail && wc != L'\n'))
 +		    putchar ('\n');
@@ -392,8 +391,8 @@
 +	  if (print_kth (1, NULL))
 +	    {
 +	      /* Print the field, but not the trailing delimiter.  */
-+	      fwrite (field_1_buffer, sizeof (char), len - 1, stdout);
-+	      found_any_selected_field = 1;
++	      fwrite (field_1_buffer, sizeof (char), n_bytes - 1, stdout);
++	      found_any_selected_field = true;
 +	    }
 +	  ++field_idx;
 +	}
@@ -405,9 +404,9 @@
 +	      if (found_any_selected_field)
 +		{
 +		  fwrite (output_delimiter_string, sizeof (char),
-+			  output_delimiter_length, stdout);
++		      output_delimiter_length, stdout);
 +		}
-+	      found_any_selected_field = 1;
++	      found_any_selected_field = true;
 +	    }
 +
 +	  while (1)
@@ -447,7 +446,7 @@
 +	  if (wc == WEOF)
 +	    break;
 +	  field_idx = 1;
-+	  found_any_selected_field = 0;
++	  found_any_selected_field = false;
 +	}
 +    }
 +}
@@ -494,8 +493,8 @@
  }
  
  /* Process file FILE to standard output.
-@@ -724,6 +1042,8 @@
-   int optc, exit_status = 0;
+@@ -748,6 +1077,8 @@ main (int argc, char **argv)
+   bool ok;
    bool delim_specified = false;
    char *spec_list_string IF_LINT(= NULL);
 +  char mbdelim[MB_LEN_MAX + 1];
@@ -503,15 +502,15 @@
  
    initialize_main (&argc, &argv);
    program_name = argv[0];
-@@ -749,7 +1069,6 @@
- 	  break;
- 
+@@ -770,7 +1101,6 @@ main (int argc, char **argv)
+       switch (optc)
+ 	{
  	case 'b':
 -	case 'c':
  	  /* Build the byte list. */
  	  if (operating_mode != undefined_mode)
  	    FATAL_ERROR (_("only one type of list may be specified"));
-@@ -757,6 +1076,14 @@
+@@ -778,6 +1108,14 @@ main (int argc, char **argv)
  	  spec_list_string = optarg;
  	  break;
  
@@ -526,55 +525,51 @@
  	case 'f':
  	  /* Build the field list. */
  	  if (operating_mode != undefined_mode)
-@@ -768,10 +1095,35 @@
+@@ -789,9 +1127,32 @@ main (int argc, char **argv)
  	case 'd':
  	  /* New delimiter. */
  	  /* Interpret -d '' to mean `use the NUL byte as the delimiter.'  */
 -	  if (optarg[0] != '\0' && optarg[1] != '\0')
 -	    FATAL_ERROR (_("the delimiter must be a single character"));
 -	  delim = optarg[0];
--	  delim_specified = true;
 +#if HAVE_MBRTOWC
++	  if(MB_CUR_MAX > 1)
 +	    {
-+	      if(MB_CUR_MAX > 1)
++	      mbstate_t state;
++
++	      memset (&state, '\0', sizeof(mbstate_t));
++	      delimlen = mbrtowc (&wcdelim, optarg, MB_LEN_MAX, &state);
++
++	      if (delimlen == (size_t)-1 || delimlen == (size_t)-2)
++		force_singlebyte_mode = true;
++	      else
 +		{
-+		  mbstate_t state;
-+
-+		  memset (&state, '\0', sizeof(mbstate_t));
-+		  delimlen = mbrtowc (&wcdelim, optarg, strnlen(optarg, MB_LEN_MAX), &state);
-+
-+		  if (delimlen == (size_t)-1 || delimlen == (size_t)-2)
-+		    ++force_singlebyte_mode;
-+		  else
-+		    {
-+		      delimlen = (delimlen < 1) ? 1 : delimlen;
-+		      if (wcdelim != L'\0' && *(optarg + delimlen) != '\0')
-+			FATAL_ERROR (_("the delimiter must be a single character"));
-+		      memcpy (mbdelim, optarg, delimlen);
-+		    }
-+		}
-+
-+	      if (MB_CUR_MAX <= 1 || force_singlebyte_mode)
-+#endif
-+		{
-+		  if (optarg[0] != '\0' && optarg[1] != '\0')
++		  delimlen = (delimlen < 1) ? 1 : delimlen;
++		  if (wcdelim != L'\0' && *(optarg + delimlen) != '\0')
 +		    FATAL_ERROR (_("the delimiter must be a single character"));
-+		  delim = (unsigned char) optarg[0];
++		  memcpy (mbdelim, optarg, delimlen);
 +		}
-+	    delim_specified = true;
-+	  }
++	    }
++
++	  if (MB_CUR_MAX <= 1 || force_singlebyte_mode)
++#endif
++	    {
++	      if (optarg[0] != '\0' && optarg[1] != '\0')
++		FATAL_ERROR (_("the delimiter must be a single character"));
++	      delim = (unsigned char) optarg[0];
++	    }
+ 	  delim_specified = true;
  	  break;
  
- 	case OUTPUT_DELIMITER_OPTION:
-@@ -784,6 +1136,7 @@
+@@ -805,6 +1166,7 @@ main (int argc, char **argv)
  	  break;
  
  	case 'n':
-+	  byte_mode_character_aware = 1;
++	  byte_mode_character_aware = true;
  	  break;
  
  	case 's':
-@@ -802,7 +1155,7 @@
+@@ -827,7 +1189,7 @@ main (int argc, char **argv)
    if (operating_mode == undefined_mode)
      FATAL_ERROR (_("you must specify a list of bytes, characters, or fields"));
  
@@ -583,7 +578,7 @@
      FATAL_ERROR (_("an input delimiter may be specified only\
   when operating on fields"));
  
-@@ -829,15 +1182,34 @@
+@@ -854,15 +1216,34 @@ main (int argc, char **argv)
      }
  
    if (!delim_specified)
@@ -595,8 +590,8 @@
 +      mbdelim[0] = '\t';
 +      mbdelim[1] = '\0';
 +      delimlen = 1;
-+#endif
 +    }
++#endif
  
    if (output_delimiter_string == NULL)
      {
@@ -615,7 +610,7 @@
 +      if (MB_CUR_MAX <= 1 || force_singlebyte_mode)
 +#endif
 +	{
-+	  static char dummy[2]; 
++	  static char dummy[2];
 +	  dummy[0] = delim;
 +	  dummy[1] = '\0';
 +	  output_delimiter_string = dummy;
@@ -624,9 +619,1708 @@
      }
  
    if (optind == argc)
---- coreutils-5.1.3/src/pr.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/pr.c	2004-02-16 15:36:40.000000000 +0000
-@@ -314,12 +314,50 @@
+diff -uprN coreutils-5.3.0.orig/src/expand.c coreutils-5.3.0/src/expand.c
+--- coreutils-5.3.0.orig/src/expand.c	2004-09-22 21:41:19.000000000 +0900
++++ coreutils-5.3.0/src/expand.c	2005-07-01 19:11:28.518345272 +0900
+@@ -38,12 +38,32 @@
+ #include <stdio.h>
+ #include <getopt.h>
+ #include <sys/types.h>
++
++/* Get mbstate_t, mbrtowc, wcwidth. */
++#if HAVE_WCHAR_H
++# include <wchar.h>
++#endif
++#if HAVE_WCTYPE_H
++# include <wctype.h>
++#endif
++
+ #include "system.h"
+ #include "error.h"
+ #include "posixver.h"
+ #include "quote.h"
+ #include "xstrndup.h"
+ 
++/* MB_LEN_MAX is incorrectly defined to be 1 in at least one GCC
++   installation; work around this configuration error.  */
++#if !defined MB_LEN_MAX || MB_LEN_MAX < 2
++# define MB_LEN_MAX 16
++#endif
++
++/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
++#if HAVE_MBRTOWC && defined mbstate_t
++# define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
++#endif
++
+ /* The official name of this program (e.g., no `g' prefix).  */
+ #define PROGRAM_NAME "expand"
+ 
+@@ -352,7 +372,8 @@ expand (void)
+ 		}
+ 	      else
+ 		{
+-		  column++;
++		  if (!ISCNTRL (c))
++		    column++;
+ 		  if (!column)
+ 		    error (EXIT_FAILURE, 0, _("input line is too long"));
+ 		}
+@@ -370,6 +391,163 @@ expand (void)
+     }
+ }
+ 
++#if HAVE_MBRTOWC && HAVE_WCTYPE_H
++static void
++expand_multibyte (void)
++{
++  /* Input stream.  */
++  FILE *fp = next_file (NULL);
++
++  mbstate_t i_state;		/* Current shift state of the input stream. */
++  char buf[MB_LEN_MAX + BUFSIZ];  /* For spooling a read byte sequence. */
++  char *bufpos;			/* Next read position of BUF. */
++  size_t buflen = 0;		/* The length of the byte sequence in buf. */
++
++  if (!fp)
++    return;
++
++  /* Binary I/O will preserve the original EOL style (DOS/Unix) of files.  */
++  SET_BINARY2 (fileno (fp), STDOUT_FILENO);
++
++  for (;;)
++    {
++      /* Input character, or EOF.  */
++      wint_t wc;
++
++      /* If true, perform translations.  */
++      bool convert = true;
++
++
++      /* The following variables have valid values only when CONVERT
++	 is true:  */
++
++      /* Column of next input character.  */
++      uintmax_t column = 0;
++
++      /* Index in TAB_LIST of next tab stop to examine.  */
++      size_t tab_index = 0;
++
++
++      /* Convert a line of text.  */
++
++      do
++	{
++	  wchar_t w;
++	  size_t mblength;	 /* The byte size of a multibyte character
++				    which shows as same character as WC. */
++	  mbstate_t i_state_bak; /* Back up the I_STATE. */
++
++	  /* Fill buffer */
++	  if (buflen < MB_LEN_MAX)
++	    {
++	      if (!feof(fp) && !ferror(fp)) {
++		if (buflen > 0) memmove(buf, bufpos, buflen);
++		buflen += fread(buf + buflen, sizeof(char), BUFSIZ, fp);
++		bufpos = buf;
++	      }
++	    }
++
++	  if (buflen < 1) {
++	    /* Move to the next file */
++	    if (feof(fp) || ferror(fp)) {
++	      fp = next_file(fp);
++	    }
++	    if (!fp)
++	      return;
++	    memset (&i_state, '\0', sizeof (mbstate_t));
++	    SET_BINARY2 (fileno (fp), STDOUT_FILENO);	
++	    continue;
++	  }
++
++	  i_state_bak = i_state;
++	  mblength = mbrtowc (&w, bufpos, buflen, &i_state);
++	  wc = w;
++
++	  if (mblength == (size_t) -1 || mblength == (size_t) -2) {
++	    i_state = i_state_bak;
++	    wc = L'\0';
++	    column += convert;
++	    mblength = 1;
++	  }
++
++	  if (convert)
++	    {
++	      if (wc == L'\t')
++		{
++		  /* Column the next input tab stop is on.  */
++		  uintmax_t next_tab_column;
++
++		  if (tab_size)
++		    next_tab_column = column + (tab_size - column % tab_size);
++		  else
++		    for (;;)
++		      if (tab_index == first_free_tab)
++			{
++			  next_tab_column = column + 1;
++			  break;
++			}
++		      else
++			{
++			  uintmax_t tab = tab_list[tab_index++];
++			  if (column < tab)
++			    {
++			      next_tab_column = tab;
++			      break;
++			    }
++			}
++
++		  if (next_tab_column < column)
++		    error (EXIT_FAILURE, 0, _("input line is too long"));
++
++		  while (++column < next_tab_column)
++		    if (putchar (' ') < 0)
++		      error (EXIT_FAILURE, errno, _("write error"));
++
++		  *bufpos = ' ';
++		}
++	      else if (wc == L'\b')
++		{
++		  /* Go back one column, and force recalculation of the
++		     next tab stop.  */
++		  column -= !!column;
++		  tab_index -= !!tab_index;
++		}
++	      else
++		{
++		  if (!iswcntrl (wc))
++		    {
++		      int width = wcwidth (wc);
++		      if (width > 0) {
++			if (column > (column + width))
++			  error (EXIT_FAILURE, 0, _("input line is too long"));
++			column += width;
++		      }
++		    }
++		}
++
++	      convert &= convert_entire_line | iswblank (wc);
++	    }
++
++	  if (mblength)
++	    {
++	      if (fwrite (bufpos, sizeof(char), mblength, stdout) < mblength)
++		error (EXIT_FAILURE, errno, _("write error"));
++	    }
++	  else
++	    {
++	      if (putchar('\0'))
++		error (EXIT_FAILURE, errno, _("write error"));
++	      mblength = 1;
++	    }
++
++	  buflen -= mblength;
++	  bufpos += mblength;
++	}
++      while (wc != L'\n');
++    }
++}
++#endif
++
+ int
+ main (int argc, char **argv)
+ {
+@@ -446,7 +624,12 @@ main (int argc, char **argv)
+ 
+   file_list = (optind < argc ? &argv[optind] : stdin_argv);
+ 
+-  expand ();
++#if HAVE_MBRTOWC
++  if (MB_CUR_MAX > 1)
++    expand_multibyte ();
++  else
++#endif
++    expand ();
+ 
+   if (have_read_stdin && fclose (stdin) != 0)
+     error (EXIT_FAILURE, errno, "-");
+diff -uprN coreutils-5.3.0.orig/src/expand.c~ coreutils-5.3.0/src/expand.c~
+--- coreutils-5.3.0.orig/src/expand.c~	1970-01-01 09:00:00.000000000 +0900
++++ coreutils-5.3.0/src/expand.c~	2005-07-01 19:10:53.265704488 +0900
+@@ -0,0 +1,637 @@
++/* expand - convert tabs to spaces
++   Copyright (C) 89, 91, 1995-2004 Free Software Foundation, Inc.
++
++   This program is free software; you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 2, or (at your option)
++   any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, write to the Free Software Foundation,
++   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
++
++/* By default, convert all tabs to spaces.
++   Preserves backspace characters in the output; they decrement the
++   column count for tab calculations.
++   The default action is equivalent to -8.
++
++   Options:
++   --tabs=tab1[,tab2[,...]]
++   -t tab1[,tab2[,...]]
++   -tab1[,tab2[,...]]	If only one tab stop is given, set the tabs tab1
++			columns apart instead of the default 8.  Otherwise,
++			set the tabs at columns tab1, tab2, etc. (numbered from
++			0); replace any tabs beyond the tab stops given with
++			single spaces.
++   --initial
++   -i			Only convert initial tabs on each line to spaces.
++
++   David MacKenzie <djm@gnu.ai.mit.edu> */
++
++#include <config.h>
++
++#include <stdio.h>
++#include <getopt.h>
++#include <sys/types.h>
++
++/* Get mbstate_t, mbrtowc, wcwidth. */
++#if HAVE_WCHAR_H
++# include <wchar.h>
++#endif
++#if HAVE_WCTYPE_H
++# include <wctype.h>
++#endif
++
++#include "system.h"
++#include "error.h"
++#include "posixver.h"
++#include "quote.h"
++#include "xstrndup.h"
++
++/* MB_LEN_MAX is incorrectly defined to be 1 in at least one GCC
++   installation; work around this configuration error.  */
++#if !defined MB_LEN_MAX || MB_LEN_MAX < 2
++# define MB_LEN_MAX 16
++#endif
++
++/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
++#if HAVE_MBRTOWC && defined mbstate_t
++# define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
++#endif
++
++/* The official name of this program (e.g., no `g' prefix).  */
++#define PROGRAM_NAME "expand"
++
++#define AUTHORS "David MacKenzie"
++
++/* The number of bytes added at a time to the amount of memory
++   allocated for the output line.  */
++#define OUTPUT_BLOCK 256
++
++/* The name this program was run with.  */
++char *program_name;
++
++/* If true, convert blanks even after nonblank characters have been
++   read on the line.  */
++static bool convert_entire_line;
++
++/* If nonzero, the size of all tab stops.  If zero, use `tab_list' instead.  */
++static uintmax_t tab_size;
++
++/* Array of the explicit column numbers of the tab stops;
++   after `tab_list' is exhausted, each additional tab is replaced
++   by a space.  The first column is column 0.  */
++static uintmax_t *tab_list;
++
++/* The number of allocated entries in `tab_list'.  */
++static size_t n_tabs_allocated;
++
++/* The index of the first invalid element of `tab_list',
++   where the next element can be added.  */
++static size_t first_free_tab;
++
++/* Null-terminated array of input filenames.  */
++static char **file_list;
++
++/* Default for `file_list' if no files are given on the command line.  */
++static char *stdin_argv[] =
++{
++  "-", NULL
++};
++
++/* True if we have ever read standard input.  */
++static bool have_read_stdin;
++
++/* The desired exit status.  */
++static int exit_status;
++
++static struct option const longopts[] =
++{
++  {"tabs", required_argument, NULL, 't'},
++  {"initial", no_argument, NULL, 'i'},
++  {GETOPT_HELP_OPTION_DECL},
++  {GETOPT_VERSION_OPTION_DECL},
++  {NULL, 0, NULL, 0}
++};
++
++void
++usage (int status)
++{
++  if (status != EXIT_SUCCESS)
++    fprintf (stderr, _("Try `%s --help' for more information.\n"),
++	     program_name);
++  else
++    {
++      printf (_("\
++Usage: %s [OPTION]... [FILE]...\n\
++"),
++	      program_name);
++      fputs (_("\
++Convert tabs in each FILE to spaces, writing to standard output.\n\
++With no FILE, or when FILE is -, read standard input.\n\
++\n\
++"), stdout);
++      fputs (_("\
++Mandatory arguments to long options are mandatory for short options too.\n\
++"), stdout);
++      fputs (_("\
++  -i, --initial       do not convert tabs after non blanks\n\
++  -t, --tabs=NUMBER   have tabs NUMBER characters apart, not 8\n\
++"), stdout);
++      fputs (_("\
++  -t, --tabs=LIST     use comma separated list of explicit tab positions\n\
++"), stdout);
++      fputs (HELP_OPTION_DESCRIPTION, stdout);
++      fputs (VERSION_OPTION_DESCRIPTION, stdout);
++      printf (_("\nReport bugs to <%s>.\n"), PACKAGE_BUGREPORT);
++    }
++  exit (status);
++}
++
++/* Add tab stop TABVAL to the end of `tab_list'.  */
++
++static void
++add_tab_stop (uintmax_t tabval)
++{
++  if (first_free_tab == n_tabs_allocated)
++    tab_list = x2nrealloc (tab_list, &n_tabs_allocated, sizeof *tab_list);
++  tab_list[first_free_tab++] = tabval;
++}
++
++/* Add the comma or blank separated list of tab stops STOPS
++   to the list of tab stops.  */
++
++static void
++parse_tab_stops (char const *stops)
++{
++  bool have_tabval = false;
++  uintmax_t tabval IF_LINT (= 0);
++  char const *num_start IF_LINT (= NULL);
++  bool ok = true;
++
++  for (; *stops; stops++)
++    {
++      if (*stops == ',' || ISBLANK (to_uchar (*stops)))
++	{
++	  if (have_tabval)
++	    add_tab_stop (tabval);
++	  have_tabval = false;
++	}
++      else if (ISDIGIT (*stops))
++	{
++	  if (!have_tabval)
++	    {
++	      tabval = 0;
++	      have_tabval = true;
++	      num_start = stops;
++	    }
++	  {
++	    /* Detect overflow.  */
++	    uintmax_t new_t = 10 * tabval + *stops - '0';
++	    if (UINTMAX_MAX / 10 < tabval || new_t < tabval * 10)
++	      {
++		size_t len = strspn (num_start, "0123456789");
++		char *bad_num = xstrndup (num_start, len);
++		error (0, 0, _("tab stop is too large %s"), quote (bad_num));
++		free (bad_num);
++		ok = false;
++		stops = num_start + len - 1;
++	      }
++	    tabval = new_t;
++	  }
++	}
++      else
++	{
++	  error (0, 0, _("tab size contains invalid character(s): %s"),
++		 quote (stops));
++	  ok = false;
++	  break;
++	}
++    }
++
++  if (!ok)
++    exit (EXIT_FAILURE);
++
++  if (have_tabval)
++    add_tab_stop (tabval);
++}
++
++/* Check that the list of tab stops TABS, with ENTRIES entries,
++   contains only nonzero, ascending values.  */
++
++static void
++validate_tab_stops (uintmax_t const *tabs, size_t entries)
++{
++  uintmax_t prev_tab = 0;
++  size_t i;
++
++  for (i = 0; i < entries; i++)
++    {
++      if (tabs[i] == 0)
++	error (EXIT_FAILURE, 0, _("tab size cannot be 0"));
++      if (tabs[i] <= prev_tab)
++	error (EXIT_FAILURE, 0, _("tab sizes must be ascending"));
++      prev_tab = tabs[i];
++    }
++}
++
++/* Close the old stream pointer FP if it is non-NULL,
++   and return a new one opened to read the next input file.
++   Open a filename of `-' as the standard input.
++   Return NULL if there are no more input files.  */
++
++static FILE *
++next_file (FILE *fp)
++{
++  static char *prev_file;
++  char *file;
++
++  if (fp)
++    {
++      if (ferror (fp))
++	{
++	  error (0, errno, "%s", prev_file);
++	  exit_status = EXIT_FAILURE;
++	}
++      if (fp == stdin)
++	clearerr (fp);		/* Also clear EOF.  */
++      else if (fclose (fp) != 0)
++	{
++	  error (0, errno, "%s", prev_file);
++	  exit_status = EXIT_FAILURE;
++	}
++    }
++
++  while ((file = *file_list++) != NULL)
++    {
++      if (file[0] == '-' && file[1] == '\0')
++	{
++	  have_read_stdin = true;
++	  prev_file = file;
++	  return stdin;
++	}
++      fp = fopen (file, "r");
++      if (fp)
++	{
++	  prev_file = file;
++	  return fp;
++	}
++      error (0, errno, "%s", file);
++      exit_status = EXIT_FAILURE;
++    }
++  return NULL;
++}
++
++/* Change tabs to spaces, writing to stdout.
++   Read each file in `file_list', in order.  */
++
++static void
++expand (void)
++{
++  /* Input stream.  */
++  FILE *fp = next_file (NULL);
++
++  if (!fp)
++    return;
++
++  /* Binary I/O will preserve the original EOL style (DOS/Unix) of files.  */
++  SET_BINARY2 (fileno (fp), STDOUT_FILENO);
++
++  for (;;)
++    {
++      /* Input character, or EOF.  */
++      int c;
++
++      /* If true, perform translations.  */
++      bool convert = true;
++
++
++      /* The following variables have valid values only when CONVERT
++	 is true:  */
++
++      /* Column of next input character.  */
++      uintmax_t column = 0;
++
++      /* Index in TAB_LIST of next tab stop to examine.  */
++      size_t tab_index = 0;
++
++
++      /* Convert a line of text.  */
++
++      do
++	{
++	  while ((c = getc (fp)) < 0 && (fp = next_file (fp)))
++	    SET_BINARY2 (fileno (fp), STDOUT_FILENO);
++
++	  if (convert)
++	    {
++	      if (c == '\t')
++		{
++		  /* Column the next input tab stop is on.  */
++		  uintmax_t next_tab_column;
++
++		  if (tab_size)
++		    next_tab_column = column + (tab_size - column % tab_size);
++		  else
++		    for (;;)
++		      if (tab_index == first_free_tab)
++			{
++			  next_tab_column = column + 1;
++			  break;
++			}
++		      else
++			{
++			  uintmax_t tab = tab_list[tab_index++];
++			  if (column < tab)
++			    {
++			      next_tab_column = tab;
++			      break;
++			    }
++			}
++
++		  if (next_tab_column < column)
++		    error (EXIT_FAILURE, 0, _("input line is too long"));
++
++		  while (++column < next_tab_column)
++		    if (putchar (' ') < 0)
++		      error (EXIT_FAILURE, errno, _("write error"));
++
++		  c = ' ';
++		}
++	      else if (c == '\b')
++		{
++		  /* Go back one column, and force recalculation of the
++		     next tab stop.  */
++		  column -= !!column;
++		  tab_index -= !!tab_index;
++		}
++	      else
++		{
++		  if (!ISCNTRL (c))
++		    column++;
++		  if (!column)
++		    error (EXIT_FAILURE, 0, _("input line is too long"));
++		}
++
++	      convert &= convert_entire_line | ISBLANK (c);
++	    }
++
++	  if (c < 0)
++	    return;
++
++	  if (putchar (c) < 0)
++	    error (EXIT_FAILURE, errno, _("write error"));
++	}
++      while (c != '\n');
++    }
++}
++
++#if HAVE_MBRTOWC && HAVE_WCTYPE_H
++static void
++expand_multibyte (void)
++{
++  /* Input stream.  */
++  FILE *fp = next_file (NULL);
++
++  mbstate_t i_state;		/* Current shift state of the input stream. */
++  char buf[MB_LEN_MAX + BUFSIZ];  /* For spooling a read byte sequence. */
++  char *bufpos;			/* Next read position of BUF. */
++  size_t buflen = 0;		/* The length of the byte sequence in buf. */
++
++  if (!fp)
++    return;
++
++  /* Binary I/O will preserve the original EOL style (DOS/Unix) of files.  */
++  SET_BINARY2 (fileno (fp), STDOUT_FILENO);
++
++  for (;;)
++    {
++      /* Input character, or EOF.  */
++      wint_t wc;
++
++      /* If true, perform translations.  */
++      bool convert = true;
++
++
++      /* The following variables have valid values only when CONVERT
++	 is true:  */
++
++      /* Column of next input character.  */
++      uintmax_t column = 0;
++
++      /* Index in TAB_LIST of next tab stop to examine.  */
++      size_t tab_index = 0;
++
++
++      /* Convert a line of text.  */
++
++      do
++	{
++	  wchar_t w;
++	  size_t mblength;	 /* The byte size of a multibyte character
++				    which shows as same character as WC. */
++	  mbstate_t i_state_bak; /* Back up the I_STATE. */
++
++	  /* Fill buffer */
++	  if (buflen < MB_LEN_MAX)
++	    {
++	      if (!feof(fp) && !ferror(fp)) {
++		if (buflen > 0) memmove(buf, bufpos, buflen);
++		buflen += fread(buf + buflen, sizeof(char), BUFSIZ, fp);
++		bufpos = buf;
++	      }
++	    }
++
++	  if (buflen < 1) {
++	    /* Move to the next file */
++	    if (feof(fp) || ferror(fp)) {
++	      fp = next_file(fp);
++	    }
++	    if (!fp)
++	      return;
++	    memset (&i_state, '\0', sizeof (mbstate_t));
++	    SET_BINARY2 (fileno (fp), STDOUT_FILENO);	
++	    continue;
++	  }
++
++	  i_state_bak = i_state;
++	  mblength = mbrtowc (&w, bufpos, buflen, &i_state);
++	  wc = w;
++
++	  if (mblength == (size_t) -1 || mblength == (size_t) -2) {
++	    i_state = i_state_bak;
++	    wc = L'\0';
++	    column += convert;
++	    mblength = 1;
++	  }
++
++	  if (convert)
++	    {
++	      if (wc == L'\t')
++		{
++		  /* Column the next input tab stop is on.  */
++		  uintmax_t next_tab_column;
++
++		  if (tab_size)
++		    next_tab_column = column + (tab_size - column % tab_size);
++		  else
++		    for (;;)
++		      if (tab_index == first_free_tab)
++			{
++			  next_tab_column = column + 1;
++			  break;
++			}
++		      else
++			{
++			  uintmax_t tab = tab_list[tab_index++];
++			  if (column < tab)
++			    {
++			      next_tab_column = tab;
++			      break;
++			    }
++			}
++
++		  if (next_tab_column < column)
++		    error (EXIT_FAILURE, 0, _("input line is too long"));
++
++		  while (++column < next_tab_column)
++		    if (putchar (' ') < 0)
++		      error (EXIT_FAILURE, errno, _("write error"));
++
++		  *bufpos = ' ';
++		}
++	      else if (wc == L'\b')
++		{
++		  /* Go back one column, and force recalculation of the
++		     next tab stop.  */
++		  column -= !!column;
++		  tab_index -= !!tab_index;
++		}
++	      else
++		{
++		  if (!iswcntrl (wc))
++		    {
++		      int width = wcwidth (wc);
++		      if (width > 0) {
++			if (column > (column + width))
++			  error (EXIT_FAILURE, 0, _("input line is too long"));
++			column += width;
++		      }
++		}
++
++	      convert &= convert_entire_line | iswblank (wc);
++	    }
++
++	  if (mblength)
++	    {
++	      if (fwrite (bufpos, sizeof(char), mblength, stdout) < mblength)
++		error (EXIT_FAILURE, errno, _("write error"));
++	    }
++	  else
++	    {
++	      if (putchar('\0'))
++		error (EXIT_FAILURE, errno, _("write error"));
++	      mblength = 1;
++	    }
++
++	  buflen -= mblength;
++	  bufpos += mblength;
++	}
++      while (wc != L'\n');
++    }
++}
++#endif
++
++int
++main (int argc, char **argv)
++{
++  bool have_tabval = false;
++  uintmax_t tabval IF_LINT (= 0);
++  int c;
++
++  bool obsolete_tablist = false;
++
++  initialize_main (&argc, &argv);
++  program_name = argv[0];
++  setlocale (LC_ALL, "");
++  bindtextdomain (PACKAGE, LOCALEDIR);
++  textdomain (PACKAGE);
++
++  atexit (close_stdout);
++
++  have_read_stdin = false;
++  exit_status = EXIT_SUCCESS;
++  convert_entire_line = true;
++  tab_list = NULL;
++  first_free_tab = 0;
++
++  while ((c = getopt_long (argc, argv, "it:,0123456789", longopts, NULL))
++	 != -1)
++    {
++      switch (c)
++	{
++	case '?':
++	  usage (EXIT_FAILURE);
++	case 'i':
++	  convert_entire_line = false;
++	  break;
++	case 't':
++	  parse_tab_stops (optarg);
++	  break;
++	case ',':
++	  if (have_tabval)
++	    add_tab_stop (tabval);
++	  have_tabval = false;
++	  obsolete_tablist = true;
++	  break;
++	case_GETOPT_HELP_CHAR;
++	case_GETOPT_VERSION_CHAR (PROGRAM_NAME, AUTHORS);
++	default:
++	  if (!have_tabval)
++	    {
++	      tabval = 0;
++	      have_tabval = true;
++	    }
++	  tabval = tabval * 10 + c - '0';
++	  obsolete_tablist = true;
++	  break;
++	}
++    }
++
++  if (obsolete_tablist && 200112 <= posix2_version ())
++    {
++      error (0, 0, _("`-LIST' option is obsolete; use `-t LIST'"));
++      usage (EXIT_FAILURE);
++    }
++
++  if (have_tabval)
++    add_tab_stop (tabval);
++
++  validate_tab_stops (tab_list, first_free_tab);
++
++  if (first_free_tab == 0)
++    tab_size = 8;
++  else if (first_free_tab == 1)
++    tab_size = tab_list[0];
++  else
++    tab_size = 0;
++
++  file_list = (optind < argc ? &argv[optind] : stdin_argv);
++
++#if HAVE_MBRTOWC
++  if (MB_CUR_MAX > 1)
++    expand_multibyte ();
++  else
++#endif
++    expand ();
++
++  if (have_read_stdin && fclose (stdin) != 0)
++    error (EXIT_FAILURE, errno, "-");
++
++  exit (exit_status);
++}
+diff -uprN coreutils-5.3.0.orig/src/fold.c coreutils-5.3.0/src/fold.c
+--- coreutils-5.3.0.orig/src/fold.c	2004-09-22 21:41:19.000000000 +0900
++++ coreutils-5.3.0/src/fold.c	2005-07-01 19:10:53.266704336 +0900
+@@ -23,6 +23,19 @@
+ #include <getopt.h>
+ #include <sys/types.h>
+ 
++/* Get MB_CUR_MAX.  */
++#include <stdlib.h>
++
++/* Get mbrtowc, mbstate_t, wcwidth(). */
++#if HAVE_WCHAR_H
++# include <wchar.h>
++#endif
++
++/* Get iswprint(), iswctype(), wctype(). */
++#if HAVE_WCTYPE_H
++# include <wctype.h>
++#endif
++
+ #include "system.h"
+ #include "error.h"
+ #include "posixver.h"
+@@ -30,14 +43,57 @@
+ 
+ #define TAB_WIDTH 8
+ 
++/* MB_LEN_MAX is incorrectly defined to be 1 in at least one GCC
++   installation; work around this configuration error. */
++#if !defined MB_LEN_MAX || MB_LEN_MAX < 2
++# undef MB_LEN_MAX
++# define MB_LEN_MAX 16
++#endif
++
++#ifndef HAVE_DECL_WCWIDTH
++"this configure-time declaration test was not run"
++#endif
++#if !HAVE_DECL_WCWIDTH
++extern int wcwidth ();
++#endif
++
++/* If wcwidth() doesn't exist, assume all printable characters have
++   width 1.  */
++#if !defined wcwidth && !HAVE_WCWIDTH
++# define wcwidth(wc) ((wc) == 0 ? 0 : iswprint (wc) ? 1 : -1)
++#endif
++
+ /* The official name of this program (e.g., no `g' prefix).  */
+ #define PROGRAM_NAME "fold"
+ 
+ #define AUTHORS "David MacKenzie"
+ 
++#define FATAL_ERROR(Message)	\
++do				\
++{				\
++  error (0, 0, (Message));	\
++    usage (2);			\
++}				\
++while (0)
++
++enum operating_mode
++{
++  /* Fold texts by columns that are at the given positions. */
++  column_mode,
++
++  /* Fold texts by bytes that are at the given positions. */
++  byte_mode,
++
++  /* Fold texts by characters that are at the given positions. */
++  character_mode,
++};
++
+ /* The name this program was run with. */
+ char *program_name;
+ 
++/* The argument shows current mode. (Default: column_mode) */
++static enum operating_mode operating_mode;
++
+ /* If nonzero, try to break on whitespace. */
+ static bool break_spaces;
+ 
+@@ -47,9 +103,15 @@ static bool count_bytes;
+ /* If nonzero, at least one of the files we read was standard input. */
+ static bool have_read_stdin;
+ 
++/* wide character class `blank' */
++#if HAVE_MBRTOWC
++wctype_t blank_type;
++#endif
++
+ static struct option const longopts[] =
+ {
+   {"bytes", no_argument, NULL, 'b'},
++  {"characters", no_argument, NULL, 'c'},
+   {"spaces", no_argument, NULL, 's'},
+   {"width", required_argument, NULL, 'w'},
+   {GETOPT_HELP_OPTION_DECL},
+@@ -79,6 +141,7 @@ Mandatory arguments to long options are 
+ "), stdout);
+       fputs (_("\
+   -b, --bytes         count bytes rather than columns\n\
++  -c, --characters    count characters rather than columns\n\
+   -s, --spaces        break at spaces\n\
+   -w, --width=WIDTH   use WIDTH columns instead of 80\n\
+ "), stdout);
+@@ -96,7 +159,7 @@ Mandatory arguments to long options are 
+ static size_t
+ adjust_column (size_t column, char c)
+ {
+-  if (!count_bytes)
++  if (operating_mode != byte_mode)
+     {
+       if (c == '\b')
+ 	{
+@@ -115,14 +178,9 @@ adjust_column (size_t column, char c)
+   return column;
+ }
+ 
+-/* Fold file FILENAME, or standard input if FILENAME is "-",
+-   to stdout, with maximum line length WIDTH.
+-   Return true if successful.  */
+-
+-static bool
+-fold_file (char *filename, size_t width)
++static int
++fold_text (FILE *istream, int width)
+ {
+-  FILE *istream;
+   register int c;
+   size_t column = 0;		/* Screen column where next char will go. */
+   size_t offset_out = 0;	/* Index in `line_out' for next char. */
+@@ -130,20 +188,6 @@ fold_file (char *filename, size_t width)
+   static size_t allocated_out = 0;
+   int saved_errno;
+ 
+-  if (STREQ (filename, "-"))
+-    {
+-      istream = stdin;
+-      have_read_stdin = true;
+-    }
+-  else
+-    istream = fopen (filename, "r");
+-
+-  if (istream == NULL)
+-    {
+-      error (0, errno, "%s", filename);
+-      return false;
+-    }
+-
+   while ((c = getc (istream)) != EOF)
+     {
+       if (offset_out + 1 >= allocated_out)
+@@ -221,6 +265,233 @@ fold_file (char *filename, size_t width)
+   if (offset_out)
+     fwrite (line_out, sizeof (char), (size_t) offset_out, stdout);
+ 
++  return saved_errno;
++}
++
++#if HAVE_MBRTOWC
++static void
++fold_multibyte_text (FILE *istream, int width)
++{
++  int i;
++  char buf[MB_LEN_MAX + BUFSIZ];    /* For spooling a read byte sequence. */
++  size_t buflen;	/* The length of the byte sequence in buf. */
++  char *bufpos;		/* Next read position of BUF. */
++  wint_t wc;		/* A gotten wide character. */
++  wchar_t tmp;
++  size_t mblength;	/* The byte size of a multibyte character which shows
++			   as same character as WC. */
++  mbstate_t state, state_bak;	/* State of the stream. */
++  int convfail;		/* 1, when conversion is failed. Otherwise 0. */
++
++  char *line_out = NULL;
++  size_t offset_out = 0;	/* Index in `line_out' for next char. */
++  size_t allocated_out = 1024;
++
++  int increment;
++  size_t column = 0;
++
++  size_t last_blank_pos;
++  size_t last_blank_column;
++  int is_blank_seen;
++  int last_blank_increment;
++  int is_bs_following_last_blank;
++  size_t bs_following_last_blank_num;
++  int is_cr_after_last_blank;
++
++
++#define CLEAR_FLAGS				\
++  do						\
++    {						\
++      last_blank_pos = 0;			\
++      last_blank_column = 0;			\
++      is_blank_seen = 0;			\
++      is_bs_following_last_blank = 0;		\
++      bs_following_last_blank_num = 0;		\
++      is_cr_after_last_blank = 0;		\
++    }						\
++  while (0)
++
++#define START_NEW_LINE			\
++  do					\
++    {					\
++      putchar ('\n');			\
++      column = 0;			\
++      offset_out = 0;			\
++      CLEAR_FLAGS;			\
++    }					\
++  while (0)
++
++  CLEAR_FLAGS;
++
++  memset (&state, '\0', sizeof(mbstate_t));
++  line_out = xmalloc (allocated_out);
++
++  buflen = fread (buf, sizeof(char), BUFSIZ, istream);
++  bufpos = buf;
++
++  for (;; bufpos += mblength, buflen -= mblength)
++    {
++      if (buflen < MB_LEN_MAX && !feof (istream) && !ferror (istream))
++	{
++	  memmove (buf, bufpos, buflen);
++	  buflen += fread (buf + buflen, sizeof(char), BUFSIZ, istream);
++	  bufpos = buf;
++	}
++
++      if (buflen < 1)
++	break;
++
++      /* Get a wide character. */
++      convfail = 0;
++      state_bak = state;
++      mblength = mbrtowc (&tmp, bufpos, buflen, &state);
++      wc = tmp;
++
++      switch (mblength)
++	{
++	case (size_t)-1:
++	case (size_t)-2:
++	  convfail++;
++	  state = state_bak;
++	    /* Fall through. */
++
++	case 0:
++	  mblength = 1;
++	  break;
++	}
++
++      if (!convfail && wc == L'\n')
++	{
++	  if (offset_out > 0)
++	    {
++	      fwrite (line_out, sizeof(char), offset_out, stdout);
++	      START_NEW_LINE;
++	    }
++	  continue;
++	}
++
++rescan:
++      if (operating_mode == byte_mode)		/* byte mode */
++	increment = mblength;
++      else if (operating_mode == character_mode)	/* character mode */
++	increment = 1;
++      else						/* column mode */
++	{
++	  if (convfail)
++	    increment = 1;
++	  else
++	    {
++	      switch (wc)
++		{
++		case L'\b':
++		  increment = (column > 0) ? -1 : 0;
++		  break;
++
++		case L'\r':
++		  increment = -1 * column;
++		  break;
++
++		case L'\t':
++		  increment = 8 - column % 8;
++		  break;
++
++		default:
++		  increment = wcwidth (wc);
++		  increment = (increment < 0) ? 0 : increment;
++		}
++	    }
++	}
++
++      if (column + increment > width && break_spaces && last_blank_pos)
++	{
++	  fwrite (line_out, sizeof(char), last_blank_pos, stdout);
++	  putchar ('\n');
++
++	  offset_out = offset_out - last_blank_pos;
++	  column = column - last_blank_column + ((is_cr_after_last_blank)
++	      ? last_blank_increment : bs_following_last_blank_num);
++	  memmove (line_out, line_out + last_blank_pos, offset_out);
++	  CLEAR_FLAGS;
++	  goto rescan;
++	}
++
++      if (column + increment > width && column != 0)
++	{
++	  fwrite (line_out, sizeof(char), offset_out, stdout);
++	  START_NEW_LINE;
++	  goto rescan;
++	}
++
++      if (allocated_out < offset_out + mblength)
++	line_out = x2nrealloc (line_out, &allocated_out, sizeof *line_out);
++
++      for  (i = 0; i < mblength; i++)
++	{
++	  *(line_out + offset_out) = *(bufpos + i);
++	  ++offset_out;
++	}
++
++      column += increment;
++
++      if (is_blank_seen && !convfail && wc == L'\r')
++	is_cr_after_last_blank = 1;
++
++      if (is_bs_following_last_blank && !convfail && wc == L'\b')
++	++bs_following_last_blank_num;
++      else
++	is_bs_following_last_blank = 0;
++
++      if (break_spaces && !convfail && iswctype (wc, blank_type))
++	{
++	  last_blank_pos = offset_out;
++	  last_blank_column = column;
++	  is_blank_seen = 1;
++	  last_blank_increment = increment;
++	  is_bs_following_last_blank = 1;
++	  bs_following_last_blank_num = 0;
++	  is_cr_after_last_blank = 0;
++	}
++    }
++
++  if (offset_out)
++    fwrite (line_out, sizeof (char), (size_t) offset_out, stdout);
++
++  free(line_out);
++}
++#endif
++
++/* Fold file FILENAME, or standard input if FILENAME is "-",
++   to stdout, with maximum line length WIDTH.
++   Return true if successful.  */
++
++static bool
++fold_file (char *filename, int width)
++{
++  FILE *istream;
++  int saved_errno;
++
++  if (STREQ (filename, "-"))
++    {
++      istream = stdin;
++      have_read_stdin = true;
++    }
++  else
++    istream = fopen (filename, "r");
++
++  if (istream == NULL)
++    {
++      error (0, errno, "%s", filename);
++      return false;
++    }
++
++  /* Define how ISTREAM is being folded. */
++#if HAVE_MBRTOWC
++  if (MB_CUR_MAX > 1)
++    fold_multibyte_text (istream, width);
++  else
++#endif
++  saved_errno =  fold_text (istream, width);
++
+   if (ferror (istream))
+     {
+       error (0, saved_errno, "%s", filename);
+@@ -253,6 +524,10 @@ main (int argc, char **argv)
+ 
+   atexit (close_stdout);
+ 
++#if HAVE_MBRTOWC
++  blank_type = wctype ("blank");
++#endif
++  operating_mode = column_mode;
+   break_spaces = count_bytes = have_read_stdin = false;
+ 
+   /* Turn any numeric options into -w options.  */
+@@ -280,12 +555,23 @@ main (int argc, char **argv)
+ 	}
+     }
+ 
+-  while ((optc = getopt_long (argc, argv, "bsw:", longopts, NULL)) != -1)
++  while ((optc = getopt_long (argc, argv, "bcsw:", longopts, NULL)) != -1)
+     {
+       switch (optc)
+ 	{
++	case 0:
++	  break;
++
+ 	case 'b':		/* Count bytes rather than columns. */
+-	  count_bytes = true;
++	  if (operating_mode != column_mode)
++	    FATAL_ERROR (_("only one way of folding may be specified"));
++	  operating_mode = byte_mode;
++	  break;
++
++	case 'c':               /* Count characters rather than columns. */
++	  if (operating_mode != column_mode)
++	    FATAL_ERROR (_("only one way of folding may be specified"));
++	  operating_mode = character_mode;
+ 	  break;
+ 
+ 	case 's':		/* Break at word boundaries. */
+diff -uprN coreutils-5.3.0.orig/src/join.c coreutils-5.3.0/src/join.c
+--- coreutils-5.3.0.orig/src/join.c	2004-12-09 16:57:23.000000000 +0900
++++ coreutils-5.3.0/src/join.c	2005-07-01 19:10:53.268704032 +0900
+@@ -24,6 +24,16 @@
+ #include <sys/types.h>
+ #include <getopt.h>
+ 
++/* Get mbstate_t, mbrtowc, mbrtowc, wcwidth.  */
++#if HAVE_WCHAR_H
++# include <wchar.h>
++#endif
++
++/* Get iswblank, towupper.  */
++#if HAVE_WCTYPE_H
++# include <wctype.h>
++#endif
++
+ #include "system.h"
+ #include "error.h"
+ #include "hard-locale.h"
+@@ -34,6 +44,11 @@
+ #include "xmemcoll.h"
+ #include "xstrtol.h"
+ 
++/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
++#if HAVE_MBRTOWC && defined mbstate_t
++# define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
++#endif
++
+ /* The official name of this program (e.g., no `g' prefix).  */
+ #define PROGRAM_NAME "join"
+ 
+@@ -110,7 +125,10 @@ static struct outlist *outlist_end = &ou
+ /* Tab character separating fields; if this is NUL fields are separated
+    by any nonempty string of white space, otherwise by exactly one
+    tab character.  */
+-static char tab;
++static char *tab = NULL;
++
++/* The number of bytes used for tab. */
++static size_t tablen = 0;
+ 
+ /* When using getopt_long_only, no long option can start with
+    a character that is a short option.  */
+@@ -233,7 +251,7 @@ xfields (struct line *line)
+ 
+   if (tab)
+     {
+-      unsigned char t = tab;
++      unsigned char t = tab[0];
+       char *sep;
+       for (; (sep = memchr (ptr, t, lim - ptr)) != NULL; ptr = sep + 1)
+ 	extract_field (line, ptr, sep - ptr);
+@@ -262,6 +280,133 @@ xfields (struct line *line)
+   extract_field (line, ptr, lim - ptr);
+ }
+ 
++#if HAVE_MBRTOWC
++static void
++xfields_multibyte (struct line *line)
++{
++  int i;
++  char *ptr0 = line->buf.buffer;
++  char *ptr;
++  char *lim;
++  wchar_t wc = 0;
++  size_t mblength;
++  mbstate_t state, state_bak;
++
++  memset (&state, 0, sizeof (mbstate_t));
++
++  ptr = ptr0;
++  lim = ptr0 + line->buf.length - 1;
++
++  if (tab == NULL)
++    {
++      /* Skip leading blanks before the first field.  */
++      while (ptr < lim)
++	{
++	  state_bak = state;
++	  mblength = mbrtowc (&wc, ptr, lim - ptr + 1, &state);
++
++	  if (mblength == (size_t) -1 || mblength == (size_t) -2)
++	    {
++	      mblength = 1;
++	      state = state_bak;
++	      break;
++	    }
++	  mblength = (mblength < 1) ? 1 : mblength;
++
++	  if (!iswblank (wc))
++	    break;
++	  ptr += mblength;
++	}
++    }
++
++  for (i = 0; ptr < lim; ++i)
++    {
++      if (tab != NULL)
++	{
++	  char *beg = ptr;
++	  while (ptr < lim)
++	    {
++	      state_bak = state;
++	      mblength = mbrtowc (&wc, ptr, lim - ptr + 1, &state);
++
++	      if (mblength == (size_t) -1 || mblength == (size_t) -2)
++		{
++		  mblength = 1;
++		  state = state_bak;
++		}
++	      mblength = (mblength < 1) ? 1 : mblength;
++
++	      if (mblength == tablen && !memcmp (ptr, tab, mblength))
++		break;
++	      else
++		{
++		  ptr += mblength;
++		  continue;
++		}
++	    }
++
++	  extract_field (line, beg, ptr - beg);
++	  if (ptr < lim)
++	    ptr += mblength;
++	}
++      else
++	{
++	  char *beg = ptr;
++	  while (ptr < lim)
++	    {
++	      state_bak = state;
++	      mblength = mbrtowc (&wc, ptr, lim - ptr + 1, &state);
++
++	      if (mblength == (size_t) -1 || mblength == (size_t) -2)
++		{
++		  mblength = 1;
++		  state = state_bak;
++		}
++	      mblength = (mblength < 1) ? 1 : mblength;
++
++	      if (iswblank (wc))
++		break;
++	      else
++		{
++		  ptr += mblength;
++		  continue;
++		}
++	    }
++
++	  extract_field (line, beg, ptr - beg);
++	  if (ptr < lim)
++	    ptr += mblength;
++	}
++    }
++
++  if (ptr != ptr0)
++    {
++      mblength = mbrtowc (&wc, ptr - mblength, mblength, &state);
++      wc = (mbsinit (&state) && *(ptr - mblength) == '\0') ? L'\0' : wc;
++      if (tab != NULL)
++	{
++	  if (mblength == (size_t) -1 || mblength == (size_t) -2)
++	    mblength = 1;
++
++	  if (mblength == tablen && !memcmp (ptr - mblength, tab, mblength))
++	    /* Add one more (empty) field because the last character of
++	       the line was a delimiter.  */
++	    extract_field (line, NULL, 0);
++	}
++      else
++	{
++	  if (mblength != (size_t) -1 && mblength != (size_t) -2)
++	    {
++	      if (iswblank (wc))
++		/* Add one more (empty) field because the last character of
++		   the line was a delimiter.  */
++		extract_field (line, NULL, 0);
++	    }
++	}
++    }
++}
++#endif
++
+ /* Read a line from FP into LINE and split it into fields.
+    Return true if successful.  */
+ 
+@@ -282,7 +427,13 @@ get_line (FILE *fp, struct line *line)
+   line->nfields_allocated = 0;
+   line->nfields = 0;
+   line->fields = NULL;
+-  xfields (line);
++
++#if HAVE_MBRTOWC
++  if (MB_CUR_MAX > 1)
++    xfields_multibyte (line);
++  else
++#endif
++    xfields (line);
+   return true;
+ }
+ 
+@@ -336,56 +487,115 @@ static int
+ keycmp (struct line const *line1, struct line const *line2)
+ {
+   /* Start of field to compare in each file.  */
+-  char *beg1;
+-  char *beg2;
+-
+-  size_t len1;
+-  size_t len2;		/* Length of fields to compare.  */
++  char *beg[2];
++  char *copy[2];
++  size_t len[2];           /* Length of fields to compare.  */
+   int diff;
++  int i, j;
+ 
+   if (join_field_1 < line1->nfields)
+     {
+-      beg1 = line1->fields[join_field_1].beg;
+-      len1 = line1->fields[join_field_1].len;
++      beg[0] = line1->fields[join_field_1].beg;
++      len[0] = line1->fields[join_field_1].len;
+     }
+   else
+     {
+-      beg1 = NULL;
+-      len1 = 0;
++      beg[0] = NULL;
++      len[0] = 0;
+     }
+ 
+   if (join_field_2 < line2->nfields)
+     {
+-      beg2 = line2->fields[join_field_2].beg;
+-      len2 = line2->fields[join_field_2].len;
++      beg[1] = line2->fields[join_field_2].beg;
++      len[1] = line2->fields[join_field_2].len;
+     }
+   else
+     {
+-      beg2 = NULL;
+-      len2 = 0;
++      beg[1] = NULL;
++      len[1] = 0;
+     }
+ 
+-  if (len1 == 0)
+-    return len2 == 0 ? 0 : -1;
+-  if (len2 == 0)
++  if (len[0] == 0)
++    return len[1] == 0 ? 0 : -1;
++  if (len[1] == 0)
+     return 1;
+ 
+   if (ignore_case)
+     {
+-      /* FIXME: ignore_case does not work with NLS (in particular,
+-         with multibyte chars).  */
+-      diff = memcasecmp (beg1, beg2, MIN (len1, len2));
++#ifdef HAVE_MBRTOWC
++      if (MB_CUR_MAX > 1)
++	{
++	  size_t mblength;
++	  wchar_t wc, uwc;
++	  mbstate_t state, state_bak;
++
++	  memset (&state, '\0', sizeof (mbstate_t));
++
++	  for (i = 0; i < 2; i++)
++	    {
++	      copy[i] = alloca (len[i] + 1);
++
++	      for (j = 0; j < MIN (len[0], len[1]);)
++		{
++		  state_bak = state;
++		  mblength = mbrtowc (&wc, beg[i] + j, len[i] - j, &state);
++
++		  switch (mblength)
++		    {
++		    case (size_t) -1:
++		    case (size_t) -2:
++		      state = state_bak;
++		      /* Fall through */
++		    case 0:
++		      mblength = 1;
++		      break;
++
++		    default:
++		      uwc = towupper (wc);
++
++		      if (uwc != wc)
++			{
++			  mbstate_t state_wc;
++
++			  memset (&state_wc, '\0', sizeof (mbstate_t));
++			  wcrtomb (copy[i] + j, uwc, &state_wc);
++			}
++		      else
++			memcpy (copy[i] + j, beg[i] + j, mblength);
++		    }
++		  j += mblength;
++		}
++	      copy[i][j] = '\0';
++	    }
++	  return xmemcoll (copy[0], len[0], copy[1], len[1]);
++	}
++#endif
++      if (hard_LC_COLLATE)
++	{
++	  for (i = 0; i < 2; i++)
++	    {
++	      copy[i] = alloca (len[i] + 1);
++
++	      for (j = 0; j < MIN (len[0], len[1]); j++)
++		copy[i][j] = toupper (beg[i][j]);
++
++	      copy[i][j] = '\0';
++	    }
++	  return xmemcoll (copy[0], len[0], copy[1], len[1]);
++	}
++      else
++	diff = memcasecmp (beg[0], beg[1], MIN (len[0], len[1]));
+     }
+   else
+     {
+       if (hard_LC_COLLATE)
+-	return xmemcoll (beg1, len1, beg2, len2);
+-      diff = memcmp (beg1, beg2, MIN (len1, len2));
++	return xmemcoll (beg[0], len[0], beg[1], len[1]);
++      diff = memcmp (beg[0], beg[1], MIN (len[0], len[1]));
+     }
+ 
+   if (diff)
+     return diff;
+-  return len1 < len2 ? -1 : len1 != len2;
++  return len[0] < len[1] ? -1 : len[0] != len[1];
+ }
+ 
+ /* Print field N of LINE if it exists and is nonempty, otherwise
+@@ -414,7 +624,8 @@ static void
+ prjoin (struct line const *line1, struct line const *line2)
+ {
+   const struct outlist *outlist;
+-  char output_separator = tab ? tab : ' ';
++  char *output_separator = tab ? tab : " ";
++  size_t output_separator_len = tab ? tablen : 1;
+ 
+   outlist = outlist_head.next;
+   if (outlist)
+@@ -449,7 +660,7 @@ prjoin (struct line const *line1, struct
+ 	  o = o->next;
+ 	  if (o == NULL)
+ 	    break;
+-	  putchar (output_separator);
++	  fwrite (output_separator, 1, output_separator_len, stdout);
+ 	}
+       putchar ('\n');
+     }
+@@ -467,23 +678,23 @@ prjoin (struct line const *line1, struct
+       prfield (join_field_1, line1);
+       for (i = 0; i < join_field_1 && i < line1->nfields; ++i)
+ 	{
+-	  putchar (output_separator);
++	  fwrite (output_separator, 1, output_separator_len, stdout);
+ 	  prfield (i, line1);
+ 	}
+       for (i = join_field_1 + 1; i < line1->nfields; ++i)
+ 	{
+-	  putchar (output_separator);
++	  fwrite (output_separator, 1, output_separator_len, stdout);
+ 	  prfield (i, line1);
+ 	}
+ 
+       for (i = 0; i < join_field_2 && i < line2->nfields; ++i)
+ 	{
+-	  putchar (output_separator);
++	  fwrite (output_separator, 1, output_separator_len, stdout);
+ 	  prfield (i, line2);
+ 	}
+       for (i = join_field_2 + 1; i < line2->nfields; ++i)
+ 	{
+-	  putchar (output_separator);
++	  fwrite (output_separator, 1, output_separator_len, stdout);
+ 	  prfield (i, line2);
+ 	}
+       putchar ('\n');
+@@ -814,7 +1025,21 @@ main (int argc, char **argv)
+ 	  break;
+ 
+ 	case 't':
+-	  tab = *optarg;
++	  tab = xstrdup (optarg);
++#if HAVE_MBRTOWC
++	  if (MB_CUR_MAX > 1)
++	    {
++	      mbstate_t state;
++
++	      memset (&state, 0, sizeof (mbstate_t));
++	      tablen = mbrtowc (NULL, optarg, strlen (optarg), &state);
++	      if (tablen == (size_t) 0
++		  || tablen == (size_t) -1 || tablen == (size_t) -2)
++		tablen = 1;
++	    }
++	  else
++#endif
++	    tablen = 1;
+ 	  break;
+ 
+ 	case 1:		/* Non-option argument.  */
+diff -uprN coreutils-5.3.0.orig/src/pr.c coreutils-5.3.0/src/pr.c
+--- coreutils-5.3.0.orig/src/pr.c	2005-01-08 20:58:47.000000000 +0900
++++ coreutils-5.3.0/src/pr.c	2005-07-01 19:10:53.271703576 +0900
+@@ -314,6 +314,32 @@
  #include <stdio.h>
  #include <getopt.h>
  #include <sys/types.h>
@@ -658,7 +2352,8 @@
 +
  #include "system.h"
  #include "error.h"
- #include "mbswidth.h"
+ #include "hard-locale.h"
+@@ -321,6 +347,18 @@
  #include "posixver.h"
  #include "xstrtol.h"
  
@@ -674,32 +2369,33 @@
 +extern int wcwidth ();
 +#endif
 +
- /* The official name of this program (e.g., no `g' prefix).  */
- #define PROGRAM_NAME "pr"
- 
-@@ -412,7 +450,20 @@
+ #if ! (HAVE_DECL_STRTOUMAX || defined strtoumax)
+ uintmax_t strtoumax ();
+ #endif
+@@ -416,8 +454,21 @@ struct COLUMN
+ typedef struct COLUMN COLUMN;
  
  #define NULLCOL (COLUMN *)0
- 
--static int char_to_clump (int c);
++ 
 +/* Funtion pointers to switch functions for single byte locale or for
 +   multibyte locale. If multibyte functions do not exist in your sysytem,
 +   these pointers always point the function for single byte locale. */
-+static void (*print_char) (int c);
-+static int (*char_to_clump) (int c);
++static void (*print_char) (char c);
++static int (*char_to_clump) (char c);
 +
 +/* Functions for single byte locale. */
-+static void print_char_single (int c);
-+static int char_to_clump_single (int c);
++static void print_char_single (char c);
++static int char_to_clump_single (char c);
 +
 +/* Functions for multibyte locale. */
-+static void print_char_multi (int c);
-+static int char_to_clump_multi (int c);
-+
- static int read_line (COLUMN *p);
- static int print_page (void);
- static int print_stored (COLUMN *p);
-@@ -422,6 +473,7 @@
++static void print_char_multi (char c);
++static int char_to_clump_multi (char c);
+ 
+-static int char_to_clump (char c);
+ static bool read_line (COLUMN *p);
+ static bool print_page (void);
+ static bool print_stored (COLUMN *p);
+@@ -427,6 +478,7 @@ static void print_header (void);
  static void pad_across_to (int position);
  static void add_line_number (COLUMN *p);
  static void getoptarg (char *arg, char switch_char, char *character,
@@ -707,15 +2403,15 @@
  		       int *number);
  void usage (int status);
  static void print_files (int number_of_files, char **av);
-@@ -436,7 +488,6 @@
+@@ -441,7 +493,6 @@ static void store_char (char c);
  static void pad_down (int lines);
  static void read_rest_of_line (COLUMN *p);
  static void skip_read (COLUMN *p, int column_number);
--static void print_char (int c);
+-static void print_char (char c);
  static void cleanup (void);
- static void first_last_page (char *pages);
  static void print_sep_string (void);
-@@ -452,7 +503,7 @@
+ static void separator_string (const char *optarg_S);
+@@ -456,7 +507,7 @@ static COLUMN *column_vector;
     we store the leftmost columns contiguously in buff.
     To print a line from buff, get the index of the first character
     from line_vector[i], and print up to line_vector[i + 1]. */
@@ -724,8 +2420,8 @@
  
  /* Index of the position in buff where the next character
     will be stored. */
-@@ -556,7 +607,7 @@
- static int untabify_input = FALSE;
+@@ -560,7 +611,7 @@ static int chars_per_column;
+ static bool untabify_input = false;
  
  /* (-e) The input tab character. */
 -static char input_tab_char = '\t';
@@ -733,8 +2429,8 @@
  
  /* (-e) Tabstops are at chars_per_tab, 2*chars_per_tab, 3*chars_per_tab, ...
     where the leftmost column is 1. */
-@@ -566,7 +617,10 @@
- static int tabify_output = FALSE;
+@@ -570,7 +621,10 @@ static int chars_per_input_tab = 8;
+ static bool tabify_output = false;
  
  /* (-i) The output tab character. */
 -static char output_tab_char = '\t';
@@ -745,8 +2441,8 @@
  
  /* (-i) The width of the output tab. */
  static int chars_per_output_tab = 8;
-@@ -640,7 +694,13 @@
- static int numbered_lines = FALSE;
+@@ -644,7 +698,13 @@ static int power_10;
+ static bool numbered_lines = false;
  
  /* (-n) Character which follows each line number. */
 -static char number_separator = '\t';
@@ -760,7 +2456,7 @@
  
  /* (-n) line counting starts with 1st line of input file (not with 1st
     line of 1st page printed). */
-@@ -693,6 +753,7 @@
+@@ -697,6 +757,7 @@ static bool use_col_separator = false;
     -a|COLUMN|-m is a `space' and with the -J option a `tab'. */
  static char *col_sep_string = "";
  static int col_sep_length = 0;
@@ -768,7 +2464,7 @@
  static char *column_separator = " ";
  static char *line_separator = "\t";
  
-@@ -842,6 +903,13 @@
+@@ -840,6 +901,13 @@ separator_string (const char *optarg_S)
    col_sep_length = (int) strlen (optarg_S);
    col_sep_string = xmalloc (col_sep_length + 1);
    strcpy (col_sep_string, optarg_S);
@@ -782,7 +2478,7 @@
  }
  
  int
-@@ -866,6 +934,21 @@
+@@ -864,6 +932,21 @@ main (int argc, char **argv)
  
    atexit (close_stdout);
  
@@ -804,7 +2500,7 @@
    n_files = 0;
    file_names = (argc > 1
  		? xmalloc ((argc - 1) * sizeof (char *))
-@@ -943,8 +1026,12 @@
+@@ -938,8 +1021,12 @@ main (int argc, char **argv)
  	  break;
  	case 'e':
  	  if (optarg)
@@ -817,9 +2513,9 @@
 +			 &dummy_width, &chars_per_input_tab);
 +	    }
  	  /* Could check tab width > 0. */
- 	  untabify_input = TRUE;
+ 	  untabify_input = true;
  	  break;
-@@ -957,8 +1044,12 @@
+@@ -952,8 +1039,12 @@ main (int argc, char **argv)
  	  break;
  	case 'i':
  	  if (optarg)
@@ -832,11 +2528,11 @@
 +			 &dummy_width, &chars_per_output_tab);
 +	    }
  	  /* Could check tab width > 0. */
- 	  tabify_output = TRUE;
+ 	  tabify_output = true;
  	  break;
-@@ -985,8 +1076,8 @@
+@@ -980,8 +1071,8 @@ main (int argc, char **argv)
  	case 'n':
- 	  numbered_lines = TRUE;
+ 	  numbered_lines = true;
  	  if (optarg)
 -	    getoptarg (optarg, 'n', &number_separator,
 -		       &chars_per_number);
@@ -844,17 +2540,17 @@
 +		       &number_separator_width, &chars_per_number);
  	  break;
  	case 'N':
- 	  skip_count = FALSE;
-@@ -1025,7 +1116,7 @@
- 	  old_s = FALSE;
+ 	  skip_count = false;
+@@ -1020,7 +1111,7 @@ main (int argc, char **argv)
+ 	  old_s = false;
  	  /* Reset an additional input of -s, -S dominates -s */
  	  col_sep_string = "";
 -	  col_sep_length = 0;
 +	  col_sep_length = col_sep_width = 0;
- 	  use_col_separator = TRUE;
+ 	  use_col_separator = true;
  	  if (optarg)
  	    separator_string (optarg);
-@@ -1173,10 +1264,45 @@
+@@ -1169,10 +1260,45 @@ main (int argc, char **argv)
     a number. */
  
  static void
@@ -873,9 +2569,9 @@
 +	  int width;
 +	  mbstate_t state = {'\0'};
 +
-+	  mblength = mbrtowc (&wc, arg, strnlen(arg, MB_LEN_MAX), &state);
++	  mblength = mbrtowc (&wc, arg, strlen (arg), &state);
 +
-+	  if (mblength == (size_t)-1 || mblength == (size_t)-2)
++	  if (mblength == (size_t) -1 || mblength == (size_t) -2)
 +	    {
 +	      *character_length = 1;
 +	      *character_width = 1;
@@ -902,16 +2598,16 @@
    if (*arg)
      {
        long int tmp_long;
-@@ -1241,7 +1367,7 @@
+@@ -1237,7 +1363,7 @@ init_parameters (int number_of_files)
  	  else
  	    col_sep_string = column_separator;
  
 -	  col_sep_length = 1;
 +	  col_sep_length = col_sep_width = 1;
- 	  use_col_separator = TRUE;
+ 	  use_col_separator = true;
  	}
        /* It's rather pointless to define a TAB separator with column
-@@ -1273,11 +1399,11 @@
+@@ -1269,11 +1395,11 @@ init_parameters (int number_of_files)
  	     TAB_WIDTH (chars_per_input_tab, chars_per_number);   */
  
        /* Estimate chars_per_text without any margin and keep it constant. */
@@ -925,7 +2621,7 @@
  
        /* The number is part of the column width unless we are
  	 printing files in parallel. */
-@@ -1292,7 +1418,7 @@
+@@ -1288,7 +1414,7 @@ init_parameters (int number_of_files)
      }
  
    chars_per_column = (chars_per_line - chars_used_by_number -
@@ -934,7 +2630,7 @@
  
    if (chars_per_column < 1)
      error (EXIT_FAILURE, 0, _("page width too narrow"));
-@@ -1421,7 +1547,7 @@
+@@ -1416,7 +1542,7 @@ init_funcs (void)
  
    /* Enlarge p->start_position of first column to use the same form of
       padding_not_printed with all columns. */
@@ -943,7 +2639,7 @@
  
    /* This loop takes care of all but the rightmost column. */
  
-@@ -1455,7 +1581,7 @@
+@@ -1450,7 +1576,7 @@ init_funcs (void)
  	}
        else
  	{
@@ -952,7 +2648,7 @@
  	  h_next = h + chars_per_column;
  	}
      }
-@@ -1739,9 +1865,9 @@
+@@ -1734,9 +1860,9 @@ static void
  align_column (COLUMN *p)
  {
    padding_not_printed = p->start_position;
@@ -964,11 +2660,11 @@
        padding_not_printed = ANYWHERE;
      }
  
-@@ -2015,13 +2141,13 @@
+@@ -2010,13 +2136,13 @@ store_char (char c)
        /* May be too generous. */
        buff = x2nrealloc (buff, &buff_allocated, sizeof *buff);
      }
--  buff[buff_current++] = (char) c;
+-  buff[buff_current++] = c;
 +  buff[buff_current++] = (unsigned char) c;
  }
  
@@ -980,7 +2676,7 @@
    char *s;
    int left_cut;
  
-@@ -2044,22 +2170,24 @@
+@@ -2039,22 +2165,24 @@ add_line_number (COLUMN *p)
        /* Tabification is assumed for multiple columns, also for n-separators,
  	 but `default n-separator = TAB' hasn't been given priority over
  	 equal column_width also specified by POSIX. */
@@ -989,36 +2685,36 @@
          {
            i = number_width - chars_per_number;
            while (i-- > 0)
- 	    (p->char_func) ((int) ' ');
+ 	    (p->char_func) (' ');
          }
        else
--        (p->char_func) ((int) number_separator);
+-        (p->char_func) (number_separator);
 +	for (j = 0; j < number_separator_length; j++)
-+	  (p->char_func) ((int) number_separator[j]);
++	  (p->char_func) (number_separator[j]);
      }
    else
      /* To comply with POSIX, we avoid any expansion of default TAB
         separator with a single column output. No column_width requirement
         has to be considered. */
      {
--      (p->char_func) ((int) number_separator);
+-      (p->char_func) (number_separator);
 -      if (number_separator == '\t')
 +	for (j = 0; j < number_separator_length; j++)
-+	  (p->char_func) ((int) number_separator[j]);
++	  (p->char_func) (number_separator[j]);
 +      if (number_separator[0] == '\t')
          output_position = POS_AFTER_TAB (chars_per_output_tab,
  			  output_position);
      }
-@@ -2219,7 +2347,7 @@
+@@ -2215,7 +2343,7 @@ print_white_space (void)
    while (goal - h_old > 1
  	 && (h_new = POS_AFTER_TAB (chars_per_output_tab, h_old)) <= goal)
      {
 -      putchar (output_tab_char);
-+      fwrite (output_tab_char, sizeof(char), output_tab_char_length, stdout);
++      fwrite (output_tab_char, 1, output_tab_char_length, stdout);
        h_old = h_new;
      }
    while (++h_old <= goal)
-@@ -2239,6 +2367,7 @@
+@@ -2235,6 +2363,7 @@ print_sep_string ()
  {
    char *s;
    int l = col_sep_length;
@@ -1026,7 +2722,7 @@
  
    s = col_sep_string;
  
-@@ -2252,6 +2381,7 @@
+@@ -2248,6 +2377,7 @@ print_sep_string ()
      {
        for (; separators_not_printed > 0; --separators_not_printed)
  	{
@@ -1034,7 +2730,7 @@
  	  while (l-- > 0)
  	    {
  	      /* 3 types of sep_strings: spaces only, spaces and chars,
-@@ -2265,12 +2395,15 @@
+@@ -2261,12 +2391,15 @@ print_sep_string ()
  		}
  	      else
  		{
@@ -1051,48 +2747,49 @@
            /* sep_string ends with some spaces */
  	  if (spaces_not_printed > 0)
  	    print_white_space ();
-@@ -2297,8 +2430,9 @@
+@@ -2293,8 +2426,9 @@ print_clump (COLUMN *p, int n, char *clu
     a nonspace is encountered, call print_white_space() to print the
     required number of tabs and spaces. */
  
 +
  static void
--print_char (int c)
-+print_char_single (int c)
+-print_char (char c)
++print_char_single (char c)
  {
    if (tabify_output)
      {
-@@ -2322,6 +2456,74 @@
+@@ -2318,6 +2452,75 @@ print_char (char c)
    putchar (c);
  }
  
 +#ifdef HAVE_MBRTOWC
 +static void
-+print_char_multi (int c)
++print_char_multi (char c)
 +{
 +  static size_t mbc_pos = 0;
 +  static unsigned char mbc[MB_LEN_MAX] = {'\0'};
 +  static mbstate_t state = {'\0'};
 +  mbstate_t state_bak;
 +  wchar_t wc;
++  unsigned char uc = (unsigned char) c;
 +  size_t mblength;
 +  int width;
 +
 +  if (tabify_output)
 +    {
 +      state_bak = state;
-+      mbc[mbc_pos++] = (unsigned char)c;
++      mbc[mbc_pos++] = uc;
 +      mblength = mbrtowc (&wc, mbc, mbc_pos, &state);
 +
 +      while (mbc_pos > 0)
 +	{
 +	  switch (mblength)
 +	    {
-+	    case (size_t)-2:
++	    case (size_t) -2:
 +	      state = state_bak;
 +	      return;
 +
-+	    case (size_t)-1:
++	    case (size_t) -1:
 +	      state = state_bak;
 +	      ++output_position;
 +	      putchar (mbc[0]);
@@ -1123,22 +2820,22 @@
 +	      else
 +		output_position += width;
 +
-+	      fwrite (mbc, sizeof(char), mblength, stdout);
++	      fwrite (mbc, 1, mblength, stdout);
 +	      memmove (mbc, mbc + mblength, MB_CUR_MAX - mblength);
 +	      mbc_pos -= mblength;
 +	    }
 +	}
 +      return;
 +    }
-+  putchar (c);
++  putchar (uc);
 +}
 +#endif
 +
  /* Skip to page PAGE before printing.
     PAGE may be larger than total number of pages. */
  
-@@ -2496,9 +2698,9 @@
- 	  align_empty_cols = FALSE;
+@@ -2498,9 +2701,9 @@ read_line (COLUMN *p)
+ 	  align_empty_cols = false;
  	}
  
 -      if (padding_not_printed - col_sep_length > 0)
@@ -1149,7 +2846,7 @@
  	  padding_not_printed = ANYWHERE;
  	}
  
-@@ -2599,9 +2801,9 @@
+@@ -2601,9 +2804,9 @@ print_stored (COLUMN *p)
  	}
      }
  
@@ -1161,7 +2858,7 @@
        padding_not_printed = ANYWHERE;
      }
  
-@@ -2614,8 +2816,8 @@
+@@ -2616,8 +2819,8 @@ print_stored (COLUMN *p)
    if (spaces_not_printed == 0)
      {
        output_position = p->start_position + end_vector[line];
@@ -1171,19 +2868,19 @@
 +	output_position -= col_sep_width;
      }
  
-   return TRUE;
-@@ -2633,8 +2835,9 @@
+   return true;
+@@ -2635,8 +2838,9 @@ print_stored (COLUMN *p)
     characters in clump_buff.  (e.g, the width of '\b' is -1, while the
     number of characters is 1.) */
  
 +
  static int
--char_to_clump (int c)
-+char_to_clump_single (int c)
+-char_to_clump (char c)
++char_to_clump_single (char c)
  {
-   register int *s = clump_buff;
-   register int i;
-@@ -2643,10 +2846,10 @@
+   unsigned char uc = c;
+   register char *s = clump_buff;
+@@ -2646,10 +2850,10 @@ char_to_clump (char c)
    int chars;
    int chars_per_c = 8;
  
@@ -1196,22 +2893,23 @@
      {
        width = TAB_WIDTH (chars_per_c, input_position);
  
-@@ -2717,6 +2920,154 @@
+@@ -2720,6 +2924,155 @@ char_to_clump (char c)
    return chars;
  }
  
 +#ifdef HAVE_MBRTOWC
 +static int
-+char_to_clump_multi (int c)
++char_to_clump_multi (char c)
 +{
 +  static size_t mbc_pos = 0;
 +  static unsigned char mbc[MB_LEN_MAX] = {'\0'};
 +  static mbstate_t state = {'\0'};
 +  mbstate_t state_bak;
 +  wchar_t wc;
++  unsigned char uc = (unsigned char) c;
 +  size_t mblength;
 +  int wc_width;
-+  register int *s = clump_buff;
++  register char *s = clump_buff;
 +  register int i, j;
 +  char esc_buff[4];
 +  int width;
@@ -1219,7 +2917,7 @@
 +  int chars_per_c = 8;
 +
 +  state_bak = state;
-+  mbc[mbc_pos++] = (unsigned char)c;
++  mbc[mbc_pos++] = uc;
 +  mblength = mbrtowc (&wc, mbc, mbc_pos, &state);
 +
 +  width = 0;
@@ -1228,11 +2926,11 @@
 +    {
 +      switch (mblength)
 +	{
-+	case (size_t)-2:
++	case (size_t) -2:
 +	  state = state_bak;
 +	  return 0;
 +
-+	case (size_t)-1:
++	case (size_t) -1:
 +	  state = state_bak;
 +	  mblength = 1;
 +
@@ -1290,7 +2988,7 @@
 +		      width += 4;
 +		      chars += 4;
 +		      *s++ = '\\';
-+		      sprintf (esc_buff, "%03o", c);
++		      sprintf (esc_buff, "%03o", uc);
 +		      for (j = 0; j <= 2; ++j)
 +			*s++ = (int) esc_buff[j];
 +		    }
@@ -1311,7 +3009,7 @@
 +			  width += 4;
 +			  chars += 4;
 +			  *s++ = '\\';
-+			  sprintf (esc_buff, "%03o", c);
++			  sprintf (esc_buff, "%03o", uc);
 +			  for (j = 0; j <= 2; ++j)
 +			    *s++ = (int) esc_buff[j];
 +			}
@@ -1351,41 +3049,30 @@
  /* We've just printed some files and need to clean up things before
     looking for more options and printing the next batch of files.
  
---- coreutils-5.2.1/src/sort.c	2004-12-15 14:10:01.347312694 +0000
-+++ coreutils-5.2.1/src/sort.c	2005-02-09 07:34:40.000000000 -0500
-@@ -23,10 +23,31 @@
- 
- #include <config.h>
- 
-+#include <assert.h>
- #include <getopt.h>
+diff -uprN coreutils-5.3.0.orig/src/sort.c coreutils-5.3.0/src/sort.c
+--- coreutils-5.3.0.orig/src/sort.c	2004-12-02 16:45:17.000000000 +0900
++++ coreutils-5.3.0/src/sort.c	2005-07-01 19:10:53.275702968 +0900
+@@ -27,6 +27,19 @@
  #include <sys/types.h>
  #include <signal.h>
  #include <stdio.h>
++#include <assert.h>
 +
-+/* Solaris 2.5 has a bug: <wchar.h> must be included before <wctype.h>.  */
-+/* Get mbstate_t, mbrtowc(), wcwidth().  */
++/* Get mbstate_t, mbrtowc(), wcrtomb().  */
 +#if HAVE_WCHAR_H
 +# include <wchar.h>
 +#endif
 +
-+/* Get isw* functions. */
++/* Get iswprint(), iswctype() towupper().  */
 +#if HAVE_WCTYPE_H
 +# include <wctype.h>
++wctype_t blank_type;           /* = wctype ("blank"); */
 +#endif
 +
-+/* Get nl_langinfo(). */
-+#if HAVE_LANGINFO_CODESET
-+# include <langinfo.h>
-+#endif 
-+
-+/* Include this after wctype.h so that we `#undef' ISPRINT
-+   (from Solaris's euc.h, from widec.h, from wctype.h) before
-+   redefining and using it. */
  #include "system.h"
  #include "error.h"
  #include "hard-locale.h"
-@@ -46,6 +67,17 @@
+@@ -46,6 +59,17 @@ struct rlimit { size_t rlim_cur; };
  # define getrlimit(Resource, Rlp) (-1)
  #endif
  
@@ -1403,68 +3090,76 @@
  /* The official name of this program (e.g., no `g' prefix).  */
  #define PROGRAM_NAME "sort"
  
-@@ -91,6 +123,7 @@
+@@ -91,14 +115,38 @@ static char decimal_point;
+ /* Thousands separator; if CHAR_MAX + 1, then there isn't one.  */
+ static int thousands_sep;
  
- static char decimal_point;
- static int th_sep; /* if CHAR_MAX + 1, then there is no thousands separator */
 +static int force_general_numcompare = 0;
- 
++
  /* Nonzero if the corresponding locales are hard.  */
  static bool hard_LC_COLLATE;
-@@ -109,6 +142,28 @@
+-#if HAVE_NL_LANGINFO
++#if HAVE_LANGINFO_CODESET
+ static bool hard_LC_TIME;
+ #endif
  
- #define NONZERO(x) (x != 0)
+ #define NONZERO(x) ((x) != 0)
  
 +/* get a multibyte character's byte length. */
-+#define GET_BYTELEN_OF_CHAR(LIM, PTR, MBLENGTH, STATE)			\
-+  do									\
-+    {									\
-+      wchar_t wc;							\
-+      mbstate_t state_bak;						\
-+									\
-+      state_bak = STATE;						\
-+      mblength = mbrtowc (&wc, PTR, LIM - PTR, &STATE);			\
-+									\
-+      switch (MBLENGTH)							\
-+	{								\
-+	case (size_t)-1:						\
-+	case (size_t)-2:						\
-+	  STATE = state_bak;						\
-+		/* Fall through. */					\
-+	case 0:								\
-+	  MBLENGTH = 1;							\
-+      }									\
-+    }									\
++#define GET_BYTELEN_OF_CHAR(LIM, PTR, MBLENGTH, STATE)		\
++  do								\
++    {								\
++      wchar_t wc;						\
++      mbstate_t state_bak;					\
++								\
++      state_bak = STATE;					\
++      mblength = mbrtowc (&wc, PTR, LIM - PTR, &STATE);		\
++								\
++      switch (MBLENGTH)						\
++       {							\
++       case (size_t)-1:						\
++       case (size_t)-2:						\
++         STATE = state_bak;					\
++               /* Fall through. */				\
++       case 0:							\
++         MBLENGTH = 1;						\
++       }							\
++    }								\
 +  while (0)
-+
++  
  /* The kind of blanks for '-b' to skip in various options. */
  enum blanktype { bl_start, bl_end, bl_both };
  
-@@ -245,13 +300,11 @@
+@@ -235,13 +283,22 @@ static bool reverse;
     they were read if all keys compare equal.  */
  static bool stable;
  
 -/* If TAB has this value, blanks separate fields.  */
--enum { TAB_DEFAULT = CHAR_MAX + 1 };
--
--/* Tab character separating fields.  If TAB_DEFAULT, then fields are
-+/* Tab character separating fields.  If tab_length is 0, then fields are
++/* If TAB has this value, blanks separate fields.
+ enum { TAB_DEFAULT = CHAR_MAX + 1 };
++*/
+ 
+ /* Tab character separating fields.  If TAB_DEFAULT, then fields are
     separated by the empty string between a non-blank character and a blank
-    character. */
--static int tab = TAB_DEFAULT;
-+static char tab[MB_LEN_MAX + 1];
-+static size_t tab_length = 0;
+-   character. */
++   character.
+ static int tab = TAB_DEFAULT;
++*/
++
++/* Tab character separating fields.  If NUL, then fields are separated
++   by the empty string between a non-whitespace character and a whitespace
++   character. */
++static bool tab_default = true;
++static unsigned char tab[MB_LEN_MAX + 1];
++static size_t tab_length = 1;
  
  /* Flag to remove consecutive duplicate lines from the output.
     Only the last of a sequence of equal lines will be output. */
-@@ -384,6 +437,46 @@
- };
+@@ -386,6 +443,43 @@ struct tempnode
  static struct tempnode *volatile temphead;
+ static struct tempnode *volatile *temptail = &temphead;
  
 +/* Fucntion pointers. */
-+static void
-+(*inittables) (void);
-+
 +static char *
 +(* begfield) (const struct line *line, const struct keyfield *key);
 +
@@ -1481,14 +3176,14 @@
 +   Set LENGTH the byte length of investigated multibyte character. */
 +#if HAVE_MBRTOWC
 +static int
-+ismbblank (const char *str, size_t len, size_t *length)
++ismbblank (const char *str, size_t *length)
 +{
 +  size_t mblength;
 +  wchar_t wc;
 +  mbstate_t state;
 +
 +  memset (&state, '\0', sizeof(mbstate_t));
-+  mblength = mbrtowc (&wc, str, len, &state);
++  mblength = mbrtowc (&wc, str, MB_LEN_MAX, &state);
 +
 +  if (mblength == (size_t)-1 || mblength == (size_t)-2)
 +    {
@@ -1497,15 +3192,15 @@
 +    }
 +
 +  *length = (mblength < 1) ? 1 : mblength;
-+  return iswblank (wc);
++  return (iswctype (wc, blank_type));
 +}
 +#endif
 +
- /* Clean up any remaining temporary files. */
+ /* Clean up any remaining temporary files.  */
  
  static void
-@@ -521,7 +614,7 @@
-       }
+@@ -535,7 +629,7 @@ zaptemp (const char *name)
+   free (node);
  }
  
 -#if HAVE_NL_LANGINFO
@@ -1513,16 +3208,16 @@
  
  static int
  struct_month_cmp (const void *m1, const void *m2)
-@@ -536,7 +629,7 @@
- /* Initialize the character class tables. */
+@@ -562,7 +656,7 @@ inittables (void)
+       fold_toupper[i] = (ISLOWER (i) ? toupper (i) : i);
+     }
  
- static void
--inittables (void)
-+inittables_uni (void)
- {
-   int i;
- 
-@@ -574,6 +667,64 @@
+-#if HAVE_NL_LANGINFO
++#if HAVE_LANGINFO_CODESET
+   /* If we're not in the "C" locale, read different names for months.  */
+   if (hard_LC_TIME)
+     {
+@@ -588,6 +682,71 @@ inittables (void)
  #endif
  }
  
@@ -1549,7 +3244,7 @@
 +
 +      for (j = 0; j < s_len;)
 +	{
-+	  if (!ismbblank (s + j, s_len - j, &mblength))
++	  if (!ismbblank (s + j, &mblength))
 +	    break;
 +	  j += mblength;
 +	}
@@ -1557,8 +3252,15 @@
 +      for (k = 0; j < s_len;)
 +	{
 +	  mblength = mbrtowc (&wc, (s + j), (s_len - j), &state_mb);
-+	  assert (mblength != (size_t)-1 && mblength != (size_t)-2);
-+	  if (mblength == 0)
++	  /* If conversion is failed, fall back into single byte sorting. */
++	  if (mblength == (size_t)-1 || mblength == (size_t)-2)
++	    {
++	      for (l = 0; l <= i; l++)
++		free ((void *)monthtab[l].name);
++	      inittables();
++	      return;
++	    }
++	  else if (mblength == 0)
 +	    break;
 +
 +	  pwc = towupper (wc);
@@ -1570,7 +3272,7 @@
 +	  else
 +	    {
 +	      j += mblength;
-+	      mblength = wcrtomb (mbc, pwc, &state_wc);
++	      mblength = wcrtomb (mbc, wc, &state_wc);
 +	      assert (mblength != (size_t)0 && mblength != (size_t)-1);
 +	    }
 +
@@ -1580,14 +3282,14 @@
 +      name[k] = '\0';
 +    }
 +  qsort ((void *) monthtab, MONTHS_PER_YEAR,
-+      sizeof (struct month), struct_month_cmp);
++      sizeof *monthtab, struct_month_cmp);
 +}
 +#endif
 +
  /* Specify the amount of main memory to use when sorting.  */
  static void
  specify_sort_size (char const *s)
-@@ -784,7 +935,7 @@
+@@ -798,7 +957,7 @@ buffer_linelim (struct buffer const *buf
     by KEY in LINE. */
  
  static char *
@@ -1596,12 +3298,12 @@
  {
    register char *ptr = line->text, *lim = ptr + line->length - 1;
    register size_t sword = key->sword;
-@@ -794,10 +945,10 @@
+@@ -808,10 +967,10 @@ begfield (const struct line *line, const
    /* The leading field separator itself is included in a field when -t
       is absent.  */
  
 -  if (tab != TAB_DEFAULT)
-+  if (tab_length)
++  if (!tab_default)
      while (ptr < lim && sword--)
        {
 -	while (ptr < lim && *ptr != tab)
@@ -1609,7 +3311,7 @@
  	  ++ptr;
  	if (ptr < lim)
  	  ++ptr;
-@@ -825,11 +976,70 @@
+@@ -839,11 +998,70 @@ begfield (const struct line *line, const
    return ptr;
  }
  
@@ -1626,7 +3328,7 @@
 +
 +  memset (&state, '\0', sizeof(mbstate_t));
 +
-+  if (tab_length)
++  if (!tab_default)
 +    while (ptr < lim && sword--)
 +      {
 +	while (ptr < lim && memcmp (ptr, tab, tab_length) != 0)
@@ -1643,19 +3345,19 @@
 +  else
 +    while (ptr < lim && sword--)
 +      {
-+	while (ptr < lim && ismbblank (ptr, lim - ptr, &mblength))
++	while (ptr < lim && ismbblank (ptr, &mblength))
 +	  ptr += mblength;
 +	if (ptr < lim)
 +	  {
 +	    GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
 +	    ptr += mblength;
 +	  }
-+	while (ptr < lim && !ismbblank (ptr, lim - ptr, &mblength))
++	while (ptr < lim && !ismbblank (ptr, &mblength))
 +	  ptr += mblength;
 +      }
 +
 +  if (key->skipsblanks)
-+    while (ptr < lim && ismbblank (ptr, lim - ptr, &mblength))
++    while (ptr < lim && ismbblank (ptr, &mblength))
 +      ptr += mblength;
 +
 +  for (i = 0; i < schar; i++)
@@ -1664,7 +3366,7 @@
 +
 +      if (ptr + mblength > lim)
 +	break;
-+      else
++      else 
 +	ptr += mblength;
 +    }
 +
@@ -1681,12 +3383,12 @@
  {
    register char *ptr = line->text, *lim = ptr + line->length - 1;
    register size_t eword = key->eword, echar = key->echar;
-@@ -842,10 +1052,10 @@
+@@ -856,10 +1074,10 @@ limfield (const struct line *line, const
       `beginning' is the first character following the delimiting TAB.
       Otherwise, leave PTR pointing at the first `blank' character after
       the preceding field.  */
 -  if (tab != TAB_DEFAULT)
-+  if (tab_length)
++  if (!tab_default)
      while (ptr < lim && eword--)
        {
 -	while (ptr < lim && *ptr != tab)
@@ -1694,20 +3396,16 @@
  	  ++ptr;
  	if (ptr < lim && (eword | echar))
  	  ++ptr;
-@@ -891,10 +1101,10 @@
+@@ -905,7 +1123,7 @@ limfield (const struct line *line, const
       */
  
    /* Make LIM point to the end of (one byte past) the current field.  */
 -  if (tab != TAB_DEFAULT)
-+  if (tab_length)
++  if (!tab_default)
      {
        char *newlim;
--      newlim = memchr (ptr, tab, lim - ptr);
-+      newlim = memchr (ptr, tab[0], lim - ptr);
-       if (newlim)
- 	lim = newlim;
-     }
-@@ -926,15 +1136,137 @@
+       newlim = memchr (ptr, tab, lim - ptr);
+@@ -941,6 +1159,107 @@ limfield (const struct line *line, const
    return ptr;
  }
  
@@ -1723,76 +3421,76 @@
 +
 +  memset (&state, '\0', sizeof(mbstate_t));
 +
-+  if (tab_length)
++  if (!tab_default)
 +    while (ptr < lim && eword--)
 +      {
-+	while (ptr < lim && memcmp (ptr, tab, tab_length) != 0)
-+	  {
-+	    GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
-+	    ptr += mblength;
-+	  }
-+	if (ptr < lim && (eword | echar))
-+	  {
-+	    GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
-+	    ptr += mblength;
-+	  }
++       while (ptr < lim && memcmp (ptr, tab, tab_length) != 0)
++         {
++           GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
++           ptr += mblength;
++         }
++       if (ptr < lim)
++         {
++           GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
++           ptr += mblength;
++         }
 +      }
 +  else
 +    while (ptr < lim && eword--)
 +      {
-+	while (ptr < lim && ismbblank (ptr, lim - ptr, &mblength))
-+	  ptr += mblength;
-+	if (ptr < lim)
-+	  {
-+	    GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
-+	    ptr += mblength;
-+	  }
-+	while (ptr < lim && !ismbblank (ptr, lim - ptr, &mblength))
-+	  ptr += mblength;
++       while (ptr < lim && ismbblank (ptr, &mblength))
++         ptr += mblength;
++       if (ptr < lim)
++         {
++           GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
++           ptr += mblength;
++         }
++       while (ptr < lim && !ismbblank (ptr, &mblength))
++         ptr += mblength;
 +      }
 +
-+
 +# ifdef POSIX_UNSPECIFIED
++
 +  /* Make LIM point to the end of (one byte past) the current field.  */
-+  if (tab_length)
++  if (!tab_default)
 +    {
 +      char *newlim, *p;
 +
 +      newlim = NULL;
 +      for (p = ptr; p < lim;)
-+ 	{
-+	  if (memcmp (p, tab, tab_length) == 0)
-+	    {
-+	      newlim = p;
-+	      break;
-+	    }
++       {
++         if (memcmp (p, tab, tab_length) == 0)
++           {
++             newlim = p;
++             break;
++           }
 +
-+	  GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
-+	  p += mblength;
-+	}
++         GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
++         p += mblength;
++       }
 +    }
 +  else
 +    {
 +      char *newlim;
 +      newlim = ptr;
 +
-+      while (newlim < lim && ismbblank (newlim, lim - newlim, &mblength))
-+	newlim += mblength;
++      while (newlim < lim && ismbblank (newlim, &mblength))
++       newlim += mblength;
 +      if (ptr < lim)
-+	{
-+	  GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
-+	  ptr += mblength;
-+	}
-+      while (newlim < lim && !ismbblank (newlim, lim - newlim, &mblength))
-+	newlim += mblength;
++       {
++         GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
++         ptr += mblength;
++       }
++      while (newlim < lim && !ismbblank (newlim, &mblength))
++       newlim += mblength;
 +      lim = newlim;
 +    }
 +# endif
 +
 +  /* If we're skipping leading blanks, don't start counting characters
-+   *      until after skipping past any leading blanks.  */
-+  if (key->skipsblanks)
-+    while (ptr < lim && ismbblank (ptr, lim - ptr, &mblength))
++     until after skipping past any leading blanks.  */
++  if (key->skipeblanks)
++    while (ptr < lim && ismbblank (ptr, &mblength))
 +      ptr += mblength;
 +
 +  memset (&state, '\0', sizeof(mbstate_t));
@@ -1803,117 +3501,76 @@
 +      GET_BYTELEN_OF_CHAR (lim, ptr, mblength, state);
 +
 +      if (ptr + mblength > lim)
-+	break;
++       break;
 +      else
-+	ptr += mblength;
++       ptr += mblength;
 +    }
 +
 +  return ptr;
 +}
 +#endif
 +
- /* Return the number of trailing blanks in FIELD, with LEN bytes.  */
- 
- static size_t
- trailing_blanks (char const *field, size_t len)
- {
--  size_t i;
--  for (i = len; 0 < i && blanks[UCHAR (field[i - 1])]; i--)
--    continue;
--  return len - i;
-+#if HAVE_MBRTOWC
-+  if (MB_CUR_MAX > 1)
-+    {
-+      size_t blanks = 0;
-+
-+      while (len) {
-+        size_t mblength;
-+        if (ismbblank (field, len, &mblength))
-+          blanks++;
-+        else
-+          blanks = 0;
-+
-+        field += mblength, len -= mblength;
-+      }
-+
-+      return blanks;
-+    }
-+  else
-+#endif
-+    {
-+      size_t i;
-+      for (i = len; 0 < i && blanks[UCHAR (field[i - 1])]; i--)
-+        continue;
-+      return len - i;
-+    }
- }
- 
  /* Fill BUF reading from FP, moving buf->left bytes from the end
-@@ -1019,8 +1351,22 @@
+    of buf->buf to the beginning first.  If EOF is reached and the
+    file wasn't terminated by a newline, supply one.  Set up BUF's line
+@@ -1023,8 +1342,22 @@ fillbuf (struct buffer *buf, register FI
  		  else
  		    {
  		      if (key->skipsblanks)
--			while (blanks[UCHAR (*line_start)])
+-			while (blanks[to_uchar (*line_start)])
 -			  line_start++;
-+#if HAVE_MBRTOWC
 +			{
++#if HAVE_MBRTOWC
 +			  if (MB_CUR_MAX > 1)
 +			    {
 +			      size_t mblength;
 +
-+			      while (ismbblank (line_start, ptr - line_start, &mblength))
++			      while (ismbblank (line_start, &mblength))
 +				line_start += mblength;
 +			    }
 +			  else
 +#endif
 +			    {
-+			      while (blanks[UCHAR (*line_start)])
++			      while (blanks[to_uchar (*line_start)])
 +				line_start++;
 +			    }
 +			}
  		      line->keybeg = line_start;
  		    }
- 		  if (key->skipeblanks)
-@@ -1128,13 +1474,32 @@
-   register int tmpa, tmpb, tmp;
-   register size_t log_a, log_b;
+ 		}
+@@ -1130,10 +1463,27 @@ numcompare (register const char *a, regi
+   size_t log_a;
+   size_t log_b;
  
--  tmpa = *a;
--  tmpb = *b;
+-  while (blanks[to_uchar (tmpa = *a)])
+-    a++;
+-  while (blanks[to_uchar (tmpb = *b)])
+-    b++;
 +#if HAVE_MBRTOWC
 +  if (MB_CUR_MAX > 1)
 +    {
 +      size_t mblength;
-+      size_t alen = strnlen (a, MB_LEN_MAX);
-+      size_t blen = strnlen (b, MB_LEN_MAX);
 +
-+      while (ismbblank (a, alen, &mblength))
-+	a += mblength, alen -= mblength;
-+      while (ismbblank (b, blen, &mblength))
-+	b += mblength, blen -= mblength;
- 
--  while (blanks[UCHAR (tmpa)])
--    tmpa = *++a;
--  while (blanks[UCHAR (tmpb)])
--    tmpb = *++b;
++      while (ismbblank (a, &mblength))
++	a += mblength;
++      while (ismbblank (b, &mblength))
++	b += mblength;
++
 +      tmpa = *a;
 +      tmpb = *b;
 +    }
 +  else
 +#endif
 +    {
-+      tmpa = *a;
-+      tmpb = *b;
-+
-+      while (blanks[UCHAR (tmpa)])
-+	tmpa = *++a;
-+      while (blanks[UCHAR (tmpb)])
-+	tmpb = *++b;
++      while (blanks[to_uchar (tmpa = *a)])
++	a++;
++      while (blanks[to_uchar (tmpb = *b)])
++	b++;
 +    }
  
    if (tmpa == NEGATION_SIGN)
      {
-@@ -1268,15 +1633,60 @@
+@@ -1263,15 +1613,59 @@ general_numcompare (const char *sa, cons
    /* FIXME: maybe add option to try expensive FP conversion
       only if A and B can't be compared more cheaply/accurately.  */
  
@@ -1938,65 +3595,64 @@
 +  if (force_general_numcompare)
 +    {
 +      while (1)
-+	{
-+	  a = strtod (bufa, &ea);
-+	  if (memcmp (ea, lconvp->thousands_sep, thousands_sep_len) == 0)
-+	    {
-+	      for (p = ea; *(p + thousands_sep_len) != '\0'; p++)
-+		*p = *(p + thousands_sep_len);
-+	      *p = '\0';
-+	      continue;
-+	    }
-+	  break;
-+	}
++       {
++         a = strtod (bufa, &ea);
++         if (memcmp (ea, lconvp->thousands_sep, thousands_sep_len) == 0)
++           {
++             for (p = ea; *(p + thousands_sep_len) != '\0'; p++)
++               *p = *(p + thousands_sep_len);
++             *p = '\0';
++             continue;
++           }
++         break;
++       }
 +
 +      while (1)
-+	{
-+	  b = strtod (bufb, &eb);
-+	  if (memcmp (eb, lconvp->thousands_sep, thousands_sep_len) == 0)
-+	    {
-+	      for (p = eb; *(p + thousands_sep_len) != '\0'; p++)
-+		*p = *(p + thousands_sep_len);
-+	      *p = '\0';
-+	      continue;
-+	    }
-+	  break;
-+	}
++       {
++         b = strtod (bufb, &eb);
++         if (memcmp (eb, lconvp->thousands_sep, thousands_sep_len) == 0)
++           {
++             for (p = eb; *(p + thousands_sep_len) != '\0'; p++)
++               *p = *(p + thousands_sep_len);
++             *p = '\0';
++             continue;
++           }
++         break;
++       }
 +    }
 +  else
 +    {
 +      a = strtod (bufa, &ea);
 +      b = strtod (bufb, &eb);
 +    }
++
  
    /* Put conversion errors at the start of the collating sequence.  */
 -  if (sa == ea)
 -    return sb == eb ? 0 : -1;
 -  if (sb == eb)
-+  free (bufa);
-+  free (bufb);
 +  if (bufa == ea)
 +    return bufb == eb ? 0 : -1;
 +  if (bufb == eb)
      return 1;
  
    /* Sort numbers in the usual way, where -0 == +0.  Put NaNs after
-@@ -1294,7 +1704,7 @@
+@@ -1289,7 +1683,7 @@ general_numcompare (const char *sa, cons
     Return 0 if the name in S is not recognized.  */
  
  static int
--getmonth (const char *s, size_t len)
-+getmonth_uni (const char *s, size_t len)
+-getmonth (char const *month, size_t len)
++getmonth_uni (char const *month, size_t len)
  {
-   char *month;
-   register size_t i;
-@@ -1332,11 +1742,79 @@
-   return result;
+   size_t lo = 0;
+   size_t hi = MONTHS_PER_YEAR;
+@@ -1331,11 +1725,79 @@ getmonth (char const *month, size_t len)
+   return 0;
  }
  
 +#if HAVE_MBRTOWC
 +static int
-+getmonth_mb (const char *s, size_t len)
++getmonth_mb (char const *s, size_t len)
 +{
 +  char *month;
 +  register size_t i;
@@ -2008,7 +3664,7 @@
 +  wchar_t *month_wcs;
 +  mbstate_t state;
 +
-+  while (len > 0 && ismbblank (s, len, &mblength))
++  while (len > 0 && ismbblank (s, &mblength))
 +    {
 +      s += mblength;
 +      len -= mblength;
@@ -2027,12 +3683,12 @@
 +  memset (&state, '\0', sizeof(mbstate_t));
 +
 +  wclength = mbsrtowcs (month_wcs, pp, len + 1, &state);
-+  assert (wclength != (size_t)-1 && *pp == NULL);
++  assert (wclength != (size_t)1 && *pp == NULL);
 +
 +  for (i = 0; i < wclength; i++)
 +    {
 +      month_wcs[i] = towupper(month_wcs[i]);
-+      if (iswblank (month_wcs[i]))
++      if (iswctype (month_wcs[i], blank_type))
 +	{
 +	  month_wcs[i] = L'\0';
 +	  break;
@@ -2071,10 +3727,17 @@
  {
    struct keyfield const *key = keylist;
  
-@@ -1507,6 +1985,187 @@
-   return key->reverse ? -diff : diff;
- }
+@@ -1499,11 +1961,188 @@ keycompare (const struct line *a, const 
  
+   return 0;
+ 
+- greater:
++greater:
++  diff = 1;
++not_equal:
++  return key->reverse ? -diff : diff;
++}
++
 +#if HAVE_MBRTOWC
 +static int
 +keycompare_mb (const struct line *a, const struct line *b)
@@ -2099,22 +3762,12 @@
 +
 +  for (;;)
 +    {
-+      unsigned char *translate = (unsigned char *) key->translate;
-+      bool const *ignore = key->ignore;
++      register char const *translate = key->translate;
++      register bool const *ignore = key->ignore;
 +
 +      /* Find the lengths. */
 +      size_t lena = lima <= texta ? 0 : lima - texta;
 +      size_t lenb = limb <= textb ? 0 : limb - textb;
-+
-+      if (key->skipeblanks)
-+	{
-+	  char *a_end = texta + lena;
-+	  char *b_end = textb + lenb;
-+	  a_end -= trailing_blanks (texta, lena);
-+	  b_end -= trailing_blanks (textb, lenb);
-+	  lena = a_end - texta;
-+	  lenb = b_end - textb;
-+	}
 +
 +      /* Actually compare the fields. */
 +      if (key->numeric | key->general_numeric)
@@ -2135,81 +3788,87 @@
 +	{
 +	  if (ignore || translate)
 +	    {
-+	      char *copy_a = (char *) alloca (lena + 1 + lenb + 1);
++	      char buf[4000];
++	      size_t size = lena + 1 + lenb + 1;
++	      char *copy_a = (size <= sizeof buf ? buf : xmalloc (size));
 +	      char *copy_b = copy_a + lena + 1;
 +	      size_t new_len_a, new_len_b;
 +	      size_t i, j;
 +
 +	      /* Ignore and/or translate chars before comparing.  */
 +# define IGNORE_CHARS(NEW_LEN, LEN, TEXT, COPY, WC, MBLENGTH, STATE)	\
-+  do									\
-+    {									\
-+      wchar_t uwc;							\
-+      char mbc[MB_LEN_MAX];						\
-+      mbstate_t state_wc;						\
++ do									\
++   {									\
++     wchar_t uwc;							\
++       char mbc[MB_LEN_MAX];						\
++       mbstate_t state_wc;						\
 +									\
-+      for (NEW_LEN = i = 0; i < LEN;)					\
-+	{								\
-+	  mbstate_t state_bak;						\
++       for (NEW_LEN = i = 0; i < LEN;)					\
++	 {								\
++	   mbstate_t state_bak;						\
 +									\
-+	  state_bak = STATE;						\
-+	  MBLENGTH = mbrtowc (&WC, TEXT + i, LEN - i, &STATE);		\
++	     state_bak = STATE;						\
++	     MBLENGTH = mbrtowc (&WC, TEXT + i, LEN - i, &STATE);	\
 +									\
-+	  if (MBLENGTH == (size_t)-2 || MBLENGTH == (size_t)-1		\
-+	      || MBLENGTH == 0)						\
-+	    {								\
-+	      if (MBLENGTH == (size_t)-2 || MBLENGTH == (size_t)-1)	\
-+		STATE = state_bak;					\
-+	      if (!ignore)						\
-+		COPY[NEW_LEN++] = TEXT[i++];				\
-+	      continue;							\
-+	    }								\
++	     if (MBLENGTH == (size_t)-2 || MBLENGTH == (size_t)-1	\
++		 || MBLENGTH == 0)					\
++	       {							\
++		 if (MBLENGTH == (size_t)-2 || MBLENGTH == (size_t)-1)	\
++		   STATE = state_bak;					\
++		     if (!ignore)					\
++		       COPY[NEW_LEN++] = TEXT[i++];			\
++			 continue;					\
++	       }							\
 +									\
-+	  if (ignore)							\
-+	    {								\
-+	      if ((ignore == nonprinting && !iswprint (WC))		\
-+		   || (ignore == nondictionary				\
-+		       && !iswalnum (WC) && !iswblank (WC)))		\
-+		{							\
-+		  i += MBLENGTH;					\
-+		  continue;						\
-+		}							\
-+	    }								\
++	     if (ignore)						\
++	       {							\
++		 if ((ignore == nonprinting && !iswprint (WC))		\
++		     || (ignore == nondictionary			\
++		       && !iswalnum (WC) && !iswctype (WC, blank_type)))  \
++		   {							\
++		     i += MBLENGTH;					\
++		       continue;					\
++		   }							\
++	       }							\
 +									\
-+	  if (translate)						\
-+	    {								\
++	     if (translate)						\
++	       {							\
 +									\
-+	      uwc = towupper(WC);					\
-+	      if (WC == uwc)						\
-+		{							\
-+		  memcpy (mbc, TEXT + i, MBLENGTH);			\
-+		  i += MBLENGTH;					\
-+		}							\
-+	      else							\
-+		{							\
-+		  i += MBLENGTH;					\
-+		  WC = uwc;						\
-+		  memset (&state_wc, '\0', sizeof (mbstate_t));		\
++		   uwc = toupper(WC);					\
++		   if (WC == uwc)					\
++		     {							\
++		       memcpy (mbc, TEXT + i, MBLENGTH);		\
++			 i += MBLENGTH;					\
++		     }							\
++		   else							\
++		     {							\
++		       i += MBLENGTH;					\
++			 WC = uwc;					\
++			 memset (&state_wc, '\0', sizeof (mbstate_t));	\
 +									\
-+		  MBLENGTH = wcrtomb (mbc, WC, &state_wc);		\
-+		  assert (MBLENGTH != (size_t)-1 && MBLENGTH != 0);	\
-+		}							\
++			 MBLENGTH = wcrtomb (mbc, WC, &state_wc);	\
++			 assert (MBLENGTH != (size_t)-1 && MBLENGTH != 0);  \
++		     }							\
 +									\
-+	      for (j = 0; j < MBLENGTH; j++)				\
-+		COPY[NEW_LEN++] = mbc[j];				\
-+	    }								\
-+	  else								\
-+	    for (j = 0; j < MBLENGTH; j++)				\
-+	      COPY[NEW_LEN++] = TEXT[i++];				\
-+	}								\
-+      COPY[NEW_LEN] = '\0';						\
-+    }									\
-+  while (0)
-+	      IGNORE_CHARS (new_len_a, lena, texta, copy_a,
-+			    wc_a, mblength_a, state_a);
++		   for (j = 0; j < MBLENGTH; j++)			\
++		     COPY[NEW_LEN++] = mbc[j];				\
++	       }							\
++	     else							\
++	       for (j = 0; j < MBLENGTH; j++)				\
++		 COPY[NEW_LEN++] = TEXT[i++];				\
++	 }								\
++     COPY[NEW_LEN] = '\0';						\
++   }									\
++ while (0)
++
++		IGNORE_CHARS (new_len_a, lena, texta, copy_a,
++		    wc_a, mblength_a, state_a);
 +	      IGNORE_CHARS (new_len_b, lenb, textb, copy_b,
-+			    wc_b, mblength_b, state_b);
++		  wc_b, mblength_b, state_b);
 +	      diff = xmemcoll (copy_a, new_len_a, copy_b, new_len_b);
++
++	      if (sizeof buf < size)
++		free (copy_a);
 +	    }
 +	  else if (lena == 0)
 +	    diff = - NONZERO (lenb);
@@ -2227,21 +3886,21 @@
 +	break;
 +
 +      /* Find the beginning and limit of the next field.  */
-+      if (key->eword != -1)
++      if (key->eword != SIZE_MAX)
 +	lima = limfield (a, key), limb = limfield (b, key);
 +      else
 +	lima = a->text + a->length - 1, limb = b->text + b->length - 1;
 +
-+      if (key->sword != -1)
++      if (key->sword != SIZE_MAX)
 +	texta = begfield (a, key), textb = begfield (b, key);
 +      else
 +	{
 +	  texta = a->text, textb = b->text;
 +	  if (key->skipsblanks)
 +	    {
-+	      while (texta < lima && ismbblank (texta, lima - texta, &mblength_a))
++	      while (texta < lima && ismbblank (texta, &mblength_a))
 +		texta += mblength_a;
-+	      while (textb < limb && ismbblank (textb, limb - textb, &mblength_b))
++	      while (textb < limb && ismbblank (textb, &mblength_b))
 +		textb += mblength_b;
 +	    }
 +	}
@@ -2250,47 +3909,62 @@
 +  return 0;
 +
 +greater:
-+  diff = 1;
+   diff = 1;
+- not_equal:
 +not_equal:
-+  return key->reverse ? -diff : diff;
-+}
+   return key->reverse ? -diff : diff;
+ }
 +#endif
-+
+ 
  /* Compare two lines A and B, returning negative, zero, or positive
     depending on whether A compares less than, equal to, or greater than B. */
+@@ -2243,6 +2882,11 @@ set_ordering (register const char *s, st
+ 	  break;
+ 	case 'M':
+ 	  key->month = true;
++#if HAVE_MBRTOWC
++	  if (strcmp (setlocale (LC_CTYPE, NULL), setlocale (LC_TIME, NULL)))
++	    error (0, 0, _("As LC_TIME differs from LC_CTYPE, the results may be strange."));
++	  inittables_mb ();
++#endif
+ 	  break;
+ 	case 'n':
+ 	  key->numeric = true;
+@@ -2296,7 +2940,7 @@ main (int argc, char **argv)
+   atexit (close_stdout);
  
-@@ -2252,20 +2911,44 @@
-   {
-     struct lconv const *lconvp = localeconv ();
+   hard_LC_COLLATE = hard_locale (LC_COLLATE);
+-#if HAVE_NL_LANGINFO
++#if HAVE_LANGINFO_CODESET
+   hard_LC_TIME = hard_locale (LC_TIME);
+ #endif
  
--    /* If the locale doesn't define a decimal point, or if the decimal
--       point is multibyte, use the C decimal point.  We don't support
--       multibyte decimal points yet.  */
-     decimal_point = *lconvp->decimal_point;
-     if (! decimal_point || lconvp->decimal_point[1])
--      decimal_point = C_DECIMAL_POINT;
+@@ -2309,14 +2953,40 @@ main (int argc, char **argv)
+        add support for multibyte decimal points.  */
+     decimal_point = locale->decimal_point[0];
+     if (! decimal_point || locale->decimal_point[1])
+-      decimal_point = '.';
 +      {
-+	decimal_point = C_DECIMAL_POINT;
-+	if (lconvp->decimal_point[0] && lconvp->decimal_point[1])
++	decimal_point = '.';
++	if (locale->decimal_point[0] && locale->decimal_point[1])
 +	  force_general_numcompare = 1;
 +      }
  
-     /* We don't support multibyte thousands separators yet.  */
-     th_sep = *lconvp->thousands_sep;
-     if (! th_sep || lconvp->thousands_sep[1])
--      th_sep = CHAR_MAX + 1;
+     /* FIXME: add support for multibyte thousands separators.  */
+     thousands_sep = *locale->thousands_sep;
+     if (! thousands_sep || locale->thousands_sep[1])
+-      thousands_sep = CHAR_MAX + 1;
 +      {
-+	th_sep = CHAR_MAX + 1;
-+	if (lconvp->thousands_sep[0] && lconvp->thousands_sep[1])
++	thousands_sep = CHAR_MAX + 1;
++	if (locale->thousands_sep[0] && locale->thousands_sep[1])
 +	  force_general_numcompare = 1;
 +      }
    }
- #endif
  
 +#if HAVE_MBRTOWC
 +  if (MB_CUR_MAX > 1)
 +    {
-+      inittables = inittables_mb;
++      blank_type = wctype ("blank");
 +      begfield = begfield_mb;
 +      limfield = limfield_mb;
 +      getmonth = getmonth_mb;
@@ -2299,7 +3973,6 @@
 +  else
 +#endif
 +    {
-+      inittables = inittables_uni;
 +      begfield = begfield_uni;
 +      limfield = limfield_uni;
 +      keycompare = keycompare_uni;
@@ -2309,84 +3982,371 @@
    have_read_stdin = false;
    inittables ();
  
-@@ -2462,13 +3145,47 @@
+@@ -2514,28 +3184,48 @@ main (int argc, char **argv)
+ 	  break;
  
  	case 't':
- 	  {
--	    int newtab = optarg[0];
+-	  {
+-	    char newtab = optarg[0];
 -	    if (! newtab)
-+	    char newtab[MB_LEN_MAX + 1];
-+	    size_t newtab_length = 1;
-+	    strncpy (newtab, optarg, MB_LEN_MAX);
-+	    if (! newtab[0])
++          {
++	    if (! optarg[0])
  	      error (SORT_FAILURE, 0, _("empty tab"));
-+#if HAVE_MBRTOWC
-+	    if (MB_CUR_MAX > 1)
-+	      {
-+		wchar_t wc;
-+		mbstate_t state;
-+		size_t i;
 +
-+		memset (&state, '\0', sizeof (mbstate_t));
-+		newtab_length = mbrtowc (&wc, newtab, strnlen (newtab, MB_LEN_MAX), &state);
-+		switch (newtab_length)
-+                  {
-+                  case (size_t) -1:
-+                  case (size_t) -2:
-+                  case 0:
-+                    newtab_length = 1;
-+                  }
-+
-+                if (optarg[newtab_length])
-+		  {
-+		    if (strcmp (optarg, "\\0") == 0)
-+		      newtab[0] = '\0';
-+		    /* Provoke with `sort -txx'.  Complain about
-+		       "multi-character tab" instead of "multibyte tab", so
-+		       that the diagnostic's wording does not need to be
-+		       changed once multibyte characters are supported.  */
-+		    error (SORT_FAILURE, 0, _("multi-character tab `%s'"),
-+			   optarg);
-+		  }
-+	      }
-+            else
-+#endif
++	    strncpy (tab, optarg, MB_LEN_MAX);
 +
  	    if (optarg[1])
  	      {
- 		if (strcmp (optarg, "\\0") == 0)
+-		if (STREQ (optarg, "\\0"))
 -		  newtab = '\0';
-+		  newtab[0] = '\0';
++		if (strcmp (optarg, "\\0") == 0)
++		  tab[0] = '\0';
  		else
  		  {
- 		    /* Provoke with `sort -txx'.  Complain about
-@@ -2479,9 +3196,12 @@
- 			   optarg);
+-		    /* Provoke with `sort -txx'.  Complain about
+-		       "multi-character tab" instead of "multibyte tab", so
+-		       that the diagnostic's wording does not need to be
+-		       changed once multibyte characters are supported.  */
+-		    error (SORT_FAILURE, 0, _("multi-character tab `%s'"),
+-			   optarg);
++#if HAVE_MBRTOWC
++		    if (MB_CUR_MAX > 1)
++		      {
++			wchar_t wc;
++			mbstate_t state;
++
++			memset (&state, '\0', sizeof (mbstate_t));
++			tab_length = mbrtowc (&wc, tab, MB_LEN_MAX, &state);
++			tab_length = (tab_length == (size_t)-1
++			    || tab_length == (size_t)-2
++			    || tab_length == 0) ? 1 : tab_length;
++			if (optarg[tab_length])
++			  {
++			    error (SORT_FAILURE, 0,
++				_("multi-character tab `%s'"), optarg);
++			  }
++		      }
++		    else
++#endif
++		      {
++			error (SORT_FAILURE, 0, _("multi-character tab `%s'"),
++			    optarg);
++		      }
  		  }
  	      }
 -	    if (tab != TAB_DEFAULT && tab != newtab)
-+	    if (tab_length
-+		&& (tab_length != newtab_length
-+		    || memcmp (tab, newtab, tab_length) != 0))
++	    if (!tab_default)
  	      error (SORT_FAILURE, 0, _("incompatible tabs"));
 -	    tab = newtab;
-+	    memcpy (tab, newtab, newtab_length);
-+	    tab_length = newtab_length;
++	    tab_default = false;
  	  }
++
  	  break;
  
---- coreutils-5.1.3/src/uniq.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/uniq.c	2004-02-16 15:36:40.000000000 +0000
+ 	case 'T':
+diff -uprN coreutils-5.3.0.orig/src/unexpand.c coreutils-5.3.0/src/unexpand.c
+--- coreutils-5.3.0.orig/src/unexpand.c	2004-09-22 21:41:20.000000000 +0900
++++ coreutils-5.3.0/src/unexpand.c	2005-07-01 19:10:53.277702664 +0900
+@@ -39,12 +39,35 @@
+ #include <stdio.h>
+ #include <getopt.h>
+ #include <sys/types.h>
++
++/* Get mbstate_t, mbrtowc(), wcwidth() */
++#if HAVE_WCHAR_H
++# include <wchar.h>
++#endif
++/* Get iswblank */
++#if HAVE_WCTYPE_H
++# include <wctype.h>
++#endif
++
++
++/* A sentinel value that's placed at the end of the list of tab stops.
++ *    This value must be a large number, but not so large that adding the
++ *       length of a line to it would cause the column variable to overflow.  */
++#define TAB_STOP_SENTINEL INT_MAX
++
+ #include "system.h"
+ #include "error.h"
+ #include "posixver.h"
+ #include "quote.h"
+ #include "xstrndup.h"
+ 
++/* MB_LEN_MAX is incorrectly defined to be 1 in at least one GCC
++   installation; work around this configuration error. */
++#if !defined MB_LEN_MAX || MB_LEN_MAX < 2
++# undef MB_LEN_MAX
++# define MB_LEN_MAX 16
++#endif
++
+ /* The official name of this program (e.g., no `g' prefix).  */
+ #define PROGRAM_NAME "unexpand"
+ 
+@@ -460,6 +483,236 @@ unexpand (void)
+     }
+ }
+ 
++#if HAVE_MBRTOWC && HAVE_WCTYPE_H
++static void
++unexpand_multibyte (void)
++{
++  /* Input stream.  */
++  FILE *fp = next_file (NULL);
++
++  mbstate_t i_state;		/* Current shift state of the input stream. */
++  char buf[MB_LEN_MAX + BUFSIZ];  /* For spooling a read byte sequence. */
++  char *bufpos;			/* Next read position of BUF. */
++  size_t buflen = 0;		/* The length of the byte sequence in buf. */
++
++  /* The array of pending blanks.  In non-POSIX locales, blanks can
++     include characters other than spaces, so the blanks must be
++     stored, not merely counted.  */
++  char *pending_blank;
++
++  if (!fp)
++    return;
++
++  /* Binary I/O will preserve the original EOL style (DOS/Unix) of files.  */
++  SET_BINARY2 (fileno (fp), STDOUT_FILENO);
++
++  /* The worst case is a non-blank character, then one blank, then a
++     tab stop, then MAX_COLUMN_WIDTH - 1 blanks, then a non-blank; so
++     allocate MAX_COLUMN_WIDTH bytes to store the blanks.  */
++  pending_blank = xmalloc (max_column_width);
++
++  memset (&i_state, '\0', sizeof(mbstate_t));
++
++  for (;;)
++    {
++      /* A gotten wide character. */
++      wint_t wc;
++
++      /* If true, perform translations.  */
++      bool convert = true;
++
++      /* The following variables have valid values only when CONVERT
++	 is true:  */
++
++      /* Column of next input character.  */
++      uintmax_t column = 0;
++
++      /* Column the next input tab stop is on.  */
++      uintmax_t next_tab_column = 0;
++
++      /* Index in TAB_LIST of next tab stop to examine.  */
++      size_t tab_index = 0;
++
++      /* If true, the first pending blank came just before a tab stop.  */
++      bool one_blank_before_tab_stop = false;
++
++      /* If true, the previous input character was a blank.  This is
++	 initially true, since initial strings of blanks are treated
++	 as if the line was preceded by a blank.  */
++      bool prev_blank = true;
++
++      /* Number of pending columns of blanks.  */
++      size_t pending = 0;
++
++      /* Convert a line of text.  */
++      do
++	{
++	  wchar_t w;
++	  size_t mblength;	 /* The byte size of a multibyte character
++				    which shows as same character as WC. */
++	  mbstate_t i_state_bak; /* Back up the I_STATE. */
++
++	  /* Fill buffer */
++	  if (buflen < MB_LEN_MAX)
++	    {
++	      if (!feof(fp) && !ferror(fp)) {
++		if (buflen > 0) memmove(buf, bufpos, buflen);
++		buflen += fread(buf + buflen, sizeof(char), BUFSIZ, fp);
++		bufpos = buf;
++	      }
++	    }
++
++	  if (buflen < 1) {
++	    /* Move to the next file */
++	    if (feof(fp) || ferror(fp)) {
++	      fp = next_file(fp);
++	    }
++	    if (!fp) {
++	      if (pending)
++		{
++		  if (fwrite (pending_blank, 1, pending, stdout) != pending)
++		    error (EXIT_FAILURE, errno, _("write error"));
++		}
++	      free (pending_blank);
++	      return;
++	    }
++	    SET_BINARY2 (fileno (fp), STDOUT_FILENO);	
++	    continue;
++	  }
++	    
++	  i_state_bak = i_state;
++	  mblength = mbrtowc (&w, bufpos, buflen, &i_state);
++	  wc = w;
++
++	  if (mblength == (size_t) -1 || mblength == (size_t) -2) {
++	    i_state = i_state_bak;
++	    wc = L'\0';
++	    column += convert;
++	    mblength = 1;
++	  }
++
++	  if (convert)
++	    {
++	      bool blank = iswblank (wc);
++
++	      if (blank)
++		{
++		  if (next_tab_column <= column)
++		    {
++		      if (tab_size)
++			next_tab_column =
++			  column + (tab_size - column % tab_size);
++		      else
++			for (;;)
++			  if (tab_index == first_free_tab)
++			    {
++			      convert = false;
++			      break;
++			    }
++			  else
++			    {
++			      uintmax_t tab = tab_list[tab_index++];
++			      if (column < tab)
++				{
++				  next_tab_column = tab;
++				  break;
++				}
++			    }
++		    }
++
++		  if (convert)
++		    {
++		      if (next_tab_column < column)
++			error (EXIT_FAILURE, 0, _("input line is too long"));
++
++		      if (wc == L'\t')
++			{
++			  column = next_tab_column;
++
++			  /* Discard pending blanks, unless it was a single
++			     blank just before the previous tab stop.  */
++			  if (! (pending == 1 && one_blank_before_tab_stop))
++			    {
++			      pending = 0;
++			      one_blank_before_tab_stop = false;
++			    }
++			}
++		      else
++			{
++			  column++;
++
++			  if (! (prev_blank && column == next_tab_column))
++			    {
++			      /* It is not yet known whether the pending blanks
++				 will be replaced by tabs.  */
++			      if (column == next_tab_column)
++				one_blank_before_tab_stop = true;
++			      pending_blank[pending++] = ' ';
++			      prev_blank = true;
++			      buflen -= mblength;
++			      bufpos += mblength;
++			      continue;
++			    }
++
++			  /* Replace the pending blanks by a tab or two.  */
++			  pending_blank[0] = *bufpos = '\t';
++			  pending = one_blank_before_tab_stop;
++			}
++		    }
++		}
++	      else if (wc == L'\b')
++		{
++		  /* Go back one column, and force recalculation of the
++		     next tab stop.  */
++		  column -= !!column;
++		  next_tab_column = column;
++		  tab_index -= !!tab_index;
++		}
++	      else
++		{
++		  if (!iswcntrl (wc))
++		    {
++		      int width = wcwidth (wc);
++		      if (width > 0) {
++			if (column > (column + width))
++			  error (EXIT_FAILURE, 0, _("input line is too long"));
++			column += width;
++		      }
++		    }
++		}
++
++	      if (pending)
++		{
++		  if (fwrite (pending_blank, 1, pending, stdout) != pending)
++		    error (EXIT_FAILURE, errno, _("write error"));
++		  pending = 0;
++		  one_blank_before_tab_stop = false;
++		}
++
++	      prev_blank = blank;
++	      convert &= convert_entire_line | blank;
++	    }
++
++	  if (mblength)
++	    {
++	      if (fwrite (bufpos, sizeof(char), mblength, stdout) < mblength)
++		error (EXIT_FAILURE, errno, _("write error"));
++	    }
++	  else
++	    {
++	      if (putchar('\0'))
++		error (EXIT_FAILURE, errno, _("write error"));
++	      mblength = 1;
++	    }
++
++	  buflen -= mblength;
++	  bufpos += mblength;
++	}
++      while (wc != L'\n');
++    }
++}
++#endif
++
+ int
+ main (int argc, char **argv)
+ {
+@@ -548,7 +801,12 @@ main (int argc, char **argv)
+ 
+   file_list = (optind < argc ? &argv[optind] : stdin_argv);
+ 
+-  unexpand ();
++#if HAVE_MBRTOWC
++  if (MB_CUR_MAX > 1)
++    unexpand_multibyte ();
++  else
++#endif
++    unexpand ();
+ 
+   if (have_read_stdin && fclose (stdin) != 0)
+     error (EXIT_FAILURE, errno, "-");
+diff -uprN coreutils-5.3.0.orig/src/uniq.c coreutils-5.3.0/src/uniq.c
+--- coreutils-5.3.0.orig/src/uniq.c	2004-12-02 16:45:17.000000000 +0900
++++ coreutils-5.3.0/src/uniq.c	2005-07-01 19:10:53.278702512 +0900
 @@ -23,6 +23,16 @@
  #include <getopt.h>
  #include <sys/types.h>
  
-+/* Get mbstate_t, mbrtowc(). */
++/* Get mbstate_t, mbrtowc(), wcrtomb() */
 +#if HAVE_WCHAR_H
 +# include <wchar.h>
 +#endif
 +
-+/* Get isw* functions. */
++/* Get iswctype(), wctype(), towupper)(. */
 +#if HAVE_WCTYPE_H
 +# include <wctype.h>
 +#endif
@@ -2394,39 +4354,34 @@
  #include "system.h"
  #include "argmatch.h"
  #include "linebuffer.h"
-@@ -31,7 +41,19 @@
- #include "posixver.h"
- #include "xmemcoll.h"
+@@ -34,6 +44,13 @@
  #include "xstrtol.h"
--#include "memcasecmp.h"
-+#include "xmemcoll.h"
-+
+ #include "memcasecmp.h"
+ 
 +/* MB_LEN_MAX is incorrectly defined to be 1 in at least one GCC
-+   installation; work around this configuration error.  */
++   installation; work around this configuration error. */
 +#if !defined MB_LEN_MAX || MB_LEN_MAX < 2
++# undef MB_LEN_MAX
 +# define MB_LEN_MAX 16
 +#endif
 +
-+/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
-+#if HAVE_MBRTOWC && defined mbstate_t
-+# define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
-+#endif
-+
- 
  /* The official name of this program (e.g., no `g' prefix).  */
  #define PROGRAM_NAME "uniq"
-@@ -108,6 +130,10 @@
+ 
+@@ -109,6 +126,12 @@ static enum delimit_method const delimit
  /* Select whether/how to delimit groups of duplicate lines.  */
  static enum delimit_method delimit_groups;
  
 +/* Function pointers. */
-+static char *
-+(*find_field) (struct linebuffer *line);
++static char * (*find_field) (struct linebuffer *line);
++
++/* Show the blank character class. */
++wctype_t blank_type;
 +
  static struct option const longopts[] =
  {
    {"count", no_argument, NULL, 'c'},
-@@ -188,7 +214,7 @@
+@@ -189,7 +212,7 @@ size_opt (char const *opt, char const *m
     return a pointer to the beginning of the line's field to be compared. */
  
  static char *
@@ -2435,7 +4390,7 @@
  {
    register size_t count;
    register char *lp = line->buffer;
-@@ -209,6 +235,83 @@
+@@ -210,6 +233,83 @@ find_field (const struct linebuffer *lin
    return lp + i;
  }
  
@@ -2486,7 +4441,7 @@
 +	{
 +	  MBCHAR_TO_WCHAR (wc, mblength, lp, pos, size, statep, convfail);
 + 
-+	  if (convfail || !iswblank (wc))
++	  if (convfail || !iswctype (wc, blank_type))
 +	    {
 +	      pos += mblength;
 +	      break;
@@ -2498,7 +4453,7 @@
 +	{
 +	  MBCHAR_TO_WCHAR (wc, mblength, lp, pos, size, statep, convfail);
 +
-+	  if (!convfail && iswblank (wc))
++	  if (!convfail && iswctype (wc, blank_type))
 +	    break;
 +
 +	  pos += mblength;
@@ -2516,45 +4471,11 @@
 +}
 +#endif
 +
- /* Return zero if two strings OLD and NEW match, nonzero if not.
+ /* Return false if two strings OLD and NEW match, true if not.
     OLD and NEW point not to the beginnings of the lines
     but rather to the beginnings of the fields to compare.
-@@ -217,6 +320,8 @@
- static int
- different (char *old, char *new, size_t oldlen, size_t newlen)
- {
-+  char *copy_old, *copy_new;
-+
-   if (check_chars < oldlen)
-     oldlen = check_chars;
-   if (check_chars < newlen)
-@@ -224,15 +329,93 @@
- 
-   if (ignore_case)
-     {
--      /* FIXME: This should invoke strcoll somehow.  */
--      return oldlen != newlen || memcasecmp (old, new, oldlen);
-+      size_t i;
-+
-+      copy_old = alloca (oldlen + 1);
-+      copy_new = alloca (oldlen + 1);
-+
-+      for (i = 0; i < oldlen; i++)
-+	{
-+	  copy_old[i] = toupper (old[i]);
-+	  copy_new[i] = toupper (new[i]);
-+	}
-     }
--  else if (HAVE_SETLOCALE && hard_LC_COLLATE)
--    return xmemcoll (old, oldlen, new, newlen);
-   else
--    return oldlen != newlen || memcmp (old, new, oldlen);
-+    {
-+      copy_old = (char *)old;
-+      copy_new = (char *)new;
-+    }
-+
-+  return xmemcoll (copy_old, oldlen, copy_new, newlen);
+@@ -234,6 +334,73 @@ different (char *old, char *new, size_t 
+     return oldlen != newlen || memcmp (old, new, oldlen);
  }
  
 +#if HAVE_MBRTOWC
@@ -2591,7 +4512,7 @@
 +	    case (size_t)-1:
 +	    case (size_t)-2:
 +	      state[i] = state_bak;
-+	      /* Fall through */
++		/* Fall through */
 +	    case 0:
 +	      mblength = 1;
 +	      break;
@@ -2627,7 +4548,7 @@
  /* Output the line in linebuffer LINE to stream STREAM
     provided that the switches say it should be output.
     MATCH is true if the line matches the previous line.
-@@ -296,15 +479,43 @@
+@@ -297,15 +464,42 @@ check_file (const char *infile, const ch
      {
        char *prevfield IF_LINT (= NULL);
        size_t prevlen IF_LINT (= 0);
@@ -2643,38 +4564,37 @@
  	  size_t thislen;
 +#if HAVE_MBRTOWC
 +	  mbstate_t thisstate;
-+#endif
-+
++#endif 
  	  if (readlinebuffer (thisline, istream) == 0)
  	    break;
  	  thisfield = find_field (thisline);
  	  thislen = thisline->length - 1 - (thisfield - thisline->buffer);
 +#if HAVE_MBRTOWC
 +	  if (MB_CUR_MAX > 1)
-+            {
-+            thisstate = thisline->state;
++	    {
++	      thisstate = thisline->state;
 +
-+            if (prevline->length == 0 || different_multi
-+              (thisfield, prevfield, thislen, prevlen, thisstate, prevstate))
-+              {
-+                fwrite (thisline->buffer, sizeof (char),
-+                        thisline->length, ostream);
++	      if (prevline->length == 0 || different_multi
++		  (thisfield, prevfield, thislen, prevlen, thisstate, prevstate))
++		{
++		  fwrite (thisline->buffer, sizeof (char),
++		      thisline->length, ostream);
 +
-+                SWAP_LINES (prevline, thisline);
-+                prevfield = thisfield;
-+                prevlen = thislen;
-+                prevstate = thisstate;
-+              }
-+          }
-+	else
++		  SWAP_LINES (prevline, thisline);
++		  prevfield = thisfield;
++		  prevlen = thislen;
++		  prevstate = thisstate;
++		}
++	    }
++	  else
 +#endif
  	  if (prevline->length == 0
  	      || different (thisfield, prevfield, thislen, prevlen))
  	    {
-@@ -323,17 +534,26 @@
+@@ -324,17 +518,26 @@ check_file (const char *infile, const ch
        size_t prevlen;
-       int match_count = 0;
-       int first_delimiter = 1;
+       uintmax_t match_count = 0;
+       bool first_delimiter = true;
 +#if HAVE_MBRTOWC
 +      mbstate_t prevstate;
 +#endif
@@ -2698,23 +4618,23 @@
  	  if (readlinebuffer (thisline, istream) == 0)
  	    {
  	      if (ferror (istream))
-@@ -342,6 +562,15 @@
+@@ -343,6 +546,15 @@ check_file (const char *infile, const ch
  	    }
  	  thisfield = find_field (thisline);
  	  thislen = thisline->length - 1 - (thisfield - thisline->buffer);
 +#if HAVE_MBRTOWC
 +	  if (MB_CUR_MAX > 1)
 +	    {
-+              thisstate = thisline->state;
-+              match = !different_multi (thisfield, prevfield,
-+                                thislen, prevlen, thisstate, prevstate);
-+            }
++	      thisstate = thisline->state;
++	      match = !different_multi (thisfield, prevfield,
++		  thislen, prevlen, thisstate, prevstate);
++	    }
 +	  else
 +#endif
  	  match = !different (thisfield, prevfield, thislen, prevlen);
+ 	  match_count += match;
  
- 	  if (match)
-@@ -369,6 +598,9 @@
+@@ -375,6 +587,9 @@ check_file (const char *infile, const ch
  	      SWAP_LINES (prevline, thisline);
  	      prevfield = thisfield;
  	      prevlen = thislen;
@@ -2724,7 +4644,7 @@
  	      if (!match)
  		match_count = 0;
  	    }
-@@ -411,6 +643,19 @@
+@@ -420,6 +635,18 @@ main (int argc, char **argv)
  
    atexit (close_stdout);
  
@@ -2732,6 +4652,7 @@
 +  if (MB_CUR_MAX > 1)
 +    {
 +      find_field = find_field_multi;
++      blank_type = wctype ("blank");
 +    }
 +  else
 +#endif
@@ -2739,1496 +4660,6 @@
 +      find_field = find_field_uni;
 +    }
 +
-+
-+
    skip_chars = 0;
    skip_fields = 0;
    check_chars = SIZE_MAX;
---- coreutils-5.1.3/src/expand.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/expand.c	2004-02-16 15:36:40.000000000 +0000
-@@ -38,12 +38,29 @@
- #include <stdio.h>
- #include <getopt.h>
- #include <sys/types.h>
-+
-+/* Get mbstate_t, mbrtowc(), wcwidth(). */
-+#if HAVE_WCHAR_H
-+# include <wchar.h>
-+#endif
-+
- #include "system.h"
- #include "error.h"
- #include "posixver.h"
- #include "quote.h"
- #include "xstrndup.h"
- 
-+/* MB_LEN_MAX is incorrectly defined to be 1 in at least one GCC
-+   installation; work around this configuration error.  */
-+#if !defined MB_LEN_MAX || MB_LEN_MAX < 2
-+# define MB_LEN_MAX 16
-+#endif
-+
-+/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
-+#if HAVE_MBRTOWC && defined mbstate_t
-+# define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
-+#endif
-+
- /* The official name of this program (e.g., no `g' prefix).  */
- #define PROGRAM_NAME "expand"
- 
-@@ -332,6 +349,7 @@
- 	      ++column;
- 	    }
- 	}
-+
-       else
- 	{
- 	  if (convert)
-@@ -343,7 +361,8 @@
- 		}
- 	      else
- 		{
--		  ++column;
-+		  if (!ISCNTRL (c))
-+		    ++column;
- 		  if (convert_entire_line == 0)
- 		    convert = 0;
- 		}
-@@ -353,6 +372,146 @@
-     }
- }
- 
-+#if HAVE_MBRTOWC
-+static void
-+expand_multibyte (void)
-+{
-+  FILE *fp;			/* Input strem. */
-+  mbstate_t i_state;		/* Current shift state of the input stream. */
-+  mbstate_t i_state_bak;	/* Back up the I_STATE. */
-+  mbstate_t o_state;		/* Current shift state of the output stream. */
-+  char buf[MB_LEN_MAX + BUFSIZ];  /* For spooling a read byte sequence. */
-+  char *bufpos;			/* Next read position of BUF. */
-+  size_t buflen = 0;		/* The length of the byte sequence in buf. */
-+  wchar_t wc;			/* A gotten wide character. */
-+  size_t mblength;		/* The byte size of a multibyte character
-+				   which shows as same character as WC. */
-+  int tab_index = 0;		/* Index in `tab_list' of next tabstop. */
-+  int column = 0;		/* Column on screen of the next char. */
-+  int next_tab_column;		/* Column the next tab stop is on. */
-+  int convert = 1;		/* If nonzero, perform translations. */
-+
-+  fp = next_file ((FILE *) NULL);
-+  if (fp == NULL)
-+    return;
-+
-+  /* Binary I/O will preserve the original EOL style (DOS/Unix) of files. */
-+  SET_BINARY2 (fileno (fp), STDOUT_FILENO);
-+
-+  memset (&o_state, '\0', sizeof(mbstate_t));
-+  memset (&i_state, '\0', sizeof(mbstate_t));
-+
-+  for (;;)
-+    {
-+      /* Refill the buffer BUF. */
-+      if (buflen < MB_LEN_MAX && !feof(fp) && !ferror(fp))
-+	{
-+	  memmove (buf, bufpos, buflen);
-+	  buflen += fread (buf + buflen, sizeof(char), BUFSIZ, fp);
-+	  bufpos = buf;
-+	}
-+
-+      /* No character is left in BUF. */
-+      if (buflen < 1)
-+	{
-+	  fp = next_file (fp);
-+
-+	  if (fp == NULL)
-+	    break;		/* No more files. */
-+	  else
-+	    {
-+	      memset (&i_state, '\0', sizeof(mbstate_t));
-+	      SET_BINARY2 (fileno (fp), STDOUT_FILENO);
-+	      continue;
-+	    }
-+	}
-+
-+      /* Get a wide character. */
-+      i_state_bak = i_state;
-+      mblength = mbrtowc (&wc, bufpos, buflen, &i_state);
-+
-+      switch (mblength)
-+	{
-+	case (size_t)-1:	/* illegal byte sequence. */
-+	case (size_t)-2:
-+	  mblength = 1;
-+	  i_state = i_state_bak;
-+	  if (convert)
-+	    {
-+	      ++column;
-+	      if (convert_entire_line == 0)
-+		convert = 0;
-+	    }
-+	  putchar (*bufpos);
-+	  break;
-+
-+	case 0:		/* null. */
-+	  mblength = 1;
-+	  if (convert && convert_entire_line == 0)
-+	    convert = 0;
-+	  putchar ('\0');
-+	  break;
-+
-+	default:
-+	  if (wc == L'\n')   /* LF. */
-+	    {
-+	      tab_index = 0;
-+	      column = 0;
-+	      convert = 1;
-+	      putchar ('\n');
-+	    }
-+	  else if (wc == L'\t' && convert)	/* Tab. */
-+	    {
-+	      if (tab_size == 0)
-+		{
-+		  /* Do not let tab_index == first_free_tab;
-+		     stop when it is 1 less. */
-+		  while (tab_index < first_free_tab - 1
-+		      && column >= tab_list[tab_index])
-+		    tab_index++;
-+		  next_tab_column = tab_list[tab_index];
-+		  if (tab_index < first_free_tab - 1)
-+		    tab_index++;
-+		  if (column >= next_tab_column)
-+		    next_tab_column = column + 1;
-+		}
-+	      else
-+		next_tab_column = column + tab_size - column % tab_size;
-+
-+	      while (column < next_tab_column)
-+		{
-+		  putchar (' ');
-+		  ++column;
-+		}
-+	    }
-+	  else  /* Others. */
-+	    {
-+	      if (convert)
-+		{
-+		  if (wc == L'\b')
-+		    {
-+		      if (column > 0)
-+			--column;
-+		    }
-+		  else
-+		    {
-+		      int width;		/* The width of WC. */
-+
-+		      width = wcwidth (wc);
-+		      column += (width > 0) ? width : 0;
-+		      if (convert_entire_line == 0)
-+			convert = 0;
-+		    }
-+		}
-+	      fwrite (bufpos, sizeof(char), mblength, stdout);
-+	    }
-+	}
-+      buflen -= mblength;
-+      bufpos += mblength;
-+    }
-+}
-+#endif
-+
- int
- main (int argc, char **argv)
- {
-@@ -424,7 +583,12 @@
- 
-   file_list = (optind < argc ? &argv[optind] : stdin_argv);
- 
--  expand ();
-+#if HAVE_MBRTOWC
-+  if (MB_CUR_MAX > 1)
-+    expand_multibyte ();
-+  else
-+#endif
-+    expand ();
- 
-   if (have_read_stdin && fclose (stdin) == EOF)
-     error (EXIT_FAILURE, errno, "-");
---- coreutils-5.1.3/src/fold.c	2004-02-16 15:36:40.000000000 +0000
-+++ coreutils-5.2.1/src/fold.c	2004-10-18 22:28:41.114883456 +0100
-@@ -23,31 +23,74 @@
- #include <getopt.h>
- #include <sys/types.h>
- 
-+/* Get mbstate_t, mbrtowc(), wcwidth().  */
-+#if HAVE_WCHAR_H
-+# include <wchar.h>
-+#endif
-+
-+/* Get iswprint(), iswblank(), wcwidth().  */
-+#if HAVE_WCTYPE_H
-+# include <wctype.h>
-+#endif
-+
- #include "system.h"
- #include "error.h"
- #include "posixver.h"
- #include "xstrtol.h"
- 
-+/* MB_LEN_MAX is incorrectly defined to be 1 in at least one GCC
-+      installation; work around this configuration error.  */
-+#if !defined MB_LEN_MAX || MB_LEN_MAX < 2
-+# undef MB_LEN_MAX
-+# define MB_LEN_MAX 16
-+#endif
-+
-+/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
-+#if HAVE_MBRTOWC && defined mbstate_t
-+# define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
-+#endif
-+
- /* The official name of this program (e.g., no `g' prefix).  */
- #define PROGRAM_NAME "fold"
- 
- #define AUTHORS "David MacKenzie"
- 
-+#define FATAL_ERROR(Message)                                            \
-+  do                                                                    \
-+    {                                                                   \
-+      error (0, 0, (Message));                                          \
-+      usage (2);                                                        \
-+    }                                                                   \
-+  while (0)
-+
-+enum operating_mode
-+{
-+  /* Fold texts by columns that are at the given positions. */
-+  column_mode,
-+
-+  /* Fold texts by bytes that are at the given positions. */
-+  byte_mode,
-+
-+  /* Fold texts by characters that are at the given positions. */
-+  character_mode,
-+};
-+
- /* The name this program was run with. */
- char *program_name;
- 
-+/* The argument shows current mode. (Default: column_mode) */
-+static enum operating_mode operating_mode;
-+
- /* If nonzero, try to break on whitespace. */
- static bool break_spaces;
- 
--/* If nonzero, count bytes, not column positions. */
--static bool count_bytes;
--
- /* If nonzero, at least one of the files we read was standard input. */
- static bool have_read_stdin;
- 
- static struct option const longopts[] =
- {
-   {"bytes", no_argument, NULL, 'b'},
-+  {"characters", no_argument, NULL, 'c'},
-   {"spaces", no_argument, NULL, 's'},
-   {"width", required_argument, NULL, 'w'},
-   {GETOPT_HELP_OPTION_DECL},
-@@ -77,6 +120,7 @@
- "), stdout);
-       fputs (_("\
-   -b, --bytes         count bytes rather than columns\n\
-+  -c, --characters    count characters rather than columns\n\
-   -s, --spaces        break at spaces\n\
-   -w, --width=WIDTH   use WIDTH columns instead of 80\n\
- "), stdout);
-@@ -94,7 +138,7 @@
- static size_t
- adjust_column (size_t column, char c)
- {
--  if (!count_bytes)
-+  if (operating_mode != byte_mode)
-     {
-       if (c == '\b')
- 	{
-@@ -113,34 +157,14 @@
-   return column;
- }
- 
--/* Fold file FILENAME, or standard input if FILENAME is "-",
--   to stdout, with maximum line length WIDTH.
--   Return 0 if successful, 1 if an error occurs. */
--
--static int
--fold_file (char *filename, int width)
-+static void
-+fold_text (FILE *istream, int width, int *saved_errno)
- {
--  FILE *istream;
-   register int c;
-   size_t column = 0;		/* Screen column where next char will go. */
-   size_t offset_out = 0;	/* Index in `line_out' for next char. */
-   static char *line_out = NULL;
-   static size_t allocated_out = 0;
--  int saved_errno;
--
--  if (STREQ (filename, "-"))
--    {
--      istream = stdin;
--      have_read_stdin = true;
--    }
--  else
--    istream = fopen (filename, "r");
--
--  if (istream == NULL)
--    {
--      error (0, errno, "%s", filename);
--      return 1;
--    }
- 
-   while ((c = getc (istream)) != EOF)
-     {
-@@ -168,6 +192,15 @@
- 	      bool found_blank = false;
- 	      size_t logical_end = offset_out;
- 
-+	      /* If LINE_OUT has no wide character,
-+		 put a new wide character in LINE_OUT
-+		 if column is bigger than width. */
-+	      if (offset_out == 0)
-+		{
-+		  line_out[offset_out++] = c;
-+		  continue;
-+		}
-+
- 	      /* Look for the last blank. */
- 	      while (logical_end)
- 		{
-@@ -214,11 +247,225 @@
-       line_out[offset_out++] = c;
-     }
- 
--  saved_errno = errno;
-+  *saved_errno = errno;
-+
-+  if (offset_out)
-+    fwrite (line_out, sizeof (char), (size_t) offset_out, stdout);
-+
-+  free(line_out);
-+}
-+
-+#if HAVE_MBRTOWC
-+static void
-+fold_multibyte_text (FILE *istream, int width, int *saved_errno)
-+{
-+  char buf[MB_LEN_MAX + BUFSIZ];  /* For spooling a read byte sequence. */
-+  size_t buflen = 0;	/* The length of the byte sequence in buf. */
-+  char *bufpos;         /* Next read position of BUF. */
-+  wint_t wc;		/* A gotten wide character. */
-+  size_t mblength;	/* The byte size of a multibyte character which shows
-+			   as same character as WC. */
-+  mbstate_t state, state_bak;	/* State of the stream. */
-+  int convfail;		/* 1, when conversion is failed. Otherwise 0. */
-+
-+  char *line_out = NULL;
-+  size_t offset_out = 0;	/* Index in `line_out' for next char. */
-+  size_t allocated_out = 0;
-+
-+  int increment;
-+  size_t column = 0;
-+
-+  size_t last_blank_pos;
-+  size_t last_blank_column;
-+  int is_blank_seen;
-+  int last_blank_increment;
-+  int is_bs_following_last_blank;
-+  size_t bs_following_last_blank_num;
-+  int is_cr_after_last_blank;
-+
-+#define CLEAR_FLAGS				\
-+   do						\
-+     {						\
-+	last_blank_pos = 0;			\
-+	last_blank_column = 0;			\
-+	is_blank_seen = 0;			\
-+	is_bs_following_last_blank = 0;		\
-+	bs_following_last_blank_num = 0;	\
-+	is_cr_after_last_blank = 0;		\
-+     }						\
-+   while (0)
-+
-+#define START_NEW_LINE			\
-+   do					\
-+     {					\
-+      putchar ('\n');			\
-+      column = 0;			\
-+      offset_out = 0;			\
-+      CLEAR_FLAGS;			\
-+    }					\
-+   while (0)
-+
-+  CLEAR_FLAGS;
-+  memset (&state, '\0', sizeof(mbstate_t));
-+
-+  for (;; bufpos += mblength, buflen -= mblength)
-+    {
-+      if (buflen < MB_LEN_MAX && !feof (istream) && !ferror (istream))
-+	{
-+	  memmove (buf, bufpos, buflen);
-+	  buflen += fread (buf + buflen, sizeof(char), BUFSIZ, istream);
-+	  bufpos = buf;
-+	}
-+
-+      if (buflen < 1)
-+	break;
-+
-+      /* Get a wide character. */
-+      convfail = 0;
-+      state_bak = state;
-+      mblength = mbrtowc ((wchar_t *)&wc, bufpos, buflen, &state);
-+
-+      switch (mblength)
-+	{
-+	case (size_t)-1:
-+	case (size_t)-2:
-+	  convfail++;
-+	  state = state_bak;
-+	  /* Fall through. */
-+
-+	case 0:
-+	  mblength = 1;
-+	  break;
-+	}
-+
-+rescan:
-+      if (operating_mode == byte_mode)			/* byte mode */
-+	increment = mblength;
-+      else if (operating_mode == character_mode)	/* character mode */
-+	increment = 1;
-+      else						/* column mode */
-+	{
-+	  if (convfail)
-+	    increment = 1;
-+	  else
-+	    {
-+	      switch (wc)
-+		{
-+		case L'\n':
-+		  fwrite (line_out, sizeof(char), offset_out, stdout);
-+		  START_NEW_LINE;
-+		  continue;
-+		  
-+		case L'\b':
-+		  increment = (column > 0) ? -1 : 0;
-+		  break;
-+
-+		case L'\r':
-+		  increment = -1 * column;
-+		  break;
-+
-+		case L'\t':
-+		  increment = 8 - column % 8;
-+		  break;
-+
-+		default:
-+		  increment = wcwidth (wc);
-+		  increment = (increment < 0) ? 0 : increment;
-+		}
-+	    }
-+	}
-+
-+      if (column + increment > width && break_spaces && last_blank_pos)
-+	{
-+	  fwrite (line_out, sizeof(char), last_blank_pos, stdout);
-+	  putchar ('\n');
-+
-+	  offset_out = offset_out - last_blank_pos;
-+	  column = column - last_blank_column + ((is_cr_after_last_blank)
-+	      ? last_blank_increment : bs_following_last_blank_num);
-+	  memmove (line_out, line_out + last_blank_pos, offset_out);
-+	  CLEAR_FLAGS;
-+	  goto rescan;
-+	}
-+
-+      if (column + increment > width && column != 0)
-+	{
-+	  fwrite (line_out, sizeof(char), offset_out, stdout);
-+	  START_NEW_LINE;
-+	  goto rescan;
-+	}
-+
-+      if (allocated_out < offset_out + mblength)
-+	{
-+	  allocated_out += 1024;
-+	  line_out = xrealloc (line_out, allocated_out);
-+	}
-+
-+      memcpy (line_out + offset_out, bufpos, mblength);
-+      offset_out += mblength;
-+      column += increment;
-+
-+      if (is_blank_seen && !convfail && wc == L'\r')
-+	is_cr_after_last_blank = 1;
-+
-+      if (is_bs_following_last_blank && !convfail && wc == L'\b')
-+	++bs_following_last_blank_num;
-+      else
-+	is_bs_following_last_blank = 0;
-+
-+      if (break_spaces && !convfail && iswblank (wc))
-+	{
-+	  last_blank_pos = offset_out;
-+	  last_blank_column = column;
-+	  is_blank_seen = 1;
-+	  last_blank_increment = increment;
-+	  is_bs_following_last_blank = 1;
-+	  bs_following_last_blank_num = 0;
-+	  is_cr_after_last_blank = 0;
-+	}
-+    }
-+
-+  *saved_errno = errno;
- 
-   if (offset_out)
-     fwrite (line_out, sizeof (char), (size_t) offset_out, stdout);
- 
-+  free(line_out);
-+}
-+#endif
-+
-+/* Fold file FILENAME, or standard input if FILENAME is "-",
-+   to stdout, with maximum line length WIDTH.
-+   Return 0 if successful, 1 if an error occurs. */
-+
-+static int
-+fold_file (char *filename, int width)
-+{
-+  FILE *istream;
-+  int saved_errno;
-+
-+  if (STREQ (filename, "-"))
-+    {
-+      istream = stdin;
-+      have_read_stdin = 1;
-+    }
-+  else
-+    istream = fopen (filename, "r");
-+
-+  if (istream == NULL)
-+    {
-+      error (0, errno, "%s", filename);
-+      return 1;
-+    }
-+
-+  /* Define how ISTREAM is being folded. */
-+#if HAVE_MBRTOWC
-+  if (MB_CUR_MAX > 1)
-+    fold_multibyte_text (istream, width, &saved_errno);
-+  else
-+#endif
-+    fold_text (istream, width, &saved_errno);
-+
-   if (ferror (istream))
-     {
-       error (0, saved_errno, "%s", filename);
-@@ -251,7 +498,8 @@
- 
-   atexit (close_stdout);
- 
--  break_spaces = count_bytes = have_read_stdin = false;
-+  operating_mode = column_mode;
-+  break_spaces = have_read_stdin = false;
- 
-   /* Turn any numeric options into -w options.  */
-   for (i = 1; i < argc; i++)
-@@ -278,7 +526,7 @@
- 	}
-     }
- 
--  while ((optc = getopt_long (argc, argv, "bsw:", longopts, NULL)) != -1)
-+  while ((optc = getopt_long (argc, argv, "bcsw:", longopts, NULL)) != -1)
-     {
-       switch (optc)
- 	{
-@@ -286,7 +534,15 @@
- 	  break;
- 
- 	case 'b':		/* Count bytes rather than columns. */
--	  count_bytes = true;
-+	  if (operating_mode != column_mode)
-+	    FATAL_ERROR (_("only one way of folding may be specified"));
-+	  operating_mode = byte_mode;
-+	  break;
-+
-+	case 'c':
-+	  if (operating_mode != column_mode)
-+	    FATAL_ERROR (_("only one way of folding may be specified"));
-+	  operating_mode = character_mode;
- 	  break;
- 
- 	case 's':		/* Break at word boundaries. */
---- coreutils-5.1.3/src/join.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/join.c	2004-02-16 15:36:40.000000000 +0000
-@@ -24,16 +24,30 @@
- #include <sys/types.h>
- #include <getopt.h>
- 
-+/* Get mbstate_t, mbrtowc(), mbrtowc(), wcwidth().  */
-+#if HAVE_WCHAR_H
-+# include <wchar.h>
-+#endif
-+
-+/* Get iswblank(), towupper.  */
-+#if HAVE_WCTYPE_H
-+# include <wctype.h>
-+#endif
-+
- #include "system.h"
- #include "error.h"
- #include "hard-locale.h"
- #include "linebuffer.h"
--#include "memcasecmp.h"
- #include "posixver.h"
- #include "quote.h"
- #include "xmemcoll.h"
- #include "xstrtol.h"
- 
-+/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
-+#if HAVE_MBRTOWC && defined mbstate_t
-+# define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
-+#endif
-+
- /* The official name of this program (e.g., no `g' prefix).  */
- #define PROGRAM_NAME "join"
- 
-@@ -110,7 +124,10 @@
- /* Tab character separating fields; if this is NUL fields are separated
-    by any nonempty string of white space, otherwise by exactly one
-    tab character.  */
--static char tab;
-+static char *tab = NULL;
-+
-+/* The number of bytes used for tab. */
-+static size_t tablen = 0;
- 
- /* When using getopt_long_only, no long option can start with
-    a character that is a short option.  */
-@@ -222,6 +239,8 @@
- 
- /* Fill in the `fields' structure in LINE.  */
- 
-+/* Fill in the `fields' structure in LINE.  */
-+
- static void
- xfields (struct line *line)
- {
-@@ -231,9 +250,9 @@
-   if (ptr == lim)
-     return;
- 
--  if (tab)
-+  if (tab != NULL)
-     {
--      unsigned char t = tab;
-+      unsigned char t = tab[0];
-       char *sep;
-       for (; (sep = memchr (ptr, t, lim - ptr)) != NULL; ptr = sep + 1)
- 	extract_field (line, ptr, sep - ptr);
-@@ -262,6 +281,148 @@
-   extract_field (line, ptr, lim - ptr);
- }
- 
-+#if HAVE_MBRTOWC
-+static void
-+xfields_multibyte (struct line *line)
-+{
-+  char *ptr = line->buf.buffer;
-+  char const *lim = ptr + line->buf.length - 1;
-+  wchar_t wc = 0;
-+  size_t mblength = 1;
-+  mbstate_t state, state_bak;
-+
-+  memset (&state, 0, sizeof (mbstate_t));
-+
-+  if (ptr == lim)
-+    return;
-+
-+  if (tab != NULL)
-+    {
-+      unsigned char t = tab[0];
-+      char *sep = ptr;
-+      for (; ptr < lim; ptr = sep + mblength)
-+	{
-+	  sep = ptr;
-+	  while (sep < lim)
-+	    {
-+	      state_bak = state;
-+	      mblength = mbrtowc (&wc, sep, lim - sep + 1, &state);
-+
-+	      if (mblength == (size_t)-1 || mblength == (size_t)-2)
-+		{
-+		  mblength = 1;
-+		  state = state_bak;
-+		}
-+	      mblength = (mblength < 1) ? 1 : mblength;
-+
-+	      if (mblength == tablen && !memcmp (sep, tab, mblength))
-+		break;
-+	      else
-+		{
-+		  sep += mblength;
-+		  continue;
-+		}
-+	    }
-+
-+	  if (sep == lim)
-+	    break;
-+
-+	  extract_field (line, ptr, sep - ptr);
-+	}
-+    }
-+  else
-+    {
-+      /* Skip leading blanks before the first field.  */
-+      while(ptr < lim)
-+      {
-+        state_bak = state;
-+        mblength = mbrtowc (&wc, ptr, lim - ptr + 1, &state);
-+
-+        if (mblength == (size_t)-1 || mblength == (size_t)-2)
-+          {
-+            mblength = 1;
-+            state = state_bak;
-+            break;
-+          }
-+        mblength = (mblength < 1) ? 1 : mblength;
-+
-+        if (!iswblank(wc))
-+          break;
-+        ptr += mblength;
-+      }
-+
-+      do
-+	{
-+	  char *sep;
-+	  state_bak = state;
-+	  mblength = mbrtowc (&wc, ptr, lim - ptr + 1, &state);
-+	  if (mblength == (size_t)-1 || mblength == (size_t)-2)
-+	    {
-+	      mblength = 1;
-+	      state = state_bak;
-+	      break;
-+	    }
-+	  mblength = (mblength < 1) ? 1 : mblength;
-+
-+	  sep = ptr + mblength;
-+	  while (sep != lim)
-+	    {
-+	      state_bak = state;
-+	      mblength = mbrtowc (&wc, sep, lim - sep + 1, &state);
-+	      if (mblength == (size_t)-1 || mblength == (size_t)-2)
-+		{
-+		  mblength = 1;
-+		  state = state_bak;
-+		  break;
-+		}
-+	      mblength = (mblength < 1) ? 1 : mblength;
-+
-+	      if (iswblank (wc))
-+		break;
-+
-+	      sep += mblength;
-+	    }
-+
-+	  extract_field (line, ptr, sep - ptr);
-+	  if (sep == lim)
-+	    return;
-+
-+	  state_bak = state;
-+	  mblength = mbrtowc (&wc, sep, lim - sep + 1, &state);
-+	  if (mblength == (size_t)-1 || mblength == (size_t)-2)
-+	    {
-+	      mblength = 1;
-+	      state = state_bak;
-+	      break;
-+	    }
-+	  mblength = (mblength < 1) ? 1 : mblength;
-+
-+	  ptr = sep + mblength;
-+	  while (ptr != lim)
-+	    {
-+	      state_bak = state;
-+	      mblength = mbrtowc (&wc, ptr, lim - ptr + 1, &state);
-+	      if (mblength == (size_t)-1 || mblength == (size_t)-2)
-+		{
-+		  mblength = 1;
-+		  state = state_bak;
-+		  break;
-+		}
-+	      mblength = (mblength < 1) ? 1 : mblength;
-+
-+	      if (!iswblank (wc))
-+		break;
-+
-+	      ptr += mblength;
-+	    }
-+	}
-+      while (ptr != lim);
-+    }
-+
-+  extract_field (line, ptr, lim - ptr);
-+}
-+#endif
-+
- /* Read a line from FP into LINE and split it into fields.
-    Return true if successful.  */
- 
-@@ -282,6 +443,11 @@
-   line->nfields_allocated = 0;
-   line->nfields = 0;
-   line->fields = NULL;
-+#if HAVE_MBRTOWC
-+  if (MB_CUR_MAX > 1)
-+    xfields_multibyte (line);
-+  else
-+#endif
-   xfields (line);
-   return true;
- }
-@@ -336,56 +502,114 @@
- keycmp (struct line const *line1, struct line const *line2)
- {
-   /* Start of field to compare in each file.  */
--  char *beg1;
--  char *beg2;
--
--  size_t len1;
--  size_t len2;		/* Length of fields to compare.  */
-+  char *beg[2];
-+  char *copy[2];
-+  size_t len[2];	/* Length of fields to compare.  */
-   int diff;
-+  int i, j;
- 
-   if (join_field_1 < line1->nfields)
-     {
--      beg1 = line1->fields[join_field_1].beg;
--      len1 = line1->fields[join_field_1].len;
-+      beg[0] = line1->fields[join_field_1].beg;
-+      len[0] = line1->fields[join_field_1].len;
-     }
-   else
-     {
--      beg1 = NULL;
--      len1 = 0;
-+      beg[0] = NULL;
-+      len[0] = 0;
-     }
- 
-   if (join_field_2 < line2->nfields)
-     {
--      beg2 = line2->fields[join_field_2].beg;
--      len2 = line2->fields[join_field_2].len;
-+      beg[1] = line2->fields[join_field_2].beg;
-+      len[1] = line2->fields[join_field_2].len;
-     }
-   else
-     {
--      beg2 = NULL;
--      len2 = 0;
-+      beg[1] = NULL;
-+      len[1] = 0;
-     }
- 
--  if (len1 == 0)
--    return len2 == 0 ? 0 : -1;
--  if (len2 == 0)
-+  if (len[0] == 0)
-+    return len[1] == 0 ? 0 : -1;
-+  if (len[1] == 0)
-     return 1;
- 
-   if (ignore_case)
-     {
--      /* FIXME: ignore_case does not work with NLS (in particular,
--         with multibyte chars).  */
--      diff = memcasecmp (beg1, beg2, MIN (len1, len2));
-+#ifdef HAVE_MBRTOWC
-+      if (MB_CUR_MAX > 1)
-+      {
-+        size_t mblength;
-+        wchar_t wc, uwc;
-+        mbstate_t state, state_bak;
-+
-+        memset (&state, '\0', sizeof (mbstate_t));
-+
-+        for (i = 0; i < 2; i++)
-+          {
-+            copy[i] = alloca (len[i] + 1);
-+
-+            for (j = 0; j < MIN (len[0], len[1]);)
-+              {
-+                state_bak = state;
-+                mblength = mbrtowc (&wc, beg[i] + j, len[i] - j, &state);
-+
-+                switch (mblength)
-+                  {
-+                  case (size_t) -1:
-+                  case (size_t) -2:
-+                    state = state_bak;
-+                    /* Fall through */
-+                  case 0:
-+                    mblength = 1;
-+                    break;
-+
-+                  default:
-+                    uwc = towupper (wc);
-+
-+                    if (uwc != wc)
-+                      {
-+                        mbstate_t state_wc;
-+
-+                        memset (&state_wc, '\0', sizeof (mbstate_t));
-+                        wcrtomb (copy[i] + j, uwc, &state_wc);
-+                      }
-+                    else
-+                      memcpy (copy[i] + j, beg[i] + j, mblength);
-+                  }
-+                j += mblength;
-+              }
-+            copy[i][j] = '\0';
-+          }
-+      }
-+      else
-+#endif
-+      {
-+        for (i = 0; i < 2; i++)
-+          {
-+            copy[i] = alloca (len[i] + 1);
-+
-+            for (j = 0; j < MIN (len[0], len[1]); j++)
-+              copy[i][j] = toupper (beg[i][j]);
-+
-+            copy[i][j] = '\0';
-+          }
-+      }
-     }
-   else
-     {
--      if (HAVE_SETLOCALE && hard_LC_COLLATE)
--	return xmemcoll (beg1, len1, beg2, len2);
--      diff = memcmp (beg1, beg2, MIN (len1, len2));
-+      copy[0] = (unsigned char *) beg[0];
-+      copy[1] = (unsigned char *) beg[1];
-     }
- 
-+  if (HAVE_SETLOCALE && hard_LC_COLLATE)
-+    return xmemcoll ((char *) copy[0], len[0], (char *) copy[1], len[1]);
-+  diff = memcmp (copy[0], copy[1], MIN (len[0], len[1]));
-+
-   if (diff)
-     return diff;
--  return len1 < len2 ? -1 : len1 != len2;
-+  return len[0] - len[1];
- }
- 
- /* Print field N of LINE if it exists and is nonempty, otherwise
-@@ -410,11 +634,18 @@
- 
- /* Print the join of LINE1 and LINE2.  */
- 
-+#define PUT_TAB_CHAR							\
-+  do									\
-+    {									\
-+      (tab != NULL) ?							\
-+	fwrite(tab, sizeof(char), tablen, stdout) : putchar (' ');	\
-+    }									\
-+  while (0)								
-+
- static void
- prjoin (struct line const *line1, struct line const *line2)
- {
-   const struct outlist *outlist;
--  char output_separator = tab ? tab : ' ';
- 
-   outlist = outlist_head.next;
-   if (outlist)
-@@ -430,12 +661,12 @@
- 	  if (o->file == 0)
- 	    {
- 	      if (line1 == &uni_blank)
--	        {
-+		{
- 		  line = line2;
- 		  field = join_field_2;
- 		}
- 	      else
--	        {
-+		{
- 		  line = line1;
- 		  field = join_field_1;
- 		}
-@@ -449,7 +680,7 @@
- 	  o = o->next;
- 	  if (o == NULL)
- 	    break;
--	  putchar (output_separator);
-+	  PUT_TAB_CHAR;
- 	}
-       putchar ('\n');
-     }
-@@ -467,23 +698,23 @@
-       prfield (join_field_1, line1);
-       for (i = 0; i < join_field_1 && i < line1->nfields; ++i)
- 	{
--	  putchar (output_separator);
-+	  PUT_TAB_CHAR;
- 	  prfield (i, line1);
- 	}
-       for (i = join_field_1 + 1; i < line1->nfields; ++i)
- 	{
--	  putchar (output_separator);
-+	  PUT_TAB_CHAR;
- 	  prfield (i, line1);
- 	}
- 
-       for (i = 0; i < join_field_2 && i < line2->nfields; ++i)
- 	{
--	  putchar (output_separator);
-+	  PUT_TAB_CHAR;
- 	  prfield (i, line2);
- 	}
-       for (i = join_field_2 + 1; i < line2->nfields; ++i)
- 	{
--	  putchar (output_separator);
-+	  PUT_TAB_CHAR;
- 	  prfield (i, line2);
- 	}
-       putchar ('\n');
-@@ -678,7 +909,7 @@
- 	  valid = true;
- 	}
-       else
--        {
-+	{
- 	  /* `0' must be all alone -- no `.FIELD'.  */
- 	  error (0, 0, _("invalid field specifier: `%s'"), s);
- 	}
-@@ -817,7 +1048,23 @@
- 	  break;
- 
- 	case 't':
--	  tab = *optarg;
-+	  tab = xstrdup(optarg);
-+#if HAVE_MBRTOWC
-+	  if (MB_CUR_MAX > 1)
-+	    {
-+	      mbstate_t state;
-+
-+	      memset(&state, 0, sizeof(mbstate_t));
-+	      tablen = mbrtowc(NULL, optarg, strnlen(optarg, MB_LEN_MAX), &state);
-+	      if (tablen == (size_t) 0
-+		 || tablen == (size_t)-1 || tablen == (size_t)-2)
-+		tablen = 1;
-+	    }
-+	  else
-+	    {
-+#endif
-+	      tablen = 1;
-+	    }
- 	  break;
- 
- 	case 1:		/* Non-option argument.  */
---- coreutils-5.1.3/src/unexpand.c.i18n	2004-01-21 22:27:02.000000000 +0000
-+++ coreutils-5.1.3/src/unexpand.c	2004-02-16 15:36:40.000000000 +0000
-@@ -40,10 +40,27 @@
- #include <stdio.h>
- #include <getopt.h>
- #include <sys/types.h>
-+
-+/* Get mbstate_t, mbrtowc(), wcwidth(). */
-+#if HAVE_WCHAR_H
-+# include <wchar.h>
-+#endif
-+
- #include "system.h"
- #include "error.h"
- #include "posixver.h"
- 
-+/* MB_LEN_MAX is incorrectly defined to be 1 in at least one GCC
-+      installation; work around this configuration error.  */
-+#if !defined MB_LEN_MAX || MB_LEN_MAX < 2
-+# define MB_LEN_MAX 16
-+#endif
-+
-+/* Some systems, like BeOS, have multibyte encodings but lack mbstate_t.  */
-+#if HAVE_MBRTOWC && defined mbstate_t
-+# define mbrtowc(pwc, s, n, ps) (mbrtowc) (pwc, s, n, 0)
-+#endif
-+
- /* The official name of this program (e.g., no `g' prefix).  */
- #define PROGRAM_NAME "unexpand"
- 
-@@ -348,7 +365,8 @@
- 		}
- 	      else
- 		{
--		  ++column;
-+		  if (!ISCNTRL (c))
-+		    ++column;
- 		  if (convert_entire_line == 0)
- 		    convert = 0;
- 		}
-@@ -366,6 +384,210 @@
-     }
- }
- 
-+#if HAVE_MBRTOWC
-+static void
-+unexpand_multibyte (void)
-+{
-+  FILE *fp;			/* Input stream. */
-+  mbstate_t i_state;		/* Current shift state of the input stream. */
-+  mbstate_t i_state_bak;	/* Back up the I_STATE. */
-+  mbstate_t o_state;		/* Current shift state of the output stream. */
-+  char buf[MB_LEN_MAX + BUFSIZ];  /* For spooling a read byte sequence. */
-+  char *bufpos;			/* Next read position of BUF. */
-+  size_t buflen = 0;		/* The length of the byte sequence in buf. */
-+  wint_t wc;			/* A gotten wide character. */
-+  size_t mblength;		/* The byte size of a multibyte character
-+				   which shows as same character as WC. */
-+
-+  /* Index in `tab_list' of next tabstop: */
-+  int tab_index = 0;		/* For calculating width of pending tabs. */
-+  int print_tab_index = 0;	/* For printing as many tabs as possible. */
-+  unsigned int column = 0;	/* Column on screen of next char. */
-+  int next_tab_column;		/* Column the next tab stop is on. */
-+  int convert = 1;		/* If nonzero, perform translations. */
-+  unsigned int pending = 0;	/* Pending columns of blanks. */
-+
-+  fp = next_file ((FILE *) NULL);
-+  if (fp == NULL)
-+    return;
-+
-+  /* Binary I/O will preserve the original EOL style (DOS/Unix) of files. */
-+  SET_BINARY2 (fileno (fp), STDOUT_FILENO);
-+
-+  memset (&o_state, '\0', sizeof(mbstate_t));
-+  memset (&i_state, '\0', sizeof(mbstate_t));
-+
-+  for (;;)
-+    {
-+      if (buflen < MB_LEN_MAX && !feof(fp) && !ferror(fp))
-+	{
-+	  memmove (buf, bufpos, buflen);
-+	  buflen += fread (buf + buflen, sizeof(char), BUFSIZ, fp);
-+	  bufpos = buf;
-+	}
-+
-+      /* Get a wide character. */
-+      if (buflen < 1)
-+	{
-+	  mblength = 1;
-+	  wc = WEOF;
-+	}
-+      else
-+	{
-+	  i_state_bak = i_state;
-+	  mblength = mbrtowc ((wchar_t *)&wc, bufpos, buflen, &i_state);
-+	}
-+
-+      if (mblength == (size_t)-1 || mblength == (size_t)-2)
-+	{
-+	  i_state = i_state_bak;
-+	  wc = L'\0';
-+	}
-+
-+      if (wc == L' ' && convert && column < TAB_STOP_SENTINEL)
-+	{
-+	  ++pending;
-+	  ++column;
-+	}
-+      else if (wc == L'\t' && convert)
-+	{
-+	  if (tab_size == 0)
-+	    {
-+	      /* Do not let tab_index == first_free_tab;
-+		 stop when it is 1 less. */
-+	      while (tab_index < first_free_tab - 1
-+		  && column >= tab_list[tab_index])
-+		tab_index++;
-+	      next_tab_column = tab_list[tab_index];
-+	      if (tab_index < first_free_tab - 1)
-+		tab_index++;
-+	      if (column >= next_tab_column)
-+		{
-+		  convert = 0;	/* Ran out of tab stops. */
-+		  goto flush_pend_mb;
-+		}
-+	    }
-+	  else
-+	    {
-+	      next_tab_column = column + tab_size - column % tab_size;
-+	    }
-+	  pending += next_tab_column - column;
-+	  column = next_tab_column;
-+	}
-+      else
-+	{
-+flush_pend_mb:
-+	  /* Flush pending spaces.  Print as many tabs as possible,
-+	     then print the rest as spaces. */
-+	  if (pending == 1)
-+	    {
-+	      putchar (' ');
-+	      pending = 0;
-+	    }
-+	  column -= pending;
-+	  while (pending > 0)
-+	    {
-+	      if (tab_size == 0)
-+		{
-+		  /* Do not let print_tab_index == first_free_tab;
-+		     stop when it is 1 less. */
-+		  while (print_tab_index < first_free_tab - 1
-+		      && column >= tab_list[print_tab_index])
-+		    print_tab_index++;
-+		  next_tab_column = tab_list[print_tab_index];
-+		  if (print_tab_index < first_free_tab - 1)
-+		    print_tab_index++;
-+		}
-+	      else
-+		{
-+		  next_tab_column =
-+		    column + tab_size - column % tab_size;
-+		}
-+	      if (next_tab_column - column <= pending)
-+		{
-+		  putchar ('\t');
-+		  pending -= next_tab_column - column;
-+		  column = next_tab_column;
-+		}
-+	      else
-+		{
-+		  --print_tab_index;
-+		  column += pending;
-+		  while (pending != 0)
-+		    {
-+		      putchar (' ');
-+		      pending--;
-+		    }
-+		}
-+	    }
-+
-+	  if (wc == WEOF)
-+	    {
-+	      fp = next_file (fp);
-+	      if (fp == NULL)
-+		break;          /* No more files. */
-+	      else
-+		{
-+		  memset (&i_state, '\0', sizeof(mbstate_t));
-+		  SET_BINARY2 (fileno (fp), STDOUT_FILENO);
-+		  continue;
-+		}
-+	    }
-+
-+	  if (mblength == (size_t)-1 || mblength == (size_t)-2)
-+	    {
-+	      if (convert)
-+		{
-+		  ++column;
-+		  if (convert_entire_line == 0)
-+		    convert = 0;
-+		}
-+	      mblength = 1;
-+	      putchar (buf[0]);
-+	    }
-+	  else if (mblength == 0)
-+	    {
-+	      if (convert && convert_entire_line == 0)
-+		convert = 0;
-+	      mblength = 1;
-+	      putchar ('\0');
-+	    }
-+	  else
-+	    {
-+	      if (convert)
-+		{
-+		  if (wc == L'\b')
-+		    {
-+		      if (column > 0)
-+			--column;
-+		    }
-+		  else
-+		    {
-+		      int width;            /* The width of WC. */
-+
-+		      width = wcwidth (wc);
-+		      column += (width > 0) ? width : 0;
-+		      if (convert_entire_line == 0)
-+			convert = 0;
-+		    }
-+		}
-+
-+	      if (wc == L'\n')
-+		{
-+		  tab_index = print_tab_index = 0;
-+		  column = pending = 0;
-+		  convert = 1;
-+		}
-+	      fwrite (bufpos, sizeof(char), mblength, stdout);
-+	    }
-+	}
-+      buflen -= mblength;
-+      bufpos += mblength;
-+    }
-+}
-+#endif
-+
-+
- void
- usage (int status)
- {
-@@ -488,7 +710,12 @@
- 
-   file_list = (optind < argc ? &argv[optind] : stdin_argv);
- 
--  unexpand ();
-+#if HAVE_MBRTOWC
-+  if (MB_CUR_MAX > 1)
-+    unexpand_multibyte ();
-+  else
-+#endif
-+    unexpand ();
- 
-   if (have_read_stdin && fclose (stdin) == EOF)
-     error (EXIT_FAILURE, errno, "-");
---- coreutils-5.2.1/tests/sort/sort-mb-tests.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/sort-mb-tests	2005-02-09 07:34:40.000000000 -0500
-@@ -0,0 +1,58 @@
-+#! /bin/sh
-+case $# in
-+  0) xx='../../src/sort';;
-+  *) xx="$1";;
-+esac
-+test "$VERBOSE" && echo=echo || echo=:
-+$echo testing program: $xx
-+errors=0
-+test "$srcdir" || srcdir=.
-+test "$VERBOSE" && $xx --version 2> /dev/null
-+
-+export LC_ALL=en_US.UTF-8
-+locale -k LC_CTYPE 2>&1 | grep -q charmap.*UTF-8 || exit 77
-+errors=0
-+
-+$xx -t ＠ +1 -n mb1.I > mb1.O
-+code=$?
-+if test $code != 0; then
-+  $echo "Test mb1 failed: $xx return code $code differs from expected value 0" 1>&2
-+  errors=`expr $errors + 1`
-+else
-+  cmp mb1.O $srcdir/mb1.X > /dev/null 2>&1
-+  case $? in
-+    0) if test "$VERBOSE"; then $echo "passed mb1"; fi;;
-+    1) $echo "Test mb1 failed: files mb1.O and $srcdir/mb1.X differ" 1>&2
-+       (diff -c mb1.O $srcdir/mb1.X) 2> /dev/null
-+       errors=`expr $errors + 1`;;
-+    2) $echo "Test mb1 may have failed." 1>&2
-+       $echo The command "cmp mb1.O $srcdir/mb1.X" failed. 1>&2
-+       errors=`expr $errors + 1`;;
-+  esac
-+fi
-+
-+$xx -t ＠ +3 -n mb2.I > mb2.O
-+code=$?
-+if test $code != 0; then
-+  $echo "Test mb2 failed: $xx return code $code differs from expected value 0" 1>&2
-+  errors=`expr $errors + 1`
-+else
-+  cmp mb2.O $srcdir/mb2.X > /dev/null 2>&1
-+  case $? in
-+    0) if test "$VERBOSE"; then $echo "passed mb2"; fi;;
-+    1) $echo "Test mb2 failed: files mb2.O and $srcdir/mb2.X differ" 1>&2
-+       (diff -c mb2.O $srcdir/mb2.X) 2> /dev/null
-+       errors=`expr $errors + 1`;;
-+    2) $echo "Test mb2 may have failed." 1>&2
-+       $echo The command "cmp mb2.O $srcdir/mb2.X" failed. 1>&2
-+       errors=`expr $errors + 1`;;
-+  esac
-+fi
-+
-+if test $errors = 0; then
-+  $echo Passed all 113 tests. 1>&2
-+else
-+  $echo Failed $errors tests. 1>&2
-+fi
-+test $errors = 0 || errors=1
-+exit $errors
---- coreutils-5.2.1/tests/sort/mb1.I.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/mb1.I	2005-02-09 07:34:40.000000000 -0500
-@@ -0,0 +1,4 @@
-+Apple＠10
-+Banana＠5
-+Citrus＠20
-+Cherry＠30
---- coreutils-5.2.1/tests/sort/mb2.I.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/mb2.I	2005-02-09 07:34:40.000000000 -0500
-@@ -0,0 +1,4 @@
-+Apple＠ＡＡ10＠＠20
-+Banana＠ＡＡ5＠＠30
-+Citrus＠ＡＡ20＠＠5
-+Cherry＠ＡＡ30＠＠10
---- coreutils-5.2.1/tests/sort/mb1.X.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/mb1.X	2005-02-09 07:34:40.000000000 -0500
-@@ -0,0 +1,4 @@
-+Banana＠5
-+Apple＠10
-+Citrus＠20
-+Cherry＠30
---- coreutils-5.2.1/tests/sort/mb2.X.jj	2005-02-09 07:34:40.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/mb2.X	2005-02-09 07:34:40.000000000 -0500
-@@ -0,0 +1,4 @@
-+Citrus＠ＡＡ20＠＠5
-+Cherry＠ＡＡ30＠＠10
-+Apple＠ＡＡ10＠＠20
-+Banana＠ＡＡ5＠＠30
---- coreutils-5.2.1/tests/sort/Makefile.am.jj	2004-02-11 06:54:14.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/Makefile.am	2005-02-09 07:36:20.000000000 -0500
-@@ -43,12 +43,14 @@ o-no-file1.E create-empty.O create-empty
- nul-nls.E use-nl.O use-nl.E o2.O o2.E nul-tab.O nul-tab.E
- ##test-files-end
- 
--EXTRA_DIST = Test.pm $x-tests $(explicit) $(maint_gen)
--noinst_SCRIPTS = $x-tests
-+run_gen += mb1.O mb2.O
-+
-+EXTRA_DIST = Test.pm $x-tests $(explicit) $(maint_gen) mb1.I mb1.X mb2.I mb2.X
-+noinst_SCRIPTS = $x-tests $x-mb-tests
- 
- editpl = sed -e 's,@''PERL''@,$(PERL),g' -e 's,@''srcdir''@,$(srcdir),g'
- 
--TESTS = $x-tests
-+TESTS = $x-tests $x-mb-tests
- 
- mk_script = $(srcdir)/../mk-script
- $(srcdir)/$x-tests: $(mk_script) Test.pm
---- coreutils-5.2.1/tests/sort/Makefile.in.jj	2004-03-11 03:58:06.000000000 -0500
-+++ coreutils-5.2.1/tests/sort/Makefile.in	2005-02-09 07:36:50.000000000 -0500
-@@ -301,10 +301,13 @@ n10b.E n11a.O n11a.E n11b.O n11b.E 01a.O
- o-no-file1.E create-empty.O create-empty.E neg-nls.O neg-nls.E nul-nls.O \
- nul-nls.E use-nl.O use-nl.E o2.O o2.E nul-tab.O nul-tab.E
- 
-+run_gen += mb1.O mb2.O
-+
-+EXTRA_DIST = Test.pm $x-tests $(explicit) $(maint_gen) mb1.I mb1.X mb2.I mb2.X
- EXTRA_DIST = Test.pm $x-tests $(explicit) $(maint_gen)
--noinst_SCRIPTS = $x-tests
-+noinst_SCRIPTS = $x-tests $x-mb-tests
- editpl = sed -e 's,@''PERL''@,$(PERL),g' -e 's,@''srcdir''@,$(srcdir),g'
--TESTS = $x-tests
-+TESTS = $x-tests $x-mb-tests
- mk_script = $(srcdir)/../mk-script
- MAINTAINERCLEANFILES = $x-tests $(maint_gen)
- CLEANFILES = $(run_gen)
