@@ -1,0 +1,57 @@
+From nobody Mon Mar 15 10:51:02 2004
+From: Jim Meyering <jim@meyering.net>
+Subject: Re: Bug#238046: coreutils: date takes current seconds value if none
+	is given
+To: Marc Haber <mh+debian-bugs@zugschlus.de>
+Cc: Debian Bug Tracking System <submit@bugs.debian.org>,
+	bug-coreutils@gnu.org, 238046@bugs.debian.org
+Date: Mon, 15 Mar 2004 09:38:26 +0100
+
+Marc Haber <mh+debian-bugs@zugschlus.de> wrote:
+> Package: coreutils
+> Version: 5.0.91-2
+>
+> $ date --date="14 Mar 2004 21:04 +0100"
+> Sun Mar 14 20:04:37 UTC 2004
+> $ date --date="14 Mar 2004 21:04 +0100"
+> Sun Mar 14 20:04:39 UTC 2004
+> $ date --date="14 Mar 2004 21:04 +0100"
+> Sun Mar 14 20:04:40 UTC 2004
+>
+> Looks like date takes the seconds value from the system clock if none
+> is given on the command line.
+
+Thank you!
+That bug is also present in coreutils-5.2.1.
+
+Here's a fix:
+
+2004-03-15  Jim Meyering  <jim@meyering.net>
+
+	`date --date="21:04 +0100" +%S' would print the seconds value
+	from the current time, rather than `00'.
+	* getdate.y: For a date string like `10:23 +0100',
+	set the number of seconds to zero.  Reported by Marc Haber.
+
+Index: getdate.y
+===================================================================
+RCS file: /fetish/cu/lib/getdate.y,v
+retrieving revision 1.80
+diff -u -p -u -p -r1.80 getdate.y
+--- lib/getdate.y	10 Sep 2003 08:37:15 -0000	1.80
++++ lib/getdate.y	15 Mar 2004 08:30:57 -0000
+@@ -220,6 +220,7 @@ time:
+       {
+ 	PC.hour = $1.value;
+ 	PC.minutes = $3.value;
++	PC.seconds = 0;
+ 	PC.meridian = MER24;
+ 	PC.zones_seen++;
+ 	PC.time_zone = $4.value % 100 + ($4.value / 100) * 60;
+
+
+_______________________________________________
+Bug-coreutils mailing list
+Bug-coreutils@gnu.org
+http://mail.gnu.org/mailman/listinfo/bug-coreutils
+

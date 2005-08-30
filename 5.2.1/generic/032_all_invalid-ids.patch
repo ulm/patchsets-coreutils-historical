@@ -1,0 +1,48 @@
+While uid_t and gid_t are both unsigned, the values (uid_t) -1 and
+(gid_t) -1 are reserved.  A uid or gid argument of -1 to the chown(2)
+system call means to leave the uid/gid unchanged.  Catch this case
+so that trying to set a uid or gid to -1 will result in an error.
+
+Test cases:
+
+  chown 4294967295 file
+  chown :4294967295 file
+  chgrp 4294967295 file
+
+Andreas Gruenbacher <agruen@suse.de>
+
+Index: coreutils-5.2.1/lib/userspec.c
+===================================================================
+--- coreutils-5.2.1.orig/lib/userspec.c	2004-03-03 07:57:20.000000000 +0000
++++ coreutils-5.2.1/lib/userspec.c	2004-10-02 00:57:23.179235825 +0000
+@@ -223,7 +223,7 @@
+ 		{
+ 		  unsigned long int tmp_long;
+ 		  if (xstrtoul (u, NULL, 0, &tmp_long, NULL) != LONGINT_OK
+-		      || tmp_long > MAXUID)
++		      || tmp_long > MAXUID || tmp_long == (uid_t) -1)
+ 		    return _(E_invalid_user);
+ 		  *uid = tmp_long;
+ 		}
+@@ -269,7 +269,7 @@
+ 	    {
+ 	      unsigned long int tmp_long;
+ 	      if (xstrtoul (g, NULL, 0, &tmp_long, NULL) != LONGINT_OK
+-		  || tmp_long > MAXGID)
++		  || tmp_long > MAXGID || tmp_long == (gid_t) -1)
+ 		return _(E_invalid_group);
+ 	      *gid = tmp_long;
+ 	    }
+Index: coreutils-5.2.1/src/chgrp.c
+===================================================================
+--- coreutils-5.2.1.orig/src/chgrp.c	2004-01-21 22:27:02.000000000 +0000
++++ coreutils-5.2.1/src/chgrp.c	2004-10-02 00:58:03.710426357 +0000
+@@ -98,7 +98,7 @@
+       if (s_err != LONGINT_OK)
+ 	STRTOL_FATAL_ERROR (name, _("group number"), s_err);
+ 
+-      if (tmp_long > GID_T_MAX)
++      if (tmp_long > GID_T_MAX || tmp_long == (gid_t) -1)
+ 	error (EXIT_FAILURE, 0, _("invalid group number %s"), quote (name));
+ 
+       *g = tmp_long;
