@@ -1,5 +1,7 @@
 On linux platforms, grok /proc/cpuinfo for the CPU/vendor info.
 
+Prob not suitable for upstream seeing as how it's 100% linux-specific
+
 --- coreutils-5.2.1/src/uname.c
 +++ coreutils-5.2.1/src/uname.c
 @@ -44,6 +44,11 @@
