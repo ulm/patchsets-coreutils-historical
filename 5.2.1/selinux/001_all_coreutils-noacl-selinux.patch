@@ -2,9 +2,9 @@ diff -urN coreutils-5.2.1.orig/man/Makefile.am coreutils-5.2.1/man/Makefile.am
 --- coreutils-5.2.1.orig/man/Makefile.am	2004-06-17 13:23:40.017692000 -0500
 +++ coreutils-5.2.1/man/Makefile.am	2004-06-17 13:42:51.820685714 -0500
 @@ -10,7 +10,7 @@
-   seq.1 sha1sum.1 shred.1 sleep.1 sort.1 split.1 stat.1 stty.1 \
-   sum.1 sync.1 tac.1 tail.1 tee.1 test.1 tr.1 true.1 tsort.1 \
-   tty.1 uname.1 unexpand.1 uniq.1 unlink.1 users.1 wc.1 \
+   rm.1 rmdir.1 seq.1 sha1sum.1 shred.1 sleep.1 sort.1 split.1 stat.1 stty.1 \
+   su.1 sum.1 sync.1 tac.1 tail.1 tee.1 test.1 touch.1 tr.1 true.1 tsort.1 \
+   tty.1 uname.1 unexpand.1 uniq.1 unlink.1 uptime.1 users.1 vdir.1 wc.1 \
 -  who.1 whoami.1 yes.1
 +  who.1 whoami.1 yes.1 chcon.1 runcon.1
  
@@ -19,27 +19,6 @@ diff -urN coreutils-5.2.1.orig/man/Makefile.am coreutils-5.2.1/man/Makefile.am
  
  SUFFIXES = .x .1
  
-diff -urN coreutils-5.2.1.orig/man/Makefile.in coreutils-5.2.1/man/Makefile.in
---- coreutils-5.2.1.orig/man/Makefile.in	2004-06-17 13:22:53.668002000 -0500
-+++ coreutils-5.2.1/man/Makefile.in	2004-06-17 13:42:51.823685433 -0500
-@@ -273,7 +273,7 @@
-   seq.1 sha1sum.1 shred.1 sleep.1 sort.1 split.1 stat.1 stty.1 \
-   sum.1 sync.1 tac.1 tail.1 tee.1 test.1 tr.1 true.1 tsort.1 \
-   tty.1 uname.1 unexpand.1 uniq.1 unlink.1 users.1 wc.1 \
--  who.1 whoami.1 yes.1
-+  who.1 whoami.1 yes.1 chcon.1 runcon.1
- 
- man_aux = $(dist_man_MANS:.1=.x)
- EXTRA_DIST = $(man_aux) help2man
-@@ -569,6 +569,8 @@
- who.1:		$(common_dep)	$(srcdir)/who.x		../src/who.c
- whoami.1:	$(common_dep)	$(srcdir)/whoami.x	../src/whoami.c
- yes.1:		$(common_dep)	$(srcdir)/yes.x		../src/yes.c
-+chcon.1:	$(common_dep)	$(srcdir)/chcon.x	../src/chcon.c
-+runcon.1:	$(common_dep)	$(srcdir)/runcon.x	../src/runcon.c
- 
- # Note the use of $t/$*, rather than just `$*' as in other packages.
- # That is necessary to avoid failures for programs that are also shell built-in
 diff -urN coreutils-5.2.1.orig/man/chcon.1 coreutils-5.2.1/man/chcon.1
 --- coreutils-5.2.1.orig/man/chcon.1	1969-12-31 18:00:00.000000000 -0600
 +++ coreutils-5.2.1/man/chcon.1	2004-06-17 13:42:51.852682711 -0500
@@ -342,7 +321,7 @@ diff -urN coreutils-5.2.1.orig/src/Makefile.am coreutils-5.2.1/src/Makefile.am
 @@ -10,7 +10,7 @@
    nl od paste pr ptx sha1sum sort split sum tac tail tr tsort unexpand uniq wc \
    basename date dirname echo env expr factor false \
-   id logname pathchk printenv printf pwd seq sleep tee \
+   hostname id kill logname pathchk printenv printf pwd seq sleep tee \
 -  test true tty whoami yes \
 +  test true tty whoami yes chcon runcon \
    $(OPTIONAL_BIN_PROGS) $(DF_PROG)
@@ -365,84 +344,6 @@ diff -urN coreutils-5.2.1.orig/src/Makefile.am coreutils-5.2.1/src/Makefile.am
  
  dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
  ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
-diff -urN coreutils-5.2.1.orig/src/Makefile.in coreutils-5.2.1/src/Makefile.in
---- coreutils-5.2.1.orig/src/Makefile.in	2004-06-17 13:22:52.795083000 -0500
-+++ coreutils-5.2.1/src/Makefile.in	2004-06-17 13:51:29.799575346 -0500
-@@ -16,7 +16,7 @@
- 
- 
- 
--SOURCES = $(__SOURCES) basename.c cat.c $(chgrp_SOURCES) chmod.c $(chown_SOURCES) chroot.c cksum.c comm.c $(cp_SOURCES) csplit.c cut.c date.c dd.c df.c $(dir_SOURCES) dircolors.c dirname.c du.c echo.c env.c expand.c expr.c factor.c false.c fmt.c fold.c $(ginstall_SOURCES) head.c hostid.c id.c join.c link.c ln.c logname.c $(ls_SOURCES) $(md5sum_SOURCES) mkdir.c mkfifo.c mknod.c $(mv_SOURCES) nice.c nl.c nohup.c od.c paste.c pathchk.c pinky.c pr.c printenv.c printf.c ptx.c pwd.c readlink.c $(rm_SOURCES) rmdir.c seq.c setuidgid.c $(sha1sum_SOURCES) shred.c sleep.c sort.c split.c stat.c stty.c sum.c sync.c tac.c tail.c tee.c test.c touch.c tr.c true.c tsort.c tty.c uname.c unexpand.c uniq.c unlink.c users.c $(vdir_SOURCES) wc.c who.c whoami.c yes.c
-+SOURCES = $(__SOURCES) basename.c cat.c $(chgrp_SOURCES) chmod.c $(chown_SOURCES) chroot.c cksum.c comm.c $(cp_SOURCES) csplit.c cut.c date.c dd.c df.c $(dir_SOURCES) dircolors.c dirname.c du.c echo.c env.c expand.c expr.c factor.c false.c fmt.c fold.c $(ginstall_SOURCES) head.c hostid.c id.c join.c link.c ln.c logname.c $(ls_SOURCES) $(md5sum_SOURCES) mkdir.c mkfifo.c mknod.c $(mv_SOURCES) nice.c nl.c nohup.c od.c paste.c pathchk.c pinky.c pr.c printenv.c printf.c ptx.c pwd.c readlink.c $(rm_SOURCES) rmdir.c seq.c setuidgid.c $(sha1sum_SOURCES) shred.c sleep.c sort.c split.c stat.c stty.c sum.c sync.c tac.c tail.c tee.c test.c touch.c tr.c true.c tsort.c tty.c uname.c unexpand.c uniq.c unlink.c users.c $(vdir_SOURCES) wc.c who.c whoami.c yes.c chcon.c runcon.c
- 
- srcdir = @srcdir@
- top_srcdir = @top_srcdir@
-@@ -60,8 +60,8 @@
- 	logname$(EXEEXT) pathchk$(EXEEXT) \
- 	printenv$(EXEEXT) printf$(EXEEXT) pwd$(EXEEXT) seq$(EXEEXT) \
- 	sleep$(EXEEXT) tee$(EXEEXT) test$(EXEEXT) true$(EXEEXT) \
--	tty$(EXEEXT) whoami$(EXEEXT) yes$(EXEEXT) $(am__EXEEXT_1) \
--	$(am__EXEEXT_2)
-+	tty$(EXEEXT) whoami$(EXEEXT) yes$(EXEEXT) chcon$(EXEEXT) runcon$(EXEEXT) \
-+	$(am__EXEEXT_1) $(am__EXEEXT_2)
- noinst_PROGRAMS = setuidgid$(EXEEXT)
- subdir = src
- DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
-@@ -659,7 +659,7 @@
- 	sort.c split.c stat.c stty.c sum.c sync.c tac.c tail.c \
- 	tee.c test.c touch.c tr.c true.c tsort.c tty.c uname.c \
- 	unexpand.c uniq.c unlink.c users.c $(vdir_SOURCES) \
--	wc.c who.c whoami.c yes.c
-+	wc.c who.c whoami.c yes.c chcon.c runcon.c
- DIST_SOURCES = $(__SOURCES) basename.c cat.c $(chgrp_SOURCES) chmod.c \
- 	$(chown_SOURCES) chroot.c cksum.c comm.c $(cp_SOURCES) \
- 	csplit.c cut.c date.c dd.c df.c $(dir_SOURCES) dircolors.c \
-@@ -673,7 +673,7 @@
- 	sort.c split.c stat.c stty.c sum.c sync.c tac.c tail.c \
- 	tee.c test.c touch.c tr.c true.c tsort.c tty.c uname.c \
- 	unexpand.c uniq.c unlink.c users.c $(vdir_SOURCES) \
--	wc.c who.c whoami.c yes.c
-+	wc.c who.c whoami.c yes.c chcon.c runcon.c
- HEADERS = $(noinst_HEADERS)
- ETAGS = etags
- CTAGS = ctags
-@@ -810,14 +810,14 @@
-   wheel-gen.pl extract-magic
- 
- CLEANFILES = $(SCRIPTS)
--AM_CPPFLAGS = -I.. -I$(srcdir) -I$(top_srcdir)/lib -I../lib
-+AM_CPPFLAGS = -I.. -I$(srcdir) -I$(top_srcdir)/lib -I../lib -DWITH_SELINUX
- 
- # Sometimes, the expansion of $(LIBINTL) includes -lc which may
- # include modules defining variables like `optind', so libfetish.a
- # must precede $(LIBINTL) in order to ensure we use GNU getopt.
- # But libfetish.a must also follow $(LIBINTL), since libintl uses
- # replacement functions defined in libfetish.a.
--LDADD = ../lib/libfetish.a $(LIBINTL) ../lib/libfetish.a
-+LDADD = ../lib/libfetish.a $(LIBINTL) ../lib/libfetish.a -lselinux
- dir_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
- ls_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME) -lncurses
- shred_LDADD = $(LDADD) $(LIB_CLOCK_GETTIME)
-@@ -982,6 +982,9 @@
- chmod$(EXEEXT): $(chmod_OBJECTS) $(chmod_DEPENDENCIES) 
- 	@rm -f chmod$(EXEEXT)
- 	$(LINK) $(chmod_LDFLAGS) $(chmod_OBJECTS) $(chmod_LDADD) $(LIBS)
-+chcon$(EXEEXT): $(chcon_OBJECTS) $(chcon_DEPENDENCIES) 
-+	@rm -f chcon$(EXEEXT)
-+	$(LINK) $(chcon_LDFLAGS) $(chcon_OBJECTS) $(chcon_LDADD) $(LIBS)
- chown$(EXEEXT): $(chown_OBJECTS) $(chown_DEPENDENCIES) 
- 	@rm -f chown$(EXEEXT)
- 	$(LINK) $(chown_LDFLAGS) $(chown_OBJECTS) $(chown_LDADD) $(LIBS)
-@@ -1135,6 +1138,9 @@
- rmdir$(EXEEXT): $(rmdir_OBJECTS) $(rmdir_DEPENDENCIES) 
- 	@rm -f rmdir$(EXEEXT)
- 	$(LINK) $(rmdir_LDFLAGS) $(rmdir_OBJECTS) $(rmdir_LDADD) $(LIBS)
-+runcon$(EXEEXT): $(runcon_OBJECTS) $(runcon_DEPENDENCIES) 
-+	@rm -f runcon$(EXEEXT)
-+	$(LINK) $(runcon_LDFLAGS) $(runcon_OBJECTS) $(runcon_LDADD) $(LIBS)
- seq$(EXEEXT): $(seq_OBJECTS) $(seq_DEPENDENCIES) 
- 	@rm -f seq$(EXEEXT)
- 	$(LINK) $(seq_LDFLAGS) $(seq_OBJECTS) $(seq_LDADD) $(LIBS)
 diff -urN coreutils-5.2.1.orig/src/chcon.c coreutils-5.2.1/src/chcon.c
 --- coreutils-5.2.1.orig/src/chcon.c	1969-12-31 18:00:00.000000000 -0600
 +++ coreutils-5.2.1/src/chcon.c	2004-06-17 13:42:52.010667882 -0500
