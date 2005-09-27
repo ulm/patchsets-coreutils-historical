@@ -1,10 +1,18 @@
---- ./src/ls.c.time	2002-07-24 00:36:34.000000000 +0200
-+++ ./src/ls.c	2002-07-24 00:36:28.000000000 +0200
-@@ -1612,5 +1612,7 @@
+POSIX allows for default output format to be either 'posix-long-iso'
+or 'locale', so lets go with 'locale' instead and don't bother checking
+the value of POSIXLY_CORRECT in env
+
+http://lists.gnu.org/archive/html/bug-coreutils/2005-08/msg00120.html
+http://lists.gnu.org/archive/html/bug-coreutils/2005-09/msg00162.html
+
+--- src/ls.c
++++ src/ls.c
+@@ -1823,7 +1823,7 @@ decode_switches (int argc, char **argv)
  
        if (! style)
  	if (! (style = getenv ("TIME_STYLE")))
-+	if (getenv ("POSIXLY_CORRECT"))
- 	  style = "posix-long-iso";
-+	  else style = "locale";
+-	  style = "posix-long-iso";
++	  style = "locale";
  
+       while (strncmp (style, posix_prefix, sizeof posix_prefix - 1) == 0)
+ 	{
