@@ -1,5 +1,16 @@
---- src/copy.c.orig	2006-01-23 21:36:45.000000000 -0500
-+++ src/copy.c	2006-01-23 21:44:27.000000000 -0500
+Upstream has been contacted about this a few times ...
+
+they dont want progress bars in mv/cp:
+http://lists.gnu.org/archive/html/bug-coreutils/2003-08/msg00114.html
+http://lists.gnu.org/archive/html/bug-coreutils/2003-09/msg00083.html
+http://lists.gnu.org/archive/html/bug-coreutils/2003-09/msg00084.html
+
+but they don't seem to mind a general util ... add this to future patchset:
+http://lists.gnu.org/archive/html/bug-coreutils/2003-09/msg00101.html
+http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
+
+--- coreutils/src/copy.c
++++ coreutils/src/copy.c
 @@ -17,6 +17,8 @@
  
  /* Extracted from cp.c and librarified by Jim Meyering.  */
@@ -43,7 +54,7 @@
  
 +/* Shorten a string '/long path/long file' to 'long fi...'
 +   Also adds padding bytes to end of the string if necessary */
-+char *shorten_path(const char *str, size_t max_width)
++char *shorten_name(const char *str, size_t max_width)
 +{
 +  char *shortname;
 +  char *filename = (char *) (rindex(str, '/'));
@@ -176,7 +187,7 @@
 +	    }
 +
 +	  /* Take a short filename for progress bar */
-+	  shortname = shorten_path(src_path, line_length - 48);
++	  shortname = shorten_name(src_name, line_length - 48);
 +	  progress_bar_printed = 1;
 +        }
 +      
@@ -256,8 +267,8 @@
    return return_val;
  }
  
---- src/copy.h.orig	2006-01-23 21:36:51.000000000 -0500
-+++ src/copy.h	2006-01-23 21:45:42.000000000 -0500
+--- coreutils/src/copy.h
++++ coreutils/src/copy.h
 @@ -175,6 +175,16 @@ struct cp_options
    /* If true, display the names of the files before copying them. */
    bool verbose;
@@ -275,8 +286,8 @@
    /* If true, stdin is a tty.  */
    bool stdin_tty;
  
---- src/cp.c.orig	2006-01-23 21:36:56.000000000 -0500
-+++ src/cp.c	2006-01-23 21:53:36.000000000 -0500
+--- coreutils/src/cp.c
++++ coreutils/src/cp.c
 @@ -81,6 +81,14 @@ enum
  /* Initial number of entries in the inode hash table.  */
  #define INITIAL_ENTRY_TAB_SIZE 70
@@ -341,8 +352,8 @@
  	case NO_PRESERVE_ATTRIBUTES_OPTION:
  	  decode_preserve_arg (optarg, &x, false);
  	  break;
---- src/mv.c.orig	2006-01-23 21:37:00.000000000 -0500
-+++ src/mv.c	2006-01-23 21:55:18.000000000 -0500
+--- coreutils/src/mv.c
++++ coreutils/src/mv.c
 @@ -45,6 +45,14 @@
  /* Initial number of entries in the inode hash table.  */
  #define INITIAL_ENTRY_TAB_SIZE 70
@@ -386,16 +397,6 @@
    -i, --interactive            prompt before overwrite\n\
  "), stdout);
        fputs (_("\
-@@ -353,6 +368,9 @@ main (int argc, char **argv)
-   int c;
-   bool ok;
-   bool make_backups = false;
-+  bool pbar_show = false;
-+  int pbar_delay = PROGRESS_DELAY;
-+  int pbar_min_est = PROGRESS_MIN_EST;
-   char *backup_suffix_string;
-   char *version_control_string = NULL;
-   struct cp_options x;
 @@ -375,7 +393,7 @@ main (int argc, char **argv)
       we'll actually use backup_suffix_string.  */
    backup_suffix_string = getenv ("SIMPLE_BACKUP_SUFFIX");
@@ -415,3 +416,22 @@
  	case 'i':
  	  x.interactive = I_ASK_USER;
  	  break;
+--- coreutils/src/remove.h
++++ coreutils/src/remove.h
+@@ -48,6 +48,16 @@ struct rm_options
+   /* If true, display the name of each file removed.  */
+   bool verbose;
+ 
++  /* If true, display a progress bar when the following conditions are
++   * met:
++     - pbar_delay defines how many seconds to wait before considering to
++       display the progress bar
++     - pbar_min_est defines how many seconds estimated operation complete
++       time should be at least to show the progress bar. */
++  bool pbar_show;
++  int pbar_delay;
++  int pbar_min_est;
++
+   /* If true, treat the failure by the rm function to restore the
+      current working directory as a fatal error.  I.e., if this field
+      is true and the rm function cannot restore cwd, it must exit with
