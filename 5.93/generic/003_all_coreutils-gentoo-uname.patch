@@ -1,6 +1,7 @@
 On linux platforms, grok /proc/cpuinfo for the CPU/vendor info.
 
 Prob not suitable for upstream seeing as how it's 100% linux-specific
+http://lists.gnu.org/archive/html/bug-coreutils/2005-09/msg00063.html
 
 Patch originally by Carlos E. Gorges <carlos@techlinux.com.br>, but 
 heavily reworked to suck less.
@@ -43,7 +44,7 @@ heavily reworked to suck less.
 +		*tmp-- = '\0';
 +}
 +
-+static int __linux_procinfo (int x, char *fstr)
++static int __linux_procinfo (int x, char *fstr, size_t s)
 +{
 +	FILE *fp;
 +
@@ -73,7 +74,7 @@ heavily reworked to suck less.
 +		#elif defined(__cris__)
 +			"cpu", "cpu model"
 +		#else
-+			"???", "???"
++			"unknown", "unknown"
 +		#endif
 +	};
 +
@@ -91,7 +92,7 @@ heavily reworked to suck less.
 +		fclose(fp);
 +
 +		if (ret) {
-+			strncpy(fstr, ret, 257);
++			strncpy(fstr, ret, s);
 +			return 0;
 +		}
 +	}
@@ -113,7 +114,7 @@ heavily reworked to suck less.
        {
  	static char processor[257];
 +#if defined(USE_PROCINFO)
-+	if (0 <= __linux_procinfo (PROCINFO_ARCHITECTURE, processor))
++	if (0 <= __linux_procinfo (PROCINFO_ARCHITECTURE, processor, sizeof processor))
 +#else
  	if (0 <= sysinfo (SI_ARCHITECTURE, processor, sizeof processor))
 +#endif
@@ -125,7 +126,7 @@ heavily reworked to suck less.
  	{
  	  static char hardware_platform[257];
 +#if defined(USE_PROCINFO)
-+	  if (0 <= __linux_procinfo (PROCINFO_HARDWARE_PLATFORM, hardware_platform))
++	  if (0 <= __linux_procinfo (PROCINFO_HARDWARE_PLATFORM, hardware_platform, sizeof hardware_platform))
 +#else
  	  size_t s = sizeof hardware_platform;
  	  static int mib[] = { CTL_HW, UNAME_HARDWARE_PLATFORM };
