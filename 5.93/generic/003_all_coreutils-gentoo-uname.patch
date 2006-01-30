@@ -6,6 +6,9 @@ http://lists.gnu.org/archive/html/bug-coreutils/2005-09/msg00063.html
 Patch originally by Carlos E. Gorges <carlos@techlinux.com.br>, but 
 heavily reworked to suck less.
 
+To add support for additional platforms, check out the show_cpuinfo()
+func in the linux/arch/<ARCH>/ source tree of the kernel.
+
 --- coreutils/src/uname.c
 +++ coreutils/src/uname.c
 @@ -44,6 +44,11 @@
@@ -68,7 +71,7 @@ heavily reworked to suck less.
 +		#elif defined(__s390__) || defined(__s390x__)
 +			"Type", "Manufacturer"
 +		#elif defined(__sh__)
-+			"cpu family", "Machine"
++			"cpu family", "machine"
 +		#elif defined(__m68k__)
 +			"CPU", "MMU"
 +		#elif defined(__cris__)
