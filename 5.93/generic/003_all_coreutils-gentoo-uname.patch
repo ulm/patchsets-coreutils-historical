@@ -11,13 +11,12 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
 
 --- coreutils/src/uname.c
 +++ coreutils/src/uname.c
-@@ -51,6 +51,11 @@
+@@ -51,6 +51,10 @@
  # include <mach-o/arch.h>
  #endif
  
 +#if defined (__linux__)
 +# define USE_PROCINFO
-+# define UNAME_HARDWARE_PLATFORM
 +#endif
 +
  #include "system.h"
