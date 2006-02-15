@@ -1,0 +1,12 @@
+--- coreutils-5.1.2/src/ls.c
++++ coreutils-5.1.2/src/ls.c
+@@ -1592,7 +1593,8 @@
+ 
+ 	    print_with_color = (i == color_always
+ 				|| (i == color_if_tty
+-				    && isatty (STDOUT_FILENO)));
++				    && isatty (STDOUT_FILENO))
++				    && getenv("TERM"));
+ 
+ 	    if (print_with_color)
+ 	      {
