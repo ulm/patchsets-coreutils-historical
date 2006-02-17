@@ -1436,7 +1436,17 @@ diff -urN coreutils-5.93.orig/src/install.c coreutils-5.93/src/install.c
    {"directory", no_argument, NULL, 'd'},
    {"group", required_argument, NULL, 'g'},
    {"mode", required_argument, NULL, 'm'},
-@@ -196,6 +204,11 @@
+@@ -158,6 +166,9 @@
+   x->verbose = false;
+   x->dest_info = NULL;
+   x->src_info = NULL;
++#ifdef WITH_SELINUX
++  x->preserve_security_context = 0;
++#endif
+ }
+ 
+ /* FILE is the last operand of this command.  Return true if FILE is a
+@@ -196,6 +207,11 @@
    bool no_target_directory = false;
    int n_files;
    char **file;
@@ -2660,24 +2670,24 @@ diff -urN coreutils-5.93.orig/src/stat.c coreutils-5.93/src/stat.c
 @@ -537,8 +552,9 @@
  
  static void
- print_it (char const *masterformat, char const *filename,
+ print_it (char const *format, char const *filename,
 -	  void (*print_func) (char *, size_t, char, char const *, void const *),
 -	  void const *data)
 +	  void (*print_func) (char *, size_t, char, char const *, void const *,
 +			      SECURITY_ID_T ),
 +	  void const *data, SECURITY_ID_T scontext)
  {
-   char *b;
- 
+   /* Add 2 to accommodate our conversion of the stat `%s' format string
+      to the longer printf `%llu' one.  */
 @@ -576,7 +592,7 @@
- 	      putchar ('%');
- 	      break;
- 	    default:
--	      print_func (dest, n_alloc, *p, filename, data);
-+		    print_func (dest, n_alloc, *p, filename, data, scontext);
- 	      break;
- 	    }
- 	}
+ 		putchar ('%');
+ 		break;
+ 	      default:
+-		print_func (dest, n_alloc, *fmt_char, filename, data);
++		print_func (dest, n_alloc, *fmt_char, filename, data, scontext);
+ 		break;
+ 	      }
+ 	    break;
 @@ -592,9 +608,17 @@
  
  /* Stat the file system and print what we find.  */
@@ -2823,9 +2833,9 @@ diff -urN coreutils-5.93.orig/src/stat.c coreutils-5.93/src/stat.c
  }
  
 @@ -681,6 +758,7 @@
-   -f, --file-system     display file system status instead of file status\n\
-   -c  --format=FORMAT   use the specified FORMAT instead of the default\n\
-   -L, --dereference     follow links\n\
+       --printf=FORMAT   like --format, but interpret backslash escapes,\n\
+                           and do not output a mandatory trailing newline.\n\
+                           If you want a newline, include \\n in FORMAT.\n\
 +  -Z, --context         print the security context \n\
    -t, --terse           print the information in terse form\n\
  "), stdout);
