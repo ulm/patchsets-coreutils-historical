@@ -1,0 +1,91 @@
+http://lists.gnu.org/archive/html/bug-coreutils/2006-04/msg00128.html
+http://bugs.gentoo.org/130246
+
+From:    Paul Eggert
+Subject: Re: Problem with running tests during installing coreutils-5.94
+Date:    Tue, 18 Apr 2006 23:38:48 -0700
+
+I've long been suspicious of the 'alloca' inside shred.c.  Can you
+please apply the patch at the end of this message?  (Save this email
+into a file FOO, and then type "patch shred.c <FOO"; you'll get minor
+complaints about line numbers that you can ignore.)
+
+If this doesn't fix your problem, please try putting a "return;"
+statement at the top of the direct_mode function, so that direct_mode
+is a no-op.
+
+Thanks.
+
+I installed the following patch into CVS coreutils, since that alloca
+is kind of dicey anyway.
+
+2006-04-18  Paul Eggert
+
+        * src/shred.c (fillrand): The assertion was way too weak, due to
+        what must be a typo.  Strengthen it to its intended value.
+        (dopass): Don't use alloca; it's not worth the aggravation here,
+        since it's used only to get a page-aligned buffer, and page
+        alignment doesn't buy us much here.  I'm suspicious that alloca
+        causes problems on some hosts, due to a recent bug report by Adam
+        Waltman.
+
+--- src/shred.c 26 Mar 2006 12:07:59 -0000      1.123
++++ src/shred.c 19 Apr 2006 06:27:43 -0000      1.124
+@@ -641,10 +641,10 @@ fillpattern (int type, unsigned char *r,
+ static void
+ fillrand (struct isaac_state *s, uint32_t *r, size_t size_max, size_t size)
+ {
+-  size = (size + ISAAC_BYTES - 1) / ISAAC_BYTES;
+-  assert (size <= size_max);
++  size_t refills = (size + ISAAC_BYTES - 1) / ISAAC_BYTES;
++  assert (refills * ISAAC_BYTES <= size_max);
+ 
+-  while (size--)
++  while (refills--)
+     {
+       isaac_refill (s, r);
+       r += ISAAC_WORDS;
+@@ -748,9 +748,7 @@ dopass (int fd, char const *qname, off_t
+   size_t lim;			/* Amount of data to try writing */
+   size_t soff;			/* Offset into buffer for next write */
+   ssize_t ssize;		/* Return value from write */
+-  uint32_t *r;			/* Fill pattern.  */
+-  size_t rsize = 3 * MAX (ISAAC_WORDS, 1024) * sizeof *r; /* Fill size.  */
+-  size_t ralign = lcm (getpagesize (), sizeof *r); /* Fill alignment.  */
++  uint32_t r[3 * MAX (ISAAC_WORDS, 1024)];	/* Fill pattern.  */
+   char pass_string[PASS_NAME_SIZE];	/* Name of current pass */
+   bool write_error = false;
+   bool first_write = true;
+@@ -765,13 +763,10 @@ dopass (int fd, char const *qname, off_t
+       return -1;
+     }
+ 
+-  r = alloca (rsize + ralign - 1);
+-  r = ptr_align (r, ralign);
+-
+   /* Constant fill patterns need only be set up once. */
+   if (type >= 0)
+     {
+-      lim = rsize;
++      lim = sizeof r;
+       if ((off_t) lim > size && size != -1)
+ 	{
+ 	  lim = (size_t) size;
+@@ -796,7 +791,7 @@ dopass (int fd, char const *qname, off_t
+   for (;;)
+     {
+       /* How much to write this time? */
+-      lim = rsize;
++      lim = sizeof r;
+       if ((off_t) lim > size - offset && size != -1)
+ 	{
+ 	  if (size < offset)
+@@ -806,7 +801,7 @@ dopass (int fd, char const *qname, off_t
+ 	    break;
+ 	}
+       if (type < 0)
+-	fillrand (s, r, rsize, lim);
++	fillrand (s, r, sizeof r, lim);
+       /* Loop to retry partial writes. */
+       for (soff = 0; soff < lim; soff += ssize, first_write = false)
+ 	{
