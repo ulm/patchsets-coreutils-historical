@@ -1,0 +1,21 @@
+http://bugs.gentoo.org/130455
+
+--- po/cs.po
++++ po/cs.po
+@@ -3838,14 +3838,12 @@
+ msgstr "%s: chybné èíslo"
+ 
+ #: src/ls.c:685
+-#, fuzzy
+ msgid "%b %e  %Y"
+-msgstr "%e. %b %Y %H.%M"
++msgstr "%e. %b %Y"
+ 
+ #: src/ls.c:693
+-#, fuzzy
+ msgid "%b %e %H:%M"
+-msgstr "%e. %b %Y %H.%M"
++msgstr "%e. %b %H.%M"
+ 
+ #: src/ls.c:1428
+ #, fuzzy, c-format
