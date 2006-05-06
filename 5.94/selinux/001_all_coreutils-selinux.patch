@@ -1,6 +1,5 @@
-diff -urN coreutils-5.93.orig/config.hin coreutils-5.93/config.hin
---- coreutils-5.93.orig/config.hin	2005-11-05 17:12:38.000000000 -0500
-+++ coreutils-5.93/config.hin	2006-01-28 23:37:00.901526038 -0500
+--- coreutils-5.93.orig/config.hin
++++ coreutils-5.93/config.hin
 @@ -387,10 +387,6 @@
     don't. */
  #undef HAVE_DECL_TTYNAME
@@ -50,9 +49,8 @@ diff -urN coreutils-5.93.orig/config.hin coreutils-5.93/config.hin
  #undef size_t
  
  /* Map `socklen_t' to `int' if it is missing. */
-diff -urN coreutils-5.93.orig/configure.ac coreutils-5.93/configure.ac
---- coreutils-5.93.orig/configure.ac	2005-11-05 17:08:33.000000000 -0500
-+++ coreutils-5.93/configure.ac	2006-01-28 23:37:00.905525770 -0500
+--- coreutils-5.93.orig/configure.ac
++++ coreutils-5.93/configure.ac
 @@ -28,6 +28,13 @@
  AB_INIT()
  AM_INIT_AUTOMAKE([1.8.3 gnits dist-bzip2])
@@ -67,9 +65,8 @@ diff -urN coreutils-5.93.orig/configure.ac coreutils-5.93/configure.ac
  gl_DEFAULT_POSIX2_VERSION
  gl_USE_SYSTEM_EXTENSIONS
  gl_PERL
-diff -urN coreutils-5.93.orig/man/Makefile.am coreutils-5.93/man/Makefile.am
---- coreutils-5.93.orig/man/Makefile.am	2005-10-13 10:12:51.000000000 -0400
-+++ coreutils-5.93/man/Makefile.am	2006-01-28 23:37:00.907525637 -0500
+--- coreutils-5.93.orig/man/Makefile.am
++++ coreutils-5.93/man/Makefile.am
 @@ -10,7 +10,7 @@
    rm.1 rmdir.1 seq.1 sha1sum.1 shred.1 sleep.1 sort.1 split.1 stat.1 stty.1 \
    su.1 sum.1 sync.1 tac.1 tail.1 tee.1 test.1 touch.1 tr.1 true.1 tsort.1 \
@@ -88,54 +85,8 @@ diff -urN coreutils-5.93.orig/man/Makefile.am coreutils-5.93/man/Makefile.am
  
  SUFFIXES = .x .1
  
-diff -urN coreutils-5.93.orig/man/Makefile.in coreutils-5.93/man/Makefile.in
---- coreutils-5.93.orig/man/Makefile.in	2005-11-05 17:12:21.000000000 -0500
-+++ coreutils-5.93/man/Makefile.in	2006-01-28 23:37:00.912525303 -0500
-@@ -107,25 +107,25 @@
- 	$(top_srcdir)/m4/onceonly_2_57.m4 $(top_srcdir)/m4/openat.m4 \
- 	$(top_srcdir)/m4/pathmax.m4 $(top_srcdir)/m4/perl.m4 \
- 	$(top_srcdir)/m4/physmem.m4 $(top_srcdir)/m4/po.m4 \
--	$(top_srcdir)/m4/posixtm.m4 $(top_srcdir)/m4/posixver.m4 \
--	$(top_srcdir)/m4/prereq.m4 $(top_srcdir)/m4/progtest.m4 \
--	$(top_srcdir)/m4/putenv.m4 $(top_srcdir)/m4/quote.m4 \
--	$(top_srcdir)/m4/quotearg.m4 $(top_srcdir)/m4/readlink.m4 \
--	$(top_srcdir)/m4/readtokens.m4 $(top_srcdir)/m4/readutmp.m4 \
--	$(top_srcdir)/m4/regex.m4 $(top_srcdir)/m4/rename.m4 \
--	$(top_srcdir)/m4/restrict.m4 $(top_srcdir)/m4/rmdir-errno.m4 \
--	$(top_srcdir)/m4/rmdir.m4 $(top_srcdir)/m4/root-dev-ino.m4 \
--	$(top_srcdir)/m4/rpmatch.m4 $(top_srcdir)/m4/safe-read.m4 \
--	$(top_srcdir)/m4/safe-write.m4 $(top_srcdir)/m4/same.m4 \
--	$(top_srcdir)/m4/save-cwd.m4 $(top_srcdir)/m4/savedir.m4 \
--	$(top_srcdir)/m4/setenv.m4 $(top_srcdir)/m4/settime.m4 \
--	$(top_srcdir)/m4/sha1.m4 $(top_srcdir)/m4/sig2str.m4 \
--	$(top_srcdir)/m4/signed.m4 $(top_srcdir)/m4/socklen.m4 \
--	$(top_srcdir)/m4/sockpfaf.m4 $(top_srcdir)/m4/ssize_t.m4 \
--	$(top_srcdir)/m4/st_dm_mode.m4 $(top_srcdir)/m4/stat-macros.m4 \
--	$(top_srcdir)/m4/stat-prog.m4 $(top_srcdir)/m4/stat-time.m4 \
--	$(top_srcdir)/m4/stdbool.m4 $(top_srcdir)/m4/stdint_h.m4 \
--	$(top_srcdir)/m4/stdio-safer.m4 \
-+	$(top_srcdir)/m4/posix_acl.m4 $(top_srcdir)/m4/posixtm.m4 \
-+	$(top_srcdir)/m4/posixver.m4 $(top_srcdir)/m4/prereq.m4 \
-+	$(top_srcdir)/m4/progtest.m4 $(top_srcdir)/m4/putenv.m4 \
-+	$(top_srcdir)/m4/quote.m4 $(top_srcdir)/m4/quotearg.m4 \
-+	$(top_srcdir)/m4/readlink.m4 $(top_srcdir)/m4/readtokens.m4 \
-+	$(top_srcdir)/m4/readutmp.m4 $(top_srcdir)/m4/regex.m4 \
-+	$(top_srcdir)/m4/rename.m4 $(top_srcdir)/m4/restrict.m4 \
-+	$(top_srcdir)/m4/rmdir-errno.m4 $(top_srcdir)/m4/rmdir.m4 \
-+	$(top_srcdir)/m4/root-dev-ino.m4 $(top_srcdir)/m4/rpmatch.m4 \
-+	$(top_srcdir)/m4/safe-read.m4 $(top_srcdir)/m4/safe-write.m4 \
-+	$(top_srcdir)/m4/same.m4 $(top_srcdir)/m4/save-cwd.m4 \
-+	$(top_srcdir)/m4/savedir.m4 $(top_srcdir)/m4/setenv.m4 \
-+	$(top_srcdir)/m4/settime.m4 $(top_srcdir)/m4/sha1.m4 \
-+	$(top_srcdir)/m4/sig2str.m4 $(top_srcdir)/m4/signed.m4 \
-+	$(top_srcdir)/m4/socklen.m4 $(top_srcdir)/m4/sockpfaf.m4 \
-+	$(top_srcdir)/m4/ssize_t.m4 $(top_srcdir)/m4/st_dm_mode.m4 \
-+	$(top_srcdir)/m4/stat-macros.m4 $(top_srcdir)/m4/stat-prog.m4 \
-+	$(top_srcdir)/m4/stat-time.m4 $(top_srcdir)/m4/stdbool.m4 \
-+	$(top_srcdir)/m4/stdint_h.m4 $(top_srcdir)/m4/stdio-safer.m4 \
- 	$(top_srcdir)/m4/stdlib-safer.m4 $(top_srcdir)/m4/stpcpy.m4 \
- 	$(top_srcdir)/m4/strcase.m4 $(top_srcdir)/m4/strcspn.m4 \
- 	$(top_srcdir)/m4/strdup.m4 $(top_srcdir)/m4/strftime.m4 \
+--- coreutils-5.93.orig/man/Makefile.in
++++ coreutils-5.93/man/Makefile.in
 @@ -199,7 +199,6 @@
  GLIBC21 = @GLIBC21@
  GMSGFMT = @GMSGFMT@
@@ -222,9 +173,8 @@ diff -urN coreutils-5.93.orig/man/Makefile.in coreutils-5.93/man/Makefile.in
  
  # Note the use of $t/$*, rather than just `$*' as in other packages.
  # That is necessary to avoid failures for programs that are also shell built-in
-diff -urN coreutils-5.93.orig/man/chcon.1 coreutils-5.93/man/chcon.1
---- coreutils-5.93.orig/man/chcon.1	1969-12-31 19:00:00.000000000 -0500
-+++ coreutils-5.93/man/chcon.1	2006-01-28 23:37:00.914525169 -0500
+--- coreutils-5.93.orig/man/chcon.1
++++ coreutils-5.93/man/chcon.1
 @@ -0,0 +1,64 @@
 +.TH CHCON 1 "July 2003" "chcon (coreutils) 5.0" "User Commands"
 +.SH NAME
@@ -290,17 +240,15 @@ diff -urN coreutils-5.93.orig/man/chcon.1 coreutils-5.93/man/chcon.1
 +.B info chcon
 +.PP
 +should give you access to the complete manual.
-diff -urN coreutils-5.93.orig/man/chcon.x coreutils-5.93/man/chcon.x
---- coreutils-5.93.orig/man/chcon.x	1969-12-31 19:00:00.000000000 -0500
-+++ coreutils-5.93/man/chcon.x	2006-01-28 23:37:01.332497249 -0500
+--- coreutils-5.93.orig/man/chcon.x
++++ coreutils-5.93/man/chcon.x
 @@ -0,0 +1,4 @@
 +[NAME]
 +chcon \- change file security context
 +[DESCRIPTION]
 +.\" Add any additional description here
-diff -urN coreutils-5.93.orig/man/cp.1 coreutils-5.93/man/cp.1
---- coreutils-5.93.orig/man/cp.1	2005-11-05 17:13:18.000000000 -0500
-+++ coreutils-5.93/man/cp.1	2006-01-28 23:37:01.385493710 -0500
+--- coreutils-5.93.orig/man/cp.1
++++ coreutils-5.93/man/cp.1
 @@ -57,7 +57,7 @@
  .TP
  \fB\-\-preserve\fR[=\fIATTR_LIST\fR]
@@ -320,9 +268,8 @@ diff -urN coreutils-5.93.orig/man/cp.1 coreutils-5.93/man/cp.1
  \fB\-\-version\fR
  output version information and exit
  .PP
-diff -urN coreutils-5.93.orig/man/dir.1 coreutils-5.93/man/dir.1
---- coreutils-5.93.orig/man/dir.1	2005-11-05 17:13:18.000000000 -0500
-+++ coreutils-5.93/man/dir.1	2006-01-28 23:37:01.400492708 -0500
+--- coreutils-5.93.orig/man/dir.1
++++ coreutils-5.93/man/dir.1
 @@ -201,6 +201,20 @@
  .TP
  \fB\-1\fR
@@ -344,9 +291,8 @@ diff -urN coreutils-5.93.orig/man/dir.1 coreutils-5.93/man/dir.1
  .TP
  \fB\-\-help\fR
  display this help and exit
-diff -urN coreutils-5.93.orig/man/id.1 coreutils-5.93/man/id.1
---- coreutils-5.93.orig/man/id.1	2005-11-05 17:13:19.000000000 -0500
-+++ coreutils-5.93/man/id.1	2006-01-28 23:37:01.402492574 -0500
+--- coreutils-5.93.orig/man/id.1
++++ coreutils-5.93/man/id.1
 @@ -13,6 +13,9 @@
  \fB\-a\fR
  ignore, for compatibility with other versions
@@ -357,9 +303,8 @@ diff -urN coreutils-5.93.orig/man/id.1 coreutils-5.93/man/id.1
  \fB\-g\fR, \fB\-\-group\fR
  print only the effective group ID
  .TP
-diff -urN coreutils-5.93.orig/man/install.1 coreutils-5.93/man/install.1
---- coreutils-5.93.orig/man/install.1	2005-11-05 17:13:20.000000000 -0500
-+++ coreutils-5.93/man/install.1	2006-01-28 23:37:01.404492441 -0500
+--- coreutils-5.93.orig/man/install.1
++++ coreutils-5.93/man/install.1
 @@ -65,6 +65,11 @@
  .TP
  \fB\-v\fR, \fB\-\-verbose\fR
@@ -372,9 +317,8 @@ diff -urN coreutils-5.93.orig/man/install.1 coreutils-5.93/man/install.1
  .TP
  \fB\-\-help\fR
  display this help and exit
-diff -urN coreutils-5.93.orig/man/ls.1 coreutils-5.93/man/ls.1
---- coreutils-5.93.orig/man/ls.1	2005-11-05 17:13:20.000000000 -0500
-+++ coreutils-5.93/man/ls.1	2006-01-28 23:37:01.406492307 -0500
+--- coreutils-5.93.orig/man/ls.1
++++ coreutils-5.93/man/ls.1
 @@ -201,6 +201,20 @@
  .TP
  \fB\-1\fR
@@ -396,9 +340,8 @@ diff -urN coreutils-5.93.orig/man/ls.1 coreutils-5.93/man/ls.1
  .TP
  \fB\-\-help\fR
  display this help and exit
-diff -urN coreutils-5.93.orig/man/mkdir.1 coreutils-5.93/man/mkdir.1
---- coreutils-5.93.orig/man/mkdir.1	2005-11-05 17:13:20.000000000 -0500
-+++ coreutils-5.93/man/mkdir.1	2006-01-28 23:37:01.408492173 -0500
+--- coreutils-5.93.orig/man/mkdir.1
++++ coreutils-5.93/man/mkdir.1
 @@ -12,6 +12,8 @@
  .PP
  Mandatory arguments to long options are mandatory for short options too.
@@ -408,9 +351,8 @@ diff -urN coreutils-5.93.orig/man/mkdir.1 coreutils-5.93/man/mkdir.1
  \fB\-m\fR, \fB\-\-mode\fR=\fIMODE\fR
  set permission mode (as in chmod), not rwxrwxrwx \- umask
  .TP
-diff -urN coreutils-5.93.orig/man/mkfifo.1 coreutils-5.93/man/mkfifo.1
---- coreutils-5.93.orig/man/mkfifo.1	2005-11-05 17:13:20.000000000 -0500
-+++ coreutils-5.93/man/mkfifo.1	2006-01-28 23:37:01.410492040 -0500
+--- coreutils-5.93.orig/man/mkfifo.1
++++ coreutils-5.93/man/mkfifo.1
 @@ -12,6 +12,9 @@
  .PP
  Mandatory arguments to long options are mandatory for short options too.
@@ -421,9 +363,8 @@ diff -urN coreutils-5.93.orig/man/mkfifo.1 coreutils-5.93/man/mkfifo.1
  \fB\-m\fR, \fB\-\-mode\fR=\fIMODE\fR
  set permission mode (as in chmod), not a=rw \- umask
  .TP
-diff -urN coreutils-5.93.orig/man/mknod.1 coreutils-5.93/man/mknod.1
---- coreutils-5.93.orig/man/mknod.1	2005-11-05 17:13:20.000000000 -0500
-+++ coreutils-5.93/man/mknod.1	2006-01-28 23:37:01.412491906 -0500
+--- coreutils-5.93.orig/man/mknod.1
++++ coreutils-5.93/man/mknod.1
 @@ -12,6 +12,9 @@
  .PP
  Mandatory arguments to long options are mandatory for short options too.
@@ -434,9 +375,8 @@ diff -urN coreutils-5.93.orig/man/mknod.1 coreutils-5.93/man/mknod.1
  \fB\-m\fR, \fB\-\-mode\fR=\fIMODE\fR
  set permission mode (as in chmod), not a=rw \- umask
  .TP
-diff -urN coreutils-5.93.orig/man/runcon.1 coreutils-5.93/man/runcon.1
---- coreutils-5.93.orig/man/runcon.1	1969-12-31 19:00:00.000000000 -0500
-+++ coreutils-5.93/man/runcon.1	2006-01-28 23:37:01.415491706 -0500
+--- coreutils-5.93.orig/man/runcon.1
++++ coreutils-5.93/man/runcon.1
 @@ -0,0 +1,43 @@
 +.TH RUNCON "1" "February 2005" "runcon (coreutils) 5.0" "selinux"
 +.SH NAME
@@ -481,9 +421,8 @@ diff -urN coreutils-5.93.orig/man/runcon.1 coreutils-5.93/man/runcon.1
 +.PP
 +Note that only carefully-chosen contexts are likely to successfully
 +run.
-diff -urN coreutils-5.93.orig/man/runcon.x coreutils-5.93/man/runcon.x
---- coreutils-5.93.orig/man/runcon.x	1969-12-31 19:00:00.000000000 -0500
-+++ coreutils-5.93/man/runcon.x	2006-01-28 23:37:01.417491572 -0500
+--- coreutils-5.93.orig/man/runcon.x
++++ coreutils-5.93/man/runcon.x
 @@ -0,0 +1,14 @@
 +[NAME]
 +runcon \- run command with specified security context
@@ -499,9 +438,8 @@ diff -urN coreutils-5.93.orig/man/runcon.x coreutils-5.93/man/runcon.x
 +.PP
 +Note that only carefully-chosen contexts are likely to successfully
 +run.
-diff -urN coreutils-5.93.orig/man/stat.1 coreutils-5.93/man/stat.1
---- coreutils-5.93.orig/man/stat.1	2005-11-05 17:13:22.000000000 -0500
-+++ coreutils-5.93/man/stat.1	2006-01-28 23:37:01.418491506 -0500
+--- coreutils-5.93.orig/man/stat.1
++++ coreutils-5.93/man/stat.1
 @@ -22,6 +22,9 @@
  \fB\-t\fR, \fB\-\-terse\fR
  print the information in terse form
@@ -522,9 +460,8 @@ diff -urN coreutils-5.93.orig/man/stat.1 coreutils-5.93/man/stat.1
  %D
  Device number in hex
  .TP
-diff -urN coreutils-5.93.orig/man/vdir.1 coreutils-5.93/man/vdir.1
---- coreutils-5.93.orig/man/vdir.1	2005-11-05 17:13:23.000000000 -0500
-+++ coreutils-5.93/man/vdir.1	2006-01-28 23:37:01.421491305 -0500
+--- coreutils-5.93.orig/man/vdir.1
++++ coreutils-5.93/man/vdir.1
 @@ -201,6 +201,20 @@
  .TP
  \fB\-1\fR
@@ -546,9 +483,8 @@ diff -urN coreutils-5.93.orig/man/vdir.1 coreutils-5.93/man/vdir.1
  .TP
  \fB\-\-help\fR
  display this help and exit
-diff -urN coreutils-5.93.orig/src/Makefile.am coreutils-5.93/src/Makefile.am
---- coreutils-5.93.orig/src/Makefile.am	2005-07-18 03:52:18.000000000 -0400
-+++ coreutils-5.93/src/Makefile.am	2006-01-28 23:37:01.424491105 -0500
+--- coreutils-5.93.orig/src/Makefile.am
++++ coreutils-5.93/src/Makefile.am
 @@ -20,13 +20,13 @@
  EXTRA_PROGRAMS = chroot df hostid nice pinky stty su uname uptime users who
  
@@ -600,9 +536,8 @@ diff -urN coreutils-5.93.orig/src/Makefile.am coreutils-5.93/src/Makefile.am
  
  ## If necessary, add -lm to resolve use of pow in lib/strtod.c.
  sort_LDADD = $(LDADD) $(POW_LIB)
-diff -urN coreutils-5.93.orig/src/chcon.c coreutils-5.93/src/chcon.c
---- coreutils-5.93.orig/src/chcon.c	1969-12-31 19:00:00.000000000 -0500
-+++ coreutils-5.93/src/chcon.c	2006-01-28 23:37:01.430490704 -0500
+--- coreutils-5.93.orig/src/chcon.c
++++ coreutils-5.93/src/chcon.c
 @@ -0,0 +1,421 @@
 +/* chcontext -- change security context of a pathname */
 +
@@ -1025,9 +960,8 @@ diff -urN coreutils-5.93.orig/src/chcon.c coreutils-5.93/src/chcon.c
 +    freecon(ref_context);
 +  exit (errors);
 +}
-diff -urN coreutils-5.93.orig/src/copy.c coreutils-5.93/src/copy.c
---- coreutils-5.93.orig/src/copy.c	2005-09-24 23:07:33.000000000 -0400
-+++ coreutils-5.93/src/copy.c	2006-01-28 23:37:01.435490370 -0500
+--- coreutils-5.93.orig/src/copy.c
++++ coreutils-5.93/src/copy.c
 @@ -51,6 +51,11 @@
  #include "xreadlink.h"
  #include "yesno.h"
@@ -1112,9 +1046,8 @@ diff -urN coreutils-5.93.orig/src/copy.c coreutils-5.93/src/copy.c
    /* We have failed to create the destination file.
       If we've just added a dev/ino entry via the remember_copied
       call above (i.e., unless we've just failed to create a hard link),
-diff -urN coreutils-5.93.orig/src/copy.h coreutils-5.93/src/copy.h
---- coreutils-5.93.orig/src/copy.h	2005-07-03 05:31:19.000000000 -0400
-+++ coreutils-5.93/src/copy.h	2006-01-28 23:37:01.448489502 -0500
+--- coreutils-5.93.orig/src/copy.h
++++ coreutils-5.93/src/copy.h
 @@ -127,6 +127,9 @@
    bool preserve_ownership;
    bool preserve_mode;
@@ -1125,9 +1058,8 @@ diff -urN coreutils-5.93.orig/src/copy.h coreutils-5.93/src/copy.h
  
    /* Enabled for mv, and for cp by the --preserve=links option.
       If true, attempt to preserve in the destination files any
-diff -urN coreutils-5.93.orig/src/cp.c coreutils-5.93/src/cp.c
---- coreutils-5.93.orig/src/cp.c	2005-09-16 03:50:33.000000000 -0400
-+++ coreutils-5.93/src/cp.c	2006-01-28 23:37:01.453489168 -0500
+--- coreutils-5.93.orig/src/cp.c
++++ coreutils-5.93/src/cp.c
 @@ -51,6 +51,11 @@
  
  #define AUTHORS "Torbjorn Granlund", "David MacKenzie", "Jim Meyering"
@@ -1278,9 +1210,8 @@ diff -urN coreutils-5.93.orig/src/cp.c coreutils-5.93/src/cp.c
  
  	case REPLY_OPTION: /* Deprecated */
  	  x.interactive = XARGMATCH ("--reply", optarg,
-diff -urN coreutils-5.93.orig/src/id.c coreutils-5.93/src/id.c
---- coreutils-5.93.orig/src/id.c	2005-07-08 18:55:44.000000000 -0400
-+++ coreutils-5.93/src/id.c	2006-01-28 23:37:01.456488968 -0500
+--- coreutils-5.93.orig/src/id.c
++++ coreutils-5.93/src/id.c
 @@ -37,6 +37,20 @@
  
  int getugroups ();
@@ -1411,9 +1342,8 @@ diff -urN coreutils-5.93.orig/src/id.c coreutils-5.93/src/id.c
 +  }
 +#endif
  }
-diff -urN coreutils-5.93.orig/src/install.c coreutils-5.93/src/install.c
---- coreutils-5.93.orig/src/install.c	2005-09-23 16:50:49.000000000 -0400
-+++ coreutils-5.93/src/install.c	2006-01-28 23:42:44.466104385 -0500
+--- coreutils-5.93.orig/src/install.c
++++ coreutils-5.93/src/install.c
 @@ -48,6 +48,11 @@
  # include <sys/wait.h>
  #endif
@@ -1504,9 +1434,8 @@ diff -urN coreutils-5.93.orig/src/install.c coreutils-5.93/src/install.c
        fputs (HELP_OPTION_DESCRIPTION, stdout);
        fputs (VERSION_OPTION_DESCRIPTION, stdout);
        fputs (_("\
-diff -urN coreutils-5.93.orig/src/ls.c coreutils-5.93/src/ls.c
---- coreutils-5.93.orig/src/ls.c	2005-10-15 05:56:21.000000000 -0400
-+++ coreutils-5.93/src/ls.c	2006-01-28 23:44:20.021618895 -0500
+--- coreutils-5.93.orig/src/ls.c
++++ coreutils-5.93/src/ls.c
 @@ -135,6 +135,11 @@
  
  #define AUTHORS "Richard Stallman", "David MacKenzie"
@@ -2113,9 +2042,8 @@ diff -urN coreutils-5.93.orig/src/ls.c coreutils-5.93/src/ls.c
 +  }
 +}
 +#endif
-diff -urN coreutils-5.93.orig/src/mkdir.c coreutils-5.93/src/mkdir.c
---- coreutils-5.93.orig/src/mkdir.c	2005-06-14 19:55:47.000000000 -0400
-+++ coreutils-5.93/src/mkdir.c	2006-01-28 23:37:01.478487498 -0500
+--- coreutils-5.93.orig/src/mkdir.c
++++ coreutils-5.93/src/mkdir.c
 @@ -34,11 +34,18 @@
  
  #define AUTHORS "David MacKenzie"
@@ -2180,9 +2108,8 @@ diff -urN coreutils-5.93.orig/src/mkdir.c coreutils-5.93/src/mkdir.c
  	case_GETOPT_HELP_CHAR;
  	case_GETOPT_VERSION_CHAR (PROGRAM_NAME, AUTHORS);
  	default:
-diff -urN coreutils-5.93.orig/src/mkfifo.c coreutils-5.93/src/mkfifo.c
---- coreutils-5.93.orig/src/mkfifo.c	2005-05-14 03:58:37.000000000 -0400
-+++ coreutils-5.93/src/mkfifo.c	2006-01-28 23:37:01.480487365 -0500
+--- coreutils-5.93.orig/src/mkfifo.c
++++ coreutils-5.93/src/mkfifo.c
 @@ -32,11 +32,18 @@
  
  #define AUTHORS "David MacKenzie"
@@ -2245,9 +2172,8 @@ diff -urN coreutils-5.93.orig/src/mkfifo.c coreutils-5.93/src/mkfifo.c
  	case_GETOPT_HELP_CHAR;
  	case_GETOPT_VERSION_CHAR (PROGRAM_NAME, AUTHORS);
  	default:
-diff -urN coreutils-5.93.orig/src/mknod.c coreutils-5.93/src/mknod.c
---- coreutils-5.93.orig/src/mknod.c	2005-05-14 03:58:37.000000000 -0400
-+++ coreutils-5.93/src/mknod.c	2006-01-28 23:37:01.483487164 -0500
+--- coreutils-5.93.orig/src/mknod.c
++++ coreutils-5.93/src/mknod.c
 @@ -36,8 +36,15 @@
  /* The name this program was run with. */
  char *program_name;
@@ -2308,9 +2234,8 @@ diff -urN coreutils-5.93.orig/src/mknod.c coreutils-5.93/src/mknod.c
  	case_GETOPT_HELP_CHAR;
  	case_GETOPT_VERSION_CHAR (PROGRAM_NAME, AUTHORS);
  	default:
-diff -urN coreutils-5.93.orig/src/mv.c coreutils-5.93/src/mv.c
---- coreutils-5.93.orig/src/mv.c	2005-07-03 12:49:15.000000000 -0400
-+++ coreutils-5.93/src/mv.c	2006-01-28 23:37:01.486486964 -0500
+--- coreutils-5.93.orig/src/mv.c
++++ coreutils-5.93/src/mv.c
 @@ -34,6 +34,11 @@
  #include "quote.h"
  #include "remove.h"
@@ -2344,9 +2269,8 @@ diff -urN coreutils-5.93.orig/src/mv.c coreutils-5.93/src/mv.c
    /* FIXME: consider not calling getenv for SIMPLE_BACKUP_SUFFIX unless
       we'll actually use backup_suffix_string.  */
    backup_suffix_string = getenv ("SIMPLE_BACKUP_SUFFIX");
-diff -urN coreutils-5.93.orig/src/runcon.c coreutils-5.93/src/runcon.c
---- coreutils-5.93.orig/src/runcon.c	1969-12-31 19:00:00.000000000 -0500
-+++ coreutils-5.93/src/runcon.c	2006-01-28 23:37:01.489486764 -0500
+--- coreutils-5.93.orig/src/runcon.c
++++ coreutils-5.93/src/runcon.c
 @@ -0,0 +1,253 @@
 +/*
 + * runcon [ context |
@@ -2601,9 +2525,8 @@ diff -urN coreutils-5.93.orig/src/runcon.c coreutils-5.93/src/runcon.c
 +  }
 +  return 1; /* can't reach this statement.... */
 +}
-diff -urN coreutils-5.93.orig/src/stat.c coreutils-5.93/src/stat.c
---- coreutils-5.93.orig/src/stat.c	2005-10-15 06:15:48.000000000 -0400
-+++ coreutils-5.93/src/stat.c	2006-01-28 23:37:01.494486430 -0500
+--- coreutils-5.93.orig/src/stat.c
++++ coreutils-5.93/src/stat.c
 @@ -42,6 +42,13 @@
  # endif
  #endif
@@ -2891,9 +2814,8 @@ diff -urN coreutils-5.93.orig/src/stat.c coreutils-5.93/src/stat.c
  
    exit (ok ? EXIT_SUCCESS : EXIT_FAILURE);
  }
-diff -urN coreutils-5.93.orig/tests/help-version coreutils-5.93/tests/help-version
---- coreutils-5.93.orig/tests/help-version	2005-01-05 17:08:48.000000000 -0500
-+++ coreutils-5.93/tests/help-version	2006-01-28 23:37:01.500486029 -0500
+--- coreutils-5.93.orig/tests/help-version
++++ coreutils-5.93/tests/help-version
 @@ -45,6 +45,8 @@
  
      # Skip `test'; it doesn't accept --help or --version.

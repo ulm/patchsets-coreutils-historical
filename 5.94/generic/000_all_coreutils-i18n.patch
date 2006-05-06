@@ -4007,51 +4007,6 @@
  $(srcdir)/$x-tests: $(mk_script) Test.pm Makefile.am
 --- coreutils-5.93/tests/sort/Makefile.in.i18n	2005-11-05 22:12:25.000000000 +0000
 +++ coreutils-5.93/tests/sort/Makefile.in	2005-12-23 09:00:37.000000000 +0000
-@@ -107,25 +107,25 @@
- 	$(top_srcdir)/m4/onceonly_2_57.m4 $(top_srcdir)/m4/openat.m4 \
- 	$(top_srcdir)/m4/pathmax.m4 $(top_srcdir)/m4/perl.m4 \
- 	$(top_srcdir)/m4/physmem.m4 $(top_srcdir)/m4/po.m4 \
--	$(top_srcdir)/m4/posixtm.m4 $(top_srcdir)/m4/posixver.m4 \
--	$(top_srcdir)/m4/prereq.m4 $(top_srcdir)/m4/progtest.m4 \
--	$(top_srcdir)/m4/putenv.m4 $(top_srcdir)/m4/quote.m4 \
--	$(top_srcdir)/m4/quotearg.m4 $(top_srcdir)/m4/readlink.m4 \
--	$(top_srcdir)/m4/readtokens.m4 $(top_srcdir)/m4/readutmp.m4 \
--	$(top_srcdir)/m4/regex.m4 $(top_srcdir)/m4/rename.m4 \
--	$(top_srcdir)/m4/restrict.m4 $(top_srcdir)/m4/rmdir-errno.m4 \
--	$(top_srcdir)/m4/rmdir.m4 $(top_srcdir)/m4/root-dev-ino.m4 \
--	$(top_srcdir)/m4/rpmatch.m4 $(top_srcdir)/m4/safe-read.m4 \
--	$(top_srcdir)/m4/safe-write.m4 $(top_srcdir)/m4/same.m4 \
--	$(top_srcdir)/m4/save-cwd.m4 $(top_srcdir)/m4/savedir.m4 \
--	$(top_srcdir)/m4/setenv.m4 $(top_srcdir)/m4/settime.m4 \
--	$(top_srcdir)/m4/sha1.m4 $(top_srcdir)/m4/sig2str.m4 \
--	$(top_srcdir)/m4/signed.m4 $(top_srcdir)/m4/socklen.m4 \
--	$(top_srcdir)/m4/sockpfaf.m4 $(top_srcdir)/m4/ssize_t.m4 \
--	$(top_srcdir)/m4/st_dm_mode.m4 $(top_srcdir)/m4/stat-macros.m4 \
--	$(top_srcdir)/m4/stat-prog.m4 $(top_srcdir)/m4/stat-time.m4 \
--	$(top_srcdir)/m4/stdbool.m4 $(top_srcdir)/m4/stdint_h.m4 \
--	$(top_srcdir)/m4/stdio-safer.m4 \
-+	$(top_srcdir)/m4/posix_acl.m4 $(top_srcdir)/m4/posixtm.m4 \
-+	$(top_srcdir)/m4/posixver.m4 $(top_srcdir)/m4/prereq.m4 \
-+	$(top_srcdir)/m4/progtest.m4 $(top_srcdir)/m4/putenv.m4 \
-+	$(top_srcdir)/m4/quote.m4 $(top_srcdir)/m4/quotearg.m4 \
-+	$(top_srcdir)/m4/readlink.m4 $(top_srcdir)/m4/readtokens.m4 \
-+	$(top_srcdir)/m4/readutmp.m4 $(top_srcdir)/m4/regex.m4 \
-+	$(top_srcdir)/m4/rename.m4 $(top_srcdir)/m4/restrict.m4 \
-+	$(top_srcdir)/m4/rmdir-errno.m4 $(top_srcdir)/m4/rmdir.m4 \
-+	$(top_srcdir)/m4/root-dev-ino.m4 $(top_srcdir)/m4/rpmatch.m4 \
-+	$(top_srcdir)/m4/safe-read.m4 $(top_srcdir)/m4/safe-write.m4 \
-+	$(top_srcdir)/m4/same.m4 $(top_srcdir)/m4/save-cwd.m4 \
-+	$(top_srcdir)/m4/savedir.m4 $(top_srcdir)/m4/setenv.m4 \
-+	$(top_srcdir)/m4/settime.m4 $(top_srcdir)/m4/sha1.m4 \
-+	$(top_srcdir)/m4/sig2str.m4 $(top_srcdir)/m4/signed.m4 \
-+	$(top_srcdir)/m4/socklen.m4 $(top_srcdir)/m4/sockpfaf.m4 \
-+	$(top_srcdir)/m4/ssize_t.m4 $(top_srcdir)/m4/st_dm_mode.m4 \
-+	$(top_srcdir)/m4/stat-macros.m4 $(top_srcdir)/m4/stat-prog.m4 \
-+	$(top_srcdir)/m4/stat-time.m4 $(top_srcdir)/m4/stdbool.m4 \
-+	$(top_srcdir)/m4/stdint_h.m4 $(top_srcdir)/m4/stdio-safer.m4 \
- 	$(top_srcdir)/m4/stdlib-safer.m4 $(top_srcdir)/m4/stpcpy.m4 \
- 	$(top_srcdir)/m4/strcase.m4 $(top_srcdir)/m4/strcspn.m4 \
- 	$(top_srcdir)/m4/strdup.m4 $(top_srcdir)/m4/strftime.m4 \
 @@ -196,7 +196,6 @@
  GLIBC21 = @GLIBC21@
  GMSGFMT = @GMSGFMT@
