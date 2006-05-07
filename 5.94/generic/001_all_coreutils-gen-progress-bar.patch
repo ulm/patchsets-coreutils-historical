@@ -31,12 +31,13 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
  #include "system.h"
  #include "backupfile.h"
  #include "copy.h"
-@@ -50,6 +56,8 @@
+@@ -50,6 +56,9 @@
  #include "utimens.h"
  #include "xreadlink.h"
  #include "yesno.h"
 +#include "xstrtol.h"
 +#include "human.h"
++#include "quotearg.h"
  
  #ifndef HAVE_FCHMOD
  # define HAVE_FCHMOD false
