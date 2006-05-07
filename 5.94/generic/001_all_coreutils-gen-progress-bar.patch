@@ -31,11 +31,12 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
  #include "system.h"
  #include "backupfile.h"
  #include "copy.h"
-@@ -50,6 +56,7 @@
+@@ -50,6 +56,8 @@
  #include "utimens.h"
  #include "xreadlink.h"
  #include "yesno.h"
 +#include "xstrtol.h"
++#include "human.h"
  
  #ifndef HAVE_FCHMOD
  # define HAVE_FCHMOD false
@@ -48,7 +49,7 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
  static bool copy_internal (char const *src_name, char const *dst_name,
  			   bool new_dst, dev_t device,
  			   struct dir_list *ancestors,
-@@ -191,6 +200,62 @@ copy_dir (char const *src_name_in, char 
+@@ -191,6 +200,31 @@ copy_dir (char const *src_name_in, char 
    return ok;
  }
  
@@ -57,55 +58,24 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
 +char *shorten_name(const char *str, size_t max_width)
 +{
 +  char *shortname;
-+  char *filename = (char *) (rindex(str, '/'));
++  const char *filename;
 +  size_t len;
-+  
-+  if (filename == NULL)
-+    {
-+      filename = (char *) str;
-+    }
-+  else
-+    {
-+      filename = (char *) &filename[1];
-+    }
 +
++  filename = base_name (str);
 +  len = strlen(filename);
 +  shortname = (char *) xmalloc (max_width + 1);
 +  strncpy (shortname, filename, max_width);
 +  shortname[max_width] = '\0';
 +  if (len > max_width)
 +    {
-+      memset(&shortname[max_width - 3], '.', 3);
++      memset(shortname + max_width - 3, '.', 3);
 +    }
 +  else
 +    {
-+      memset(&shortname[len], ' ', max_width - len);
++      memset(shortname + len, ' ', max_width - len);
 +    }
 +
 +  return shortname;
-+}
-+
-+char *si_units(off_t size)
-+{
-+  const static int buf_size = 20;
-+  char *buf;
-+  static char *unit_array[] = { "B", "KiB", "MiB", "GiB", "" };
-+  size_t i;
-+  
-+  buf = xmalloc(20);
-+  for (i = 0; size > 10000; i++)
-+    {
-+      if (unit_array[i][0] == '\0')
-+	{
-+	  i--;
-+	  break;
-+	}
-+      size /= 1024;
-+    }
-+
-+  snprintf (buf, buf_size, "%lu %s", (unsigned long)size, unit_array[i]);
-+
-+  return buf;
 +}
 +
  /* Copy a regular file from SRC_NAME to DST_NAME.
@@ -141,7 +111,7 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
    for (;;)
      {
        ssize_t n_read = read (source_desc, buf, buf_size);
-@@ -390,6 +471,113 @@ copy_reg (char const *src_name, char con
+@@ -390,6 +471,110 @@ copy_reg (char const *src_name, char con
  	    }
  	  last_write_made_hole = false;
  	}
@@ -212,17 +182,17 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
 +	}
 +
 +      {
-+	char *str_size;
-+	char *str_speed;
++	char str_size[LONGEST_HUMAN_READABLE + 1];
++	char str_speed[LONGEST_HUMAN_READABLE + 1];
 +	char etabuf[64];
 +	time_t t_temp;
 +
-+        sample_window[sample_count - 1] = (n_read_total - last_bytes) /
-+                      (t_now - t_last);
-+        sample_sum += sample_window[sample_count - 1];
++	sample_window[sample_count - 1] = (n_read_total - last_bytes) /
++	                                  (t_now - t_last);
++	sample_sum += sample_window[sample_count - 1];
 +
-+        /* Calculate the remaining time */
-+        t_temp = (src_open_sb.st_size - n_read_total) / (sample_sum / sample_count);
++	/* Calculate the remaining time */
++	t_temp = (src_open_sb.st_size - n_read_total) / (sample_sum / sample_count);
 +
 +	/* Don't print the progress bar if the estimated remaining
 +	   time is low. */
@@ -232,19 +202,16 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
 +	  }
 +	progress_bar_printed = 2;
 +
-+	str_size = si_units(src_open_sb.st_size);
-+	str_speed = si_units(sample_sum / sample_count);
-+
-+        strftime(etabuf, sizeof etabuf, "%H:%M.%S", 
-+                 gmtime(&t_temp));
-+        printf (_("%s | %3lu%% | %9s | %9s/s | ETA %s\r"), shortname,
-+                (unsigned long)(n_read_total * 100 / src_open_sb.st_size),
-+                str_size, str_speed, etabuf);
-+        fflush (stdout);
-+	free(str_size);
-+	free(str_speed);
-+        t_last = t_now;
-+        last_bytes = n_read_total;
++	strftime(etabuf, sizeof etabuf, "%H:%M.%S", 
++	         gmtime(&t_temp));
++	printf (_("%s | %3lu%% | %9s | %9s/s | ETA %s\r"), shortname,
++	        (unsigned long)(n_read_total * 100 / src_open_sb.st_size),
++	        human_readable(src_open_sb.st_size, str_size, human_autoscale|human_base_1024|human_space_before_unit|human_SI|human_B, 1, 1),
++	        human_readable(sample_sum / sample_count, str_speed, human_autoscale|human_base_1024|human_space_before_unit|human_SI|human_B, 1, 1),
++	        etabuf);
++	fflush (stdout);
++	t_last = t_now;
++	last_bytes = n_read_total;
 +      }
 +    }
 +
