@@ -346,7 +346,7 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
  	  break;
  
 +	case 'g':
-+	  x.pbar_show = 1;
++	  x.pbar_show = true;
 +	  break;
 +
  	case NO_PRESERVE_ATTRIBUTES_OPTION:
@@ -411,7 +411,7 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
  	  x.interactive = I_ALWAYS_YES;
  	  break;
 +	case 'g':
-+	  x.pbar_show = 1;
++	  x.pbar_show = true;
 +	  break;
  	case 'i':
  	  x.interactive = I_ASK_USER;
