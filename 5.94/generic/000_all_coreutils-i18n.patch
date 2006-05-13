@@ -1,3 +1,6 @@
+http://www.openi18n.org/modules.php?op=modload&name=Sections&file=index&req=viewarticle&artid=17&page=1
+http://www.openi18n.org/download/utildev/coreutils-5.3.0-i18n-0.1.patch
+
 --- coreutils-5.93/lib/linebuffer.h.i18n	2005-05-14 08:58:06.000000000 +0100
 +++ coreutils-5.93/lib/linebuffer.h	2005-12-23 08:53:01.000000000 +0000
 @@ -22,6 +22,11 @@
