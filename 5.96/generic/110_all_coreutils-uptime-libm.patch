@@ -1,0 +1,25 @@
+http://bugs.gentoo.org/133859
+
+revision 1.68
+date: 2006-03-27 02:34:48 -0500;  author: meyering;  state: Exp;  lines: +2 -1
+(uptime_LDADD): Add $(POW_LIB), for uptime's use of strtod.
+Tiny patch from Nickolai Zeldovich.
+
+Index: src/Makefile.am
+===================================================================
+RCS file: /cvsroot/coreutils/coreutils/src/Makefile.am,v
+retrieving revision 1.67
+retrieving revision 1.68
+diff -u -p -r1.67 -r1.68
+--- src/Makefile.am	27 Feb 2006 10:44:34 -0000	1.67
++++ src/Makefile.am	27 Mar 2006 07:34:48 -0000	1.68
+@@ -98,7 +98,8 @@ nanosec_libs = $(LDADD) $(POW_LIB) $(LIB
+ sleep_LDADD = $(nanosec_libs)
+ tail_LDADD = $(nanosec_libs)
+ 
+-uptime_LDADD = $(LDADD) $(GETLOADAVG_LIBS)
++# If necessary, add -lm to resolve use of pow in lib/strtod.c.
++uptime_LDADD = $(LDADD) $(POW_LIB) $(GETLOADAVG_LIBS)
+ 
+ su_LDADD = $(LDADD) $(LIB_CRYPT)
+ 
