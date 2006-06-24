@@ -1,0 +1,2 @@
+used to validate the 003_all_coreutils-gentoo-uname.patch we apply to
+coreutils' uname.c to pull info out of /proc/cpuinfo

@@ -1,0 +1,15 @@
+processor	: 0
+cpu family	: PA-RISC 2.0
+cpu		: PA8600 (PCX-W+)
+cpu MHz		: 552.000000
+model		: 9000/785/C3600
+model name	: Allegro W+
+hversion	: 0x00005cf0
+sversion	: 0x00000481
+I-cache		: 512 KB
+D-cache		: 1024 KB (WB, 0-way associative)
+ITLB entries	: 160
+DTLB entries	: 160 - shared with ITLB
+bogomips	: 1097.72
+software id	: 2005082290
+

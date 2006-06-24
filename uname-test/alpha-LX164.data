@@ -1,0 +1,23 @@
+cpu			: Alpha
+cpu model		: EV56
+cpu variation		: 7
+cpu revision		: 0
+cpu serial number	: 
+system type		: EB164
+system variation	: LX164
+system revision		: 0
+system serial number	: 
+cycle frequency [Hz]	: 533163328 est.
+timer frequency [Hz]	: 1024.00
+page size [bytes]	: 8192
+phys. address bits	: 40
+max. addr. space #	: 127
+BogoMIPS		: 1059.80
+kernel unaligned acc	: 0 (pc=0,va=0)
+user unaligned acc	: 0 (pc=0,va=0)
+platform string		: Digital AlphaPC 164LX 533 MHz
+cpus detected		: 1
+L1 Icache		: 8K, 1-way, 32b line
+L1 Dcache		: 8K, 1-way, 32b line
+L2 cache		: 96K, 3-way, 64b line
+L3 cache		: 2048K, 1-way, 64b line

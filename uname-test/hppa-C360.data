@@ -1,0 +1,15 @@
+processor	: 0
+cpu family	: PA-RISC 2.0
+cpu		: PA8500 (PCX-W)
+cpu MHz		: 367.111100
+model		: 9000/785/C360
+model name	: Raven W 360 (9000/780)
+hversion	: 0x00005c60
+sversion	: 0x00000481
+I-cache		: 512 KB
+D-cache		: 1024 KB (WB, 0-way associative)
+ITLB entries	: 160
+DTLB entries	: 160 - shared with ITLB
+bogomips	: 729.08
+software id	: 2000575571
+
