@@ -1,0 +1,14 @@
+machine		: LANDISK
+processor	: 0
+cpu family	: sh4
+cpu type	: SH7751R
+cpu flags	: fpu ptea
+cache type	: split (harvard)
+icache size	: 16KiB (2-way)
+dcache size	: 32KiB (2-way)
+bogomips	: 266.24
+master_clk  	: 266.66MHz
+module_clk  	: 33.33MHz
+bus_clk     	: 133.33MHz
+cpu_clk     	: 266.66MHz
+tmu0_clk    	: 8.33MHz

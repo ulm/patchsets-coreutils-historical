@@ -61,8 +61,9 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 		{ "powerpc64", "cpu",          "machine" },
 		{ "s390",      "Type",         "Manufacturer" },
 		{ "s390x",     "Type",         "Manufacturer" },
-		{ "sh",        "cpu family",   "machine" },
+		{ "sh",        "cpu type",     "machine" },
 		{ "sparc",     "type",         "cpu" },
+		{ "vax",       "cpu type",     "cpu" },
 	};
 	const char *procinfo_keys[] = { "", "" };
 	int i;
