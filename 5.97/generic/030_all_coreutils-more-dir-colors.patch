@@ -94,12 +94,13 @@
  
  # image formats
  .jpg 01;35
-@@ -99,9 +122,23 @@
+@@ -99,9 +122,26 @@
  .tif 01;35
  .tiff 01;35
  .png 01;35
 +.mng 01;35
 +.pcx 01;35
++.yuv 01;35
  .mov 01;35
  .mpg 01;35
  .mpeg 01;35
@@ -109,7 +110,9 @@
 +.mp4 01;35  # 'Offical' container for MPEG-4
 +.m4v 01;35  # MPEG-4 Video only
 +.mp4v 01;35 # MPEG-4 Video only
++.vob 01;35  # MPEG-2 DVD
 +.qt 01;35   # Quicktime (http://developer.apple.com/qa/qtw/qtw99.html)
++.nuv 01;35
 +.wmv 01;35  # Windows Media Video
 +.asf 01;35  # Advanced Systems Format (contains Windows Media Video)
 +.rm 01;35   # Real Media
@@ -118,7 +121,7 @@
  .avi 01;35
  .fli 01;35
  .gl 01;35
-@@ -109,9 +146,24 @@
+@@ -109,9 +146,26 @@
  .xcf 01;35
  .xwd 01;35
  
@@ -146,3 +149,6 @@
 +.au 00;36
 +.flac 00;36
 +.aac 00;36
++.ra 01;36
++.mka 01;36
++.m4a 01;36
