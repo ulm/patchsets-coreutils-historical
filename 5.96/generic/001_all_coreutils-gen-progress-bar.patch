@@ -356,6 +356,17 @@ http://lists.gnu.org/archive/html/bug-coreutils/2004-02/msg00071.html
    /* Since this program may well have to process additional command
       line arguments after any call to `rm', that function must preserve
       the initial working directory, in case one of those is a
+@@ -145,6 +158,10 @@
+   x->verbose = false;
+   x->dest_info = NULL;
+   x->src_info = NULL;
++
++  x->pbar_show = false;
++  x->pbar_delay = PROGRESS_DELAY;
++  x->pbar_min_est = PROGRESS_MIN_EST;
+ }
+ 
+ /* FILE is the last operand of this command.  Return true if FILE is a
 @@ -312,6 +325,8 @@ Mandatory arguments to long options are 
        --backup[=CONTROL]       make a backup of each existing destination file\n\
    -b                           like --backup but does not accept an argument\n\
