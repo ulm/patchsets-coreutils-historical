@@ -1,0 +1,97 @@
+From: Jim Meyering <jim@meyering.net>
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: Bug-coreutils@gnu.org, bug-gnulib@gnu.org
+Subject: Re: the -x option of du misbehaves depending on arguments
+Date: Sun, 03 Dec 2006 11:34:14 +0100
+
+Mike Frysinger <vapier@gentoo.org> wrote:
+> if `du -x` is given a bunch of dirs and files in the same directory, then it
+> fails to descend into the subdirs ... for exampe:
+> $ mkdir foo
+> $ cd foo
+> $ echo somestring > file
+> $ mkdir emptydir nonemptydir
+> $ cp file nonemptydir/
+>
+> [these work]
+> $ du
+> 8       ./nonemptydir
+> 4       ./emptydir
+> 20      .
+> $ du *
+> 4       emptydir
+> 4       file
+> 8       nonemptydir
+> $ du -x
+> 8       ./nonemptydir
+> 4       ./emptydir
+> 20      .
+>
+> [this fails]
+> $ du -x *
+> 4       emptydir
+> 4       file
+> 4       nonemptydir
+>
+> tried with coreutils-6.6 and latest cvs ... coreutils-5.94 seems to work OK
+> though ...
+
+Thank you for the report.
+That is due to a bug in gnulib's lib/fts.c.
+Here's the fix I've just checked in to gnulib.
+Below, there's also a patch for coreutils adding the mandatory test
+and NEWS entry.
+
+[gnulib]
+2006-12-03  Jim Meyering  <jim@meyering.net>
+
+	* lib/fts.c (fts_load): Don't set sp->fts_dev here, since
+	p->fts_statp may not yet be defined.
+	(fts_read): Instead, set it in the caller, once p->fts_statp is
+	sure to be defined, and corresponds to a top-level directory.
+	This bug made du -x fail.  Here's the coreutils test case:
+	http://git.sv.gnu.org/gitweb/?p=coreutils.git;a=commit;h=ba45154d8e9f
+	Reported by Mike Frysinger.
+
+[coreutils]
+2006-12-03  Jim Meyering  <jim@meyering.net>
+
+	* NEWS: du --one-file-system (-x) would skip subdirectories of any
+	directory listed as second or subsequent command line argument.
+	* tests/du/one-file-system: New file.  Test for today's fts.c fix.
+	* tests/du/Makefile.am (TESTS): Add one-file-system.
+	Reported by Mike Frysinger.
+
+Index: lib/fts.c
+===================================================================
+RCS file: /sources/gnulib/gnulib/lib/fts.c,v
+retrieving revision 1.29
+diff -u -p -r1.29 fts.c
+--- lib/fts.c	22 Nov 2006 23:48:30 -0000	1.29
++++ lib/fts.c	3 Dec 2006 10:22:37 -0000
+@@ -516,7 +516,6 @@ fts_load (FTS *sp, register FTSENT *p)
+ 		p->fts_namelen = len;
+ 	}
+ 	p->fts_accpath = p->fts_path = sp->fts_path;
+-	sp->fts_dev = p->fts_statp->st_dev;
+ }
+
+ int
+@@ -743,9 +742,15 @@ check_for_dir:
+ 			abort ();
+ 		      }
+ 		  }
++
+ 		sp->fts_cur = p;
+ 		if (p->fts_info == FTS_D)
+ 		  {
++		    /* Now that P->fts_statp is guaranteed to be valid,
++		       if this is a command-line directory, record its
++		       device number, to be used for FTS_XDEV.  */
++		    if (p->fts_level == FTS_ROOTLEVEL)
++		      sp->fts_dev = p->fts_statp->st_dev;
+ 		    Dprintf (("  entering: %s\n", p->fts_path));
+ 		    if (! enter_dir (sp, p))
+ 		      {
+
+
