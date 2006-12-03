@@ -1,3 +1,6 @@
+http://bugs.gentoo.org/155125
+http://lists.gnu.org/archive/html/bug-coreutils/2006-11/msg00218.html
+
 2006-11-26  Mike Frysinger  <vapier@gentoo.org>
 
 	* m4/acl.m4 (AC_FUNC_ACL): Wrap all ACL logic in a call to

@@ -1,3 +1,5 @@
+http://lists.gnu.org/archive/html/bug-coreutils/2006-11/msg00219.html
+
 --- coreutils-6.1/src/dircolors.hin
 +++ coreutils-6.1/src/dircolors.hin
 @@ -5,9 +5,9 @@
