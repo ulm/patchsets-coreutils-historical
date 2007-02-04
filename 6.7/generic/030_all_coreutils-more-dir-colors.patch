@@ -13,6 +13,14 @@
  
  # Below, there should be one TERM entry for each termtype that is colorizable
  TERM Eterm
+@@ -28,6 +28,7 @@ TERM console
+ TERM cygwin
+ TERM dtterm
+ TERM gnome
++TERM gnome-256color
+ TERM konsole
+ TERM kterm
+ TERM linux
 @@ -66,7 +66,8 @@
  DOOR 01;35	# door
  BLK 40;33;01	# block device driver
