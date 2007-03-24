@@ -64,7 +64,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
 +			"cpu model", "system type"
 +		#elif defined(__arm__)
 +			"Processor", "Hardware"
-+		#elif defined(bfin)
++		#elif defined(__bfin__)
 +			"CPU", "BOARD Name"
 +		#elif defined(__cris__)
 +			"cpu", "cpu model"
