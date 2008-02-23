@@ -532,8 +532,8 @@ http://www.openi18n.org/download/utildev/coreutils-5.3.0-i18n-0.1.patch
 -	    FATAL_ERROR (_("the delimiter must be a single character"));
 -	  delim = optarg[0];
 -	  delim_specified = true;
-+#if HAVE_MBRTOWC
 +	    {
++#if HAVE_MBRTOWC
 +	      if(MB_CUR_MAX > 1)
 +		{
 +		  mbstate_t state;
