@@ -1,5 +1,9 @@
-1.2		[pending]
+1.2		12.04.2008
+	+ 000_all_coreutils-i18n.patch
 	U 004_all_coreutils-acl-xattr.patch
+	+ 020_all_coreutils-6.10-getgrouplist.patch
+	+ 021_all_coreutils-6.10-getgrouplist.patch
+	+ 050_all_coreutils-6.10-mv-atomic.patch
 
 1.1		22.01.2008
 	U 030_all_coreutils-more-dir-colors.patch
