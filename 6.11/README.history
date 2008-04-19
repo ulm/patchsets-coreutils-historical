@@ -1,0 +1,6 @@
+1.0		19.04.2008
+	+ 000_all_coreutils-i18n.patch
+	+ 001_all_coreutils-gen-progress-bar.patch
+	+ 003_all_coreutils-gentoo-uname.patch
+	+ 004_all_coreutils-acl-xattr.patch
+	+ 030_all_coreutils-more-dir-colors.patch
