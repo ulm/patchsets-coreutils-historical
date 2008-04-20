@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [[ $# -ne 2 ]] ; then
-	echo "Usage: $0 <coreutils ver> <patch ver>"
+if [[ $# -ne 2 && $# -ne 1 ]] ; then
+	echo "Usage: $0 <coreutils ver> [patch ver]"
 	exit 1
 fi
 cver=$1
@@ -12,15 +12,28 @@ if [[ ! -d ./${cver} ]] ; then
 	exit 1
 fi
 
+if [[ -z ${pver} ]] ; then
+	if [[ ! -e ./${cver}/README.history ]] ; then
+		echo "Error: README.history does not exist for ${cver}"
+		exit 1
+	fi
+	pver=$(awk '{print $1; exit}' ${cver}/README.history)
+	if [[ -n ${pver} ]] ; then
+		echo "Autoguessing patch ver as '${pver}' from ${cver}/README.history"
+	else
+		echo "Error: cannot extract version from ${cver}/README.history"
+		exit 1
+	fi
+fi
+
 rm -rf tmp
-rm -f coreutils-${cver}-*.tar.bz2
+rm -f coreutils-${cver}-*.tar.lzma
 
 mkdir -p tmp/patch/excluded
 cp -r ../README* ${cver}/* tmp/patch/
 find tmp/patch -name CVS -type d | xargs rm -rf
 
-tar -jcf coreutils-${cver}-patches-${pver}.tar.bz2 \
-	-C tmp patch || exit 1
+tar -C tmp patch -cf - | lzma > coreutils-${cver}-patches-${pver}.tar.lzma || exit 1
 rm -rf tmp
 
-du -b coreutils-${cver}-*.tar.bz2
+du -b coreutils-${cver}-*.tar.lzma
