@@ -1,0 +1,4 @@
+1		21.02.2008
+	+ 001_all_coreutils-gen-progress-bar.patch
+	+ 003_all_coreutils-gentoo-uname.patch
+	+ 030_all_coreutils-more-dir-colors.patch
