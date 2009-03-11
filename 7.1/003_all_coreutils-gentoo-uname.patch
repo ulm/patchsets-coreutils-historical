@@ -15,7 +15,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
  # include <mach-o/arch.h>
  #endif
  
-+#if defined (__linux__)
++#if defined(__linux__)
 +# define USE_PROCINFO
 +# define UNAME_HARDWARE_PLATFORM
 +#endif
@@ -63,7 +63,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
 +	}
 +}
 +
-+static int __linux_procinfo (int x, char *fstr, size_t s)
++static int __linux_procinfo(int x, char *fstr, size_t s)
 +{
 +	FILE *fp;
 +
