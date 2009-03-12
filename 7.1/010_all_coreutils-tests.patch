@@ -1,0 +1,28 @@
+this test only gets run as non-root, so giving it temp write access to the
+root dir is safe since normal unix access will deny it #259876
+--- a/tests/touch/not-owner
++++ b/tests/touch/not-owner
+@@ -39,7 +39,10 @@ fail=0
+ # Before fileutils-4.1, we'd get the following misleading
+ # diagnostic instead of `...: Permission denied'.
+ # touch: creating `/': Is a directory
++save_sbw=${SANDBOX_WRITE}
++export SANDBOX_WRITE=${SANDBOX_WRITE}:/
+ touch / > out 2>&1 && fail=1
++export SANDBOX_WRITE=${save_sbw}
+ 
+ # On SunOS4, EPERM is `Not owner'.
+ # On some *BSD systems it's `Operation not permitted'.
+
+we dont build/install the `groups` binary, so skip the test
+--- a/tests/misc/groups-dash
++++ b/tests/misc/groups-dash
+@@ -23,6 +23,8 @@
+ 
+ . $srcdir/test-lib.sh
+ 
++test -x "$abs_top_builddir/src/groups" || skip_test_
++
+ # Coreutils 6.9 and earlier failed to display information on first argument
+ # if later argument was --.
+ fail=0
