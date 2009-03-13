@@ -2,17 +2,35 @@ this test only gets run as non-root, so giving it temp write access to the
 root dir is safe since normal unix access will deny it #259876
 --- a/tests/touch/not-owner
 +++ b/tests/touch/not-owner
-@@ -39,7 +39,10 @@ fail=0
+@@ -39,7 +39,10 @@
  # Before fileutils-4.1, we'd get the following misleading
  # diagnostic instead of `...: Permission denied'.
  # touch: creating `/': Is a directory
 +save_sbw=${SANDBOX_WRITE}
 +export SANDBOX_WRITE=${SANDBOX_WRITE}:/
  touch / > out 2>&1 && fail=1
-+export SANDBOX_WRITE=${save_sbw}
++SANDBOX_WRITE=${save_sbw}
  
  # On SunOS4, EPERM is `Not owner'.
  # On some *BSD systems it's `Operation not permitted'.
+
+the dd test looks up a device and tries to test seeking on it.  it shouldnt
+cause any corruption because it uses a count of 0 and seeks past the end of
+the device
+--- a/tests/dd/skip-seek-past-dev
++++ b/tests/dd/skip-seek-past-dev
+@@ -53,8 +53,11 @@
+ 0+0 records out" > err_ok || framework_failure
+ compare err_ok err || fail=1
+ 
++save_sbw=${SANDBOX_WRITE}
++export SANDBOX_WRITE=${SANDBOX_WRITE}:$device
+ timeout 1 dd bs=1 seek=$DEV_OFLOW count=0 status=noxfer > "$device" 2> err
+ test "$?" = "1" || fail=1
++SANDBOX_WRITE=${save_sbw}
+ echo "dd: \`standard output': cannot seek: Invalid argument
+ 0+0 records in
+ 0+0 records out" > err_ok || framework_failure
 
 we dont build/install the `groups` binary, so skip the test
 --- a/tests/misc/groups-dash
