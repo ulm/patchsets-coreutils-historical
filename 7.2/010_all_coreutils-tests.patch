@@ -31,16 +31,3 @@ the device
  echo "dd: \`standard output': cannot seek: Invalid argument
  0+0 records in
  0+0 records out" > err_ok || framework_failure
-
-we dont build/install the `groups` binary, so skip the test
---- a/tests/misc/groups-dash
-+++ b/tests/misc/groups-dash
-@@ -23,6 +23,8 @@
- 
- . $srcdir/test-lib.sh
- 
-+test -x "$abs_top_builddir/src/groups" || skip_test_
-+
- # Coreutils 6.9 and earlier failed to display information on first argument
- # if later argument was --.
- fail=0
