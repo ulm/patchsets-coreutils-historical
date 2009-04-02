@@ -1,3 +1,7 @@
+2		01.04.2009
+	U 010_all_coreutils-tests.patch
+	+ 015_all_coreutils-mv-i-3-stdin.patch
+
 1		31.03.2009
 	+ 001_all_coreutils-gen-progress-bar.patch
 	+ 003_all_coreutils-gentoo-uname.patch
