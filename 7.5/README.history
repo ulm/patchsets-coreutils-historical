@@ -1,0 +1,6 @@
+1		08.20.2009
+	+ 001_all_coreutils-gen-progress-bar.patch
+	+ 003_all_coreutils-gentoo-uname.patch
+	+ 010_all_coreutils-tests.patch
+	+ 015_all_coreutils-mv-i-3-stdin.patch
+	+ 030_all_coreutils-more-dir-colors.patch
