@@ -1,0 +1,5 @@
+1		23.09.2009
+	+ 003_all_coreutils-gentoo-uname.patch
+	+ 010_all_coreutils-tests.patch
+	+ 015_all_coreutils-mv-i-3-stdin.patch
+	+ 030_all_coreutils-more-dir-colors.patch
