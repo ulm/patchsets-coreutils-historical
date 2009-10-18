@@ -1,0 +1,50 @@
+http://bugs.gentoo.org/289134
+
+From 2bc0f3caaafeb240cdcfd050b7ad1fe0ad14addf Mon Sep 17 00:00:00 2001
+From: Jim Meyering <meyering@redhat.com>
+Date: Mon, 24 Aug 2009 08:21:47 +0200
+Subject: [PATCH 1/1] cp: ignore obscure failure to preserve symlink time stamps,
+
+...when run on a kernel older than what was implied by headers and
+libraries tested at configure time.
+* src/copy.c (utimens_symlink): Ignore failure when errno == ENOSYS.
+* NEWS (Bug fixes): Mention it.
+Reported by Todd Zullinger and Kamil Dudka.
+Details in this thread:
+http://thread.gmane.org/gmane.linux.redhat.fedora.devel/119834
+---
+ NEWS       |    6 ++++++
+ src/copy.c |   15 ++++++++++-----
+ 2 files changed, 16 insertions(+), 5 deletions(-)
+
+diff --git a/src/copy.c b/src/copy.c
+index bf9230b..b5cf64c 100644
+--- a/src/copy.c
++++ b/src/copy.c
+@@ -123,13 +123,18 @@ static char const *top_level_dst_name;
+ static inline int
+ utimens_symlink (char const *file, struct timespec const *timespec)
+ {
++  int err = 0;
++
+ #if HAVE_UTIMENSAT
+-  return utimensat (AT_FDCWD, file, timespec, AT_SYMLINK_NOFOLLOW);
+-#else
+-  /* Don't set errno=ENOTSUP here as we don't want
+-     to output an error message for this case.  */
+-  return 0;
++  err = utimensat (AT_FDCWD, file, timespec, AT_SYMLINK_NOFOLLOW);
++  /* When configuring on a system with new headers and libraries, and
++     running on one with a kernel that is old enough to lack the syscall,
++     utimensat fails with ENOSYS.  Ignore that.  */
++  if (err && errno == ENOSYS)
++    err = 0;
+ #endif
++
++  return err;
+ }
+ 
+ /* Perform the O(1) btrfs clone operation, if possible.
+-- 
+1.6.5.rc2
+

@@ -1,4 +1,7 @@
-1		08.20.2009
+2		18.10.2009
+	+ 008_all_coreutils-cp-ignore-obscure-failure-to-preserve-symlink-time-s.patch
+
+1		20.08.2009
 	+ 001_all_coreutils-gen-progress-bar.patch
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 010_all_coreutils-tests.patch
