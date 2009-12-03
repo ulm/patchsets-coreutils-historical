@@ -1,3 +1,6 @@
+3		[pending]
+	- 015_all_coreutils-mv-i-3-stdin.patch
+
 2		18.10.2009
 	+ 008_all_coreutils-cp-ignore-obscure-failure-to-preserve-symlink-time-s.patch
 

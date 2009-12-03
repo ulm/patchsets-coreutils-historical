@@ -1,5 +1,6 @@
 3		[pending]
 	+ 005_all_gnulib-tests-avoid-false-negative-with-with-packager.patch
+	- 015_all_coreutils-mv-i-3-stdin.patch
 
 2		09.10.2009
 	+ 008_all_coreutils-gnulib-mktemp.patch
