@@ -1,0 +1,60 @@
+http://bugs.gentoo.org/298581
+
+From 67bfde666826888f12934fb610705cf253a72293 Mon Sep 17 00:00:00 2001
+From: Eric Blake <ebb9@byu.net>
+Date: Sat, 26 Dec 2009 10:37:44 -0700
+Subject: [PATCH] tac: supply link dependency
+
+* src/Makefile.am (tac_LDADD): Add LIB_GETHRXTIME.
+* THANKS: Update.
+Reported by Robert Schwebel.
+---
+ THANKS          |    1 +
+ src/Makefile.am |    3 ++-
+ 2 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/THANKS b/THANKS
+index 064c234..668d59f 100644
+--- a/THANKS
++++ b/THANKS
+@@ -515,6 +515,7 @@ Risto Kankkunen                     kankkune@lingsoft.fi
+ Robert H. de Vries                  robert@and.nl
+ Robert Lindgren                     robert@orcafat.com
+ Robert Millan                       zeratul2@wanadoo.es
++Robert Schwebel                     r.schwebel@pengutronix.de
+ Rogier Wolff                        R.E.Wolff@BitWizard.nl
+ Roland Huebner                      ro-huebner@gmx.de
+ Roland Turner                       raz.tah.bet@raz.cx
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 208cb6c..86d78f7 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -325,12 +325,13 @@ ls_LDADD += $(LIB_CLOCK_GETTIME)
+ pr_LDADD += $(LIB_CLOCK_GETTIME)
+ touch_LDADD += $(LIB_CLOCK_GETTIME)
+ 
+-# for gethrxtime, randint, randread, gen_tempname
++# for gethrxtime, randint, randread, gen_tempname, mkstemp
+ dd_LDADD += $(LIB_GETHRXTIME)
+ mktemp_LDADD += $(LIB_GETHRXTIME)
+ shred_LDADD += $(LIB_GETHRXTIME)
+ shuf_LDADD += $(LIB_GETHRXTIME)
+ sort_LDADD += $(LIB_GETHRXTIME)
++tac_LDADD += $(LIB_GETHRXTIME)
+ 
+ # for cap_get_file
+ ls_LDADD += $(LIB_CAP)
+--- a/src/Makefile.in
++++ b/src/Makefile.in
+@@ -325,7 +325,7 @@ ls_LDADD += $(LIB_CLOCK_GETTIME)
+ su_LDADD = $(LDADD) $(LIB_CRYPT)
+ sum_LDADD = $(LDADD)
+ sync_LDADD = $(LDADD)
+-tac_LDADD = $(LDADD)
++tac_LDADD = $(LDADD) $(LIB_GETHRXTIME)
+ tail_LDADD = $(LDADD) $(POW_LIB) $(LIB_NANOSLEEP)
+ tee_LDADD = $(LDADD)
+ test_LDADD = $(LDADD) $(LIB_EACCESS)
+-- 
+1.6.6
+
