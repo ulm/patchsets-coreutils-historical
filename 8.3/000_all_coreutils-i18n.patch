@@ -3907,28 +3907,6 @@ diff -urNp coreutils-8.0-orig/src/uniq.c coreutils-8.0/src/uniq.c
    skip_chars = 0;
    skip_fields = 0;
    check_chars = SIZE_MAX;
-diff -urNp coreutils-8.0-orig/tests/Makefile.in coreutils-8.0/tests/Makefile.in
---- coreutils-8.0-orig/tests/Makefile.in	2009-09-29 16:25:44.000000000 +0200
-+++ coreutils-8.0/tests/Makefile.in	2009-10-07 10:07:16.000000000 +0200
-@@ -1126,6 +1126,7 @@ TESTS =						\
-   misc/sort-compress				\
-   misc/sort-continue				\
-   misc/sort-files0-from				\
-+  misc/sort-mb-tests				\
-   misc/sort-merge				\
-   misc/sort-merge-fdlimit			\
-   misc/sort-rand				\
-@@ -1582,6 +1582,10 @@ TESTS =						\
-   $(root_tests)
- 
- pr_data = \
-+  misc/mb1.X			\
-+  misc/mb1.I			\
-+  misc/mb2.X			\
-+  misc/mb2.I			\
-   pr/0F						\
-   pr/0FF					\
-   pr/0FFnt					\
 diff -urNp coreutils-8.0-orig/tests/Makefile.am coreutils-8.0/tests/Makefile.am
 --- coreutils-8.0-orig/tests/Makefile.am	2009-09-29 16:25:44.000000000 +0200
 +++ coreutils-8.0/tests/Makefile.am	2009-10-07 10:07:16.000000000 +0200
@@ -3944,6 +3922,28 @@ diff -urNp coreutils-8.0-orig/tests/Makefile.am coreutils-8.0/tests/Makefile.am
    $(root_tests)
  
  pr_data =					\
++  misc/mb1.X			\
++  misc/mb1.I			\
++  misc/mb2.X			\
++  misc/mb2.I			\
+   pr/0F						\
+   pr/0FF					\
+   pr/0FFnt					\
+diff -urNp coreutils-8.0-orig/tests/Makefile.in coreutils-8.0/tests/Makefile.in
+--- coreutils-8.0-orig/tests/Makefile.in	2009-09-29 16:25:44.000000000 +0200
++++ coreutils-8.0/tests/Makefile.in	2009-10-07 10:07:16.000000000 +0200
+@@ -1126,6 +1126,7 @@ TESTS =						\
+   misc/sort-compress				\
+   misc/sort-continue				\
+   misc/sort-files0-from				\
++  misc/sort-mb-tests				\
+   misc/sort-merge				\
+   misc/sort-merge-fdlimit			\
+   misc/sort-rand				\
+@@ -1582,6 +1582,10 @@ TESTS =						\
+   $(root_tests)
+ 
+ pr_data = \
 +  misc/mb1.X			\
 +  misc/mb1.I			\
 +  misc/mb2.X			\
