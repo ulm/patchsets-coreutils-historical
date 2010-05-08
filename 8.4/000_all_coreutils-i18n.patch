@@ -3951,6 +3951,15 @@ diff -urNp coreutils-8.0-orig/tests/Makefile.in coreutils-8.0/tests/Makefile.in
    pr/0F						\
    pr/0FF					\
    pr/0FFnt					\
+@@ -2323,6 +2328,8 @@
+ 	@p='misc/sort-continue'; $(am__check_pre) $(LOG_COMPILE) "$$tst" $(am__check_post)
+ misc/sort-files0-from.log: misc/sort-files0-from
+ 	@p='misc/sort-files0-from'; $(am__check_pre) $(LOG_COMPILE) "$$tst" $(am__check_post)
++misc/sort-mb-tests.log: misc/sort-mb-tests
++	@p='misc/sort-mb-tests'; $(am__check_pre) $(LOG_COMPILE) "$$tst" $(am__check_post)
+ misc/sort-merge.log: misc/sort-merge
+ 	@p='misc/sort-merge'; $(am__check_pre) $(LOG_COMPILE) "$$tst" $(am__check_post)
+ misc/sort-merge-fdlimit.log: misc/sort-merge-fdlimit
 diff -urNp coreutils-8.0-orig/tests/misc/cut coreutils-8.0/tests/misc/cut
 --- coreutils-8.0-orig/tests/misc/cut	2009-09-21 14:29:33.000000000 +0200
 +++ coreutils-8.0/tests/misc/cut	2009-10-07 10:07:16.000000000 +0200
