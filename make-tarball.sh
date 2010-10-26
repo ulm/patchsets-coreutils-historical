@@ -27,13 +27,13 @@ if [[ -z ${pver} ]] ; then
 fi
 
 rm -rf tmp
-rm -f coreutils-${cver}-*.tar.lzma
+rm -f coreutils-${cver}-*.tar.xz
 
 mkdir -p tmp/patch/excluded
 cp -r ../README* ${cver}/* tmp/patch/
 find tmp/patch -name CVS -type d | xargs rm -rf
 
-tar -C tmp patch -cf - | lzma > coreutils-${cver}-patches-${pver}.tar.lzma || exit 1
+tar -C tmp patch -cf - | xz > coreutils-${cver}-patches-${pver}.tar.xz || exit 1
 rm -rf tmp
 
-du -b coreutils-${cver}-*.tar.lzma
+du -b coreutils-${cver}-*.tar.xz
