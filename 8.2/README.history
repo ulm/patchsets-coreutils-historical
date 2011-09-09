@@ -1,11 +1,11 @@
 3		[pending]
 	U 000_all_coreutils-i18n.patch
 
-2		04.01.2009
+2		04 Jan 2010
 	+ 000_all_coreutils-i18n.patch
 	+ 005_all_coreutils-upstream-tac-dep.patch
 
-1		11.12.2009
+1		11 Dec 2009
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 010_all_coreutils-tests.patch
 	+ 030_all_coreutils-more-dir-colors.patch

@@ -1,7 +1,7 @@
-2		19.02.2011
+2		19 Feb 2011
 	+ 020_all_coreutils-8.10-git-version-gen.patch
 
-1		05.02.2011
+1		05 Feb 2011
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 010_all_coreutils-tests.patch
 	+ 030_all_coreutils-more-dir-colors.patch

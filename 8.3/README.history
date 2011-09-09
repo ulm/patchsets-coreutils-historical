@@ -1,7 +1,7 @@
 2		[pending]
 	U 000_all_coreutils-i18n.patch
 
-1		07.01.2010
+1		07 Jan 2010
 	+ 000_all_coreutils-i18n.patch
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 010_all_coreutils-tests.patch

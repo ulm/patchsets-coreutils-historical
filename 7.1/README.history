@@ -1,10 +1,10 @@
-3		13.03.2009
+3		13 Mar 2009
 	U 010_all_coreutils-tests.patch
 
-2		12.03.2009
+2		12 Mar 2009
 	+ 010_all_coreutils-tests.patch
 
-1		21.02.2009
+1		21 Feb 2009
 	+ 001_all_coreutils-gen-progress-bar.patch
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 030_all_coreutils-more-dir-colors.patch

@@ -1,4 +1,4 @@
-1.0		19.04.2008
+1.0		19 Apr 2008
 	+ 000_all_coreutils-i18n.patch
 	+ 001_all_coreutils-gen-progress-bar.patch
 	+ 003_all_coreutils-gentoo-uname.patch

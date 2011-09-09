@@ -2,10 +2,10 @@
 	+ 005_all_gnulib-tests-avoid-false-negative-with-with-packager.patch
 	- 015_all_coreutils-mv-i-3-stdin.patch
 
-2		09.10.2009
+2		09 Oct 2009
 	+ 008_all_coreutils-gnulib-mktemp.patch
 
-1		23.09.2009
+1		23 Sep 2009
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 010_all_coreutils-tests.patch
 	+ 015_all_coreutils-mv-i-3-stdin.patch
