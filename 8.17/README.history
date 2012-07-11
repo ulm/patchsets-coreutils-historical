@@ -1,5 +1,5 @@
 1.1		11 July 2012
-	+ 050_coreutils-8.17-fbsd-libpthread-detection.patch
+	+ 050_all_coreutils-libpthread-detection.patch
 
 1		10 May 2012
 	+ 003_all_coreutils-gentoo-uname.patch
