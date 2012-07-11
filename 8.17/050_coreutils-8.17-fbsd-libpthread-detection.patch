@@ -1,0 +1,83 @@
+diff --git a/configure b/configure
+index f3156fe..925d6b5 100755
+--- a/configure
++++ b/configure
+@@ -42286,55 +42248,48 @@ fi
+ 
+    LIB_PTHREAD=
+    if test $ac_cv_header_pthread_h = yes; then
+-                    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing pthread_join" >&5
+-$as_echo_n "checking for library containing pthread_join... " >&6; }
+-if ${gl_cv_search_pthread_join+:} false; then :
++                              { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing pthread_create and pthread_join" >&5
++$as_echo_n "checking for library containing pthread_create and pthread_join... " >&6; }
++if ${gl_cv_lib_pthread+:} false; then :
+   $as_echo_n "(cached) " >&6
+ else
+-  gl_saved_libs="$LIBS"
+-        gl_cv_search_pthread_join=
+-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-#include <pthread.h>
+-int
+-main ()
+-{
+-pthread_join (pthread_self (), (void **) 0);
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  gl_cv_search_pthread_join="none required"
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-        if test -z "$gl_cv_search_pthread_join"; then
+-          LIBS="-lpthread $gl_saved_libs"
++  gl_saved_libs=$LIBS
++        gl_cv_lib_pthread=
++        for gl_lib_prefix in '' '-lpthread'; do
++          LIBS="$gl_lib_prefix $gl_saved_libs"
+           cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ #include <pthread.h>
++                 void *noop (void *p) { return p; }
+ int
+ main ()
+ {
+-pthread_join (pthread_self (), (void **) 0);
++pthread_t pt;
++                 void *arg = 0;
++                 pthread_create (&pt, 0, noop, arg);
++                 pthread_join (pthread_self (), &arg);
+   ;
+   return 0;
+ }
+ _ACEOF
+ if ac_fn_c_try_link "$LINENO"; then :
+-  gl_cv_search_pthread_join="-lpthread"
++  if test -z "$gl_lib_prefix"; then
++               gl_cv_lib_pthread="none required"
++             else
++               gl_cv_lib_pthread=$gl_lib_prefix
++             fi
+ fi
+ rm -f core conftest.err conftest.$ac_objext \
+     conftest$ac_exeext conftest.$ac_ext
+-        fi
++          test -n "$gl_cv_lib_pthread" && break
++        done
+         LIBS="$gl_saved_libs"
+ 
+ fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $gl_cv_search_pthread_join" >&5
+-$as_echo "$gl_cv_search_pthread_join" >&6; }
+-     if test "$gl_cv_search_pthread_join" != "none required"; then
+-       LIB_PTHREAD="$gl_cv_search_pthread_join"
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $gl_cv_lib_pthread" >&5
++$as_echo "$gl_cv_lib_pthread" >&6; }
++     if test "$gl_cv_lib_pthread" != "none required"; then
++       LIB_PTHREAD="$gl_cv_lib_pthread"
+      fi
+    fi
+ 
