@@ -1,3 +1,6 @@
+1.2		18 Aug 2012
+	+ 020_all_coreutils-linking-order.patch
+
 1.1		12 Aug 2012
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 010_all_coreutils-tests.patch
