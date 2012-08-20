@@ -1,0 +1,32 @@
+https://bugs.gentoo.org/425730
+
+From eb6cbd59c640cbdb44ecc6f83f0ec3ae64354fa3 Mon Sep 17 00:00:00 2001
+From: Mike Frysinger <vapier@gentoo.org>
+Date: Sat, 18 Aug 2012 17:48:10 -0400
+Subject: [PATCH] timer-time: fix linking order with pthreads/rt
+
+When statically linking pthreads with rt, the current order is:
+	-lpthread -lrt
+
+But when statically linking, the -lpthread will be discarded as it
+isn't used.  It needs to come after the -lrt.
+
+* m4/timer_time.m4 (LIB_TIMER_TIME): Swap order of variables.
+---
+ m4/timer_time.m4 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/configure
++++ b/configure
+@@ -33,7 +33,7 @@ AC_DEFUN([gl_TIMER_TIME],
+ _ACEOF
+ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+   $EGREP "Thread" >/dev/null 2>&1; then :
+-  LIB_TIMER_TIME="$LIBMULTITHREAD $LIB_TIMER_TIME"
++  LIB_TIMER_TIME="$LIB_TIMER_TIME $LIBMULTITHREAD"
+ fi
+ rm -f conftest*
+ 
+-- 
+1.7.9.7
+

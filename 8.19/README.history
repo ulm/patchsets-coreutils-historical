@@ -1,0 +1,5 @@
+1.1		20 Aug 2012
+	+ 003_all_coreutils-gentoo-uname.patch
+	+ 010_all_coreutils-tests.patch
+	+ 020_all_coreutils-linking-order.patch
+	+ 030_all_coreutils-more-dir-colors.patch
