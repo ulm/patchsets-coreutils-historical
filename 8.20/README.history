@@ -1,0 +1,6 @@
+1.0		23 Oct 2012
+	+ 003_all_coreutils-gentoo-uname.patch
+	+ 005_all_coreutils-fortify-source.patch
+	+ 010_all_coreutils-tests.patch
+	+ 020_all_coreutils-parallel-man-generation.patch
+	+ 030_all_coreutils-more-dir-colors.patch

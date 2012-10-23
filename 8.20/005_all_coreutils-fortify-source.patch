@@ -1,0 +1,28 @@
+From 41a16d8d92e64e8c8161492d70d9a765f0e30f90 Mon Sep 17 00:00:00 2001
+From: Mike Frysinger <vapier@gentoo.org>
+Date: Tue, 23 Oct 2012 15:10:34 -0400
+Subject: [PATCH] build: do not redefine _FORTIFY_SOURCE
+
+If the active compiler or flags have already defined _FORTIFY_SOURCE,
+don't go overriding that.  Otherwise we get a lot of spew about the
+flag being redefined.
+
+* configure.ac (FORTIFY_SOURCE): Check if _FORTIFY_SOURCE is defined.
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/lib/config.hin
++++ b/lib/config.hin
+@@ -170,7 +170,7 @@
+ 
+ /* Enable compile-time and run-time bounds-checking, and some warnings,
+       without upsetting glibc 2.15+. */
+-   #if defined __OPTIMIZE__ && __OPTIMIZE__
++   #if !defined _FORTIFY_SOURCE && defined __OPTIMIZE__ && __OPTIMIZE__
+    # define _FORTIFY_SOURCE 2
+    #endif
+   
+-- 
+1.7.12
+
