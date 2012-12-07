@@ -1,3 +1,8 @@
+1.1		07 Dec 2012
+	+ 050_all_coreutils-primes.patch
+	+ 051_all_coreutils-mangen.patch
+	+ 060_all_coreutils-disable-asm-x32.patch
+
 1.0		23 Oct 2012
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 005_all_coreutils-fortify-source.patch
