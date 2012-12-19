@@ -1,0 +1,151 @@
+fix from upstream for misbehavior with `cp --no-preserve=mode`
+
+From 62543570d72b756a3b04ca9d1ebec6f4dd2eea4b Mon Sep 17 00:00:00 2001
+From: Bernhard Voelker <mail@bernhard-voelker.de>
+Date: Sat, 8 Dec 2012 19:09:19 +0100
+Subject: [PATCH] cp: fix --no-preserve=mode to not exit 1
+
+cp --no-preserve=mode exited 1 unconditionally.  Furthermore,
+the tests which would have detected this error - namely
+link-preserve.sh and reserve-mode.sh - failed to test
+cp's exit code.
+
+* src/copy.c (copy_reg): In the case x->explicit_no_preserve_mode,
+do only set return_val to false iff the previous set_acl ()
+failed.
+* tests/cp/link-preserve.sh: Check cp's exit code.
+* tests/cp/link-symlink.sh: Likewise.
+* tests/cp/preserve-mode.sh: Likewise.
+* NEWS: Mention the fix.
+
+Bug introduced in commit v8.19-145-g24ebca6.
+
+Reported by Florian Pritz in http://bugs.gnu.org/13119.
+---
+ NEWS                      |  3 +++
+ src/copy.c                |  4 ++--
+ tests/cp/link-preserve.sh | 12 ++++++------
+ tests/cp/link-symlink.sh  |  2 +-
+ tests/cp/preserve-mode.sh |  6 +++---
+ 5 files changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/src/copy.c b/src/copy.c
+index 7a35414..0decf9f 100644
+--- a/src/copy.c
++++ b/src/copy.c
+@@ -1153,8 +1153,8 @@ preserve_metadata:
+     }
+   else if (x->explicit_no_preserve_mode)
+     {
+-      set_acl (dst_name, dest_desc, 0666 & ~cached_umask ());
+-      return_val = false;
++      if (set_acl (dst_name, dest_desc, 0666 & ~cached_umask ()) != 0)
++        return_val = false;
+     }
+   else if (omitted_permissions)
+     {
+diff --git a/tests/cp/link-preserve.sh b/tests/cp/link-preserve.sh
+index bb3b244..44768e4 100755
+--- a/tests/cp/link-preserve.sh
++++ b/tests/cp/link-preserve.sh
+@@ -37,7 +37,7 @@ rm -rf a b c
+ touch a
+ ln -s a b
+ mkdir c
+-cp --preserve=links -R -H a b c
++cp --preserve=links -R -H a b c || fail=1
+ a_inode=$(ls -i c/a|sed 's,c/.*,,')
+ b_inode=$(ls -i c/b|sed 's,c/.*,,')
+ test "$a_inode" = "$b_inode" || fail=1
+@@ -46,7 +46,7 @@ test "$a_inode" = "$b_inode" || fail=1
+ # Ensure that -L makes cp follow the b->a symlink
+ # and translates to hard-linked a and b in the destination dir.
+ rm -rf a b c d; mkdir d; (cd d; touch a; ln -s a b)
+-cp --preserve=links -R -L d c
++cp --preserve=links -R -L d c || fail=1
+ a_inode=$(ls -i c/a|sed 's,c/.*,,')
+ b_inode=$(ls -i c/b|sed 's,c/.*,,')
+ test "$a_inode" = "$b_inode" || fail=1
+@@ -54,7 +54,7 @@ test "$a_inode" = "$b_inode" || fail=1
+ 
+ # Same as above, but starting with a/b hard linked.
+ rm -rf a b c d; mkdir d; (cd d; touch a; ln a b)
+-cp --preserve=links -R -L d c
++cp --preserve=links -R -L d c || fail=1
+ a_inode=$(ls -i c/a|sed 's,c/.*,,')
+ b_inode=$(ls -i c/b|sed 's,c/.*,,')
+ test "$a_inode" = "$b_inode" || fail=1
+@@ -62,7 +62,7 @@ test "$a_inode" = "$b_inode" || fail=1
+ 
+ # Ensure that --no-preserve=links works.
+ rm -rf a b c d; mkdir d; (cd d; touch a; ln a b)
+-cp -dR --no-preserve=links d c
++cp -dR --no-preserve=links d c || fail=1
+ a_inode=$(ls -i c/a|sed 's,c/.*,,')
+ b_inode=$(ls -i c/b|sed 's,c/.*,,')
+ test "$a_inode" = "$b_inode" && fail=1
+@@ -72,7 +72,7 @@ test "$a_inode" = "$b_inode" && fail=1
+ rm -rf a b c d
+ touch a; ln a b
+ mkdir c
+-cp -d a b c
++cp -d a b c || fail=1
+ a_inode=$(ls -i c/a|sed 's,c/.*,,')
+ b_inode=$(ls -i c/b|sed 's,c/.*,,')
+ test "$a_inode" = "$b_inode" || fail=1
+@@ -82,7 +82,7 @@ test "$a_inode" = "$b_inode" || fail=1
+ rm -rf a b c d
+ touch a; chmod 731 a
+ umask 077
+-cp -a --no-preserve=mode a b
++cp -a --no-preserve=mode a b || fail=1
+ mode=$(ls -l b|cut -b-10)
+ test "$mode" = "-rw-------" || fail=1
+ umask 022
+diff --git a/tests/cp/link-symlink.sh b/tests/cp/link-symlink.sh
+index 5186887..0b7fb6e 100755
+--- a/tests/cp/link-symlink.sh
++++ b/tests/cp/link-symlink.sh
+@@ -32,7 +32,7 @@ esac
+ 
+ # link.cp is probably a hardlink, but may also be a symlink
+ # In either case the timestamp should match the original.
+-cp -al link link.cp
++cp -al link link.cp || fail=1
+ case $(stat --format=%y link.cp) in
+   2011-01-01*) ;;
+   *) fail=1 ;;
+diff --git a/tests/cp/preserve-mode.sh b/tests/cp/preserve-mode.sh
+index dc97cba..e1096f5 100755
+--- a/tests/cp/preserve-mode.sh
++++ b/tests/cp/preserve-mode.sh
+@@ -26,7 +26,7 @@ touch b
+ chmod 600 b
+ 
+ #regular file test
+-cp --no-preserve=mode b c
++cp --no-preserve=mode b c || fail=1
+ mode_a=$(ls -l a | gawk '{print $1}')
+ mode_c=$(ls -l c | gawk '{print $1}')
+ test "$mode_a" = "$mode_c" || fail=1
+@@ -36,7 +36,7 @@ mkdir d1 d2
+ chmod 705 d2
+ 
+ #directory test
+-cp --no-preserve=mode -r d2 d3
++cp --no-preserve=mode -r d2 d3 || fail=1
+ mode_d1=$(ls -l d1 | gawk '{print $1}')
+ mode_d3=$(ls -l d3 | gawk '{print $1}')
+ test "$mode_d1" = "$mode_d3" || fail=1
+@@ -46,7 +46,7 @@ touch a
+ chmod 600 a
+ 
+ #contradicting options test
+-cp --no-preserve=mode --preserve=all a b
++cp --no-preserve=mode --preserve=all a b || fail=1
+ mode_a=$(ls -l a | gawk '{print $1}')
+ mode_b=$(ls -l b | gawk '{print $1}')
+ test "$mode_a" = "$mode_b" || fail=1
+-- 
+1.8.0
+

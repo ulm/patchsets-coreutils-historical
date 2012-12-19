@@ -1,3 +1,6 @@
+1.2		19 Dec 2012
+	+ 015_all_coreutils-cp-no-preserve-mode-exit-1.patch
+
 1.1		07 Dec 2012
 	+ 050_all_coreutils-primes.patch
 	+ 051_all_coreutils-mangen.patch
