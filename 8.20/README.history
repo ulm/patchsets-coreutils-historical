@@ -1,3 +1,7 @@
+1.3		11 Jan 2013
+	+ 040_all_coreutils-cp-mkdir-eexist.patch
+	+ 041_all_coreutils-seq-s-newline.patch
+
 1.2		19 Dec 2012
 	+ 015_all_coreutils-cp-no-preserve-mode-exit-1.patch
 
