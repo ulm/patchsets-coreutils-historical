@@ -1,3 +1,6 @@
+1.4		16 Jan 2013
+	+ 061_all_coreutils-hppa-1.1.patch
+
 1.3		11 Jan 2013
 	+ 040_all_coreutils-cp-mkdir-eexist.patch
 	+ 041_all_coreutils-seq-s-newline.patch
