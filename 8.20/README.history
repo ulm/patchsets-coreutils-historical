@@ -1,3 +1,7 @@
+1.5		[pending]
+	- 020_all_coreutils-parallel-man-generation.patch
+	U 051_all_coreutils-mangen.patch
+
 1.4		16 Jan 2013
 	+ 061_all_coreutils-hppa-1.1.patch
 

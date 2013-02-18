@@ -11,13 +11,3 @@ will always be newer than the bundled man pages)
  
  # This is a kludge to remove generated 'man/*.1' from a non-srcdir build.
  # Without this, "make distcheck" might fail.
-@@ -10084,9 +10084,6 @@
- man/whoami.1:    src/whoami.c
- man/yes.1:       src/yes.c
- 
--man/arch.1:      src/arch
--man/uname.1:     src/uname
--
- .x.1:
- 	$(AM_V_GEN)case '$(PERL)' in				\
- 	  *"/missing "*)					\
