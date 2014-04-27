@@ -24,3 +24,17 @@ the device
  timeout 10 dd bs=1 seek=$DEV_OFLOW count=0 status=noxfer > "$device" 2> err
  test "$?" = "1" || fail=1
  echo "dd: 'standard output': cannot seek: Invalid argument
+
+running through strace and counting stat syscalls is off when using sandbox
+https://bugs.gentoo.org/415487
+--- a/tests/ls/stat-free-color.sh
++++ b/tests/ls/stat-free-color.sh
+@@ -19,6 +19,8 @@
+ . "${srcdir=.}/tests/init.sh"; path_prepend_ ./src
+ print_ver_ ls
+ 
++skip_ 'strace does not work under sandbox #415487'
++
+ # Note this list of _file name_ stat functions must be
+ # as cross platform as possible and so doesn't include
+ # fstatat64 as that's not available on aarch64 for example.
