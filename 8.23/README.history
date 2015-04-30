@@ -1,3 +1,6 @@
+1.1		30 Apr 2014
+	+ 002_all_coreutils-printf-macro.patch
+
 1.0		28 Jul 2014
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 010_all_coreutils-tests.patch
