@@ -1,0 +1,6 @@
+1.0		06 Jul 2015
+	+ 003_all_coreutils-gentoo-uname.patch
+	+ 010_all_coreutils-tests.patch
+	+ 030_all_coreutils-more-dir-colors.patch
+	+ 040_all_coreutils-cp-mkdir-eexist.patch
+	+ 051_all_coreutils-mangen.patch
