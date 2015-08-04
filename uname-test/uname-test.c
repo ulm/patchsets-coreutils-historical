@@ -1,9 +1,20 @@
+/*
+ * Copyright 2006-2014 Gentoo Foundation
+ * Distributed under the terms of the GNU General Public License v2
+ */
+
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-int verbose = 0;
+#ifndef ARRAY_SIZE
+# define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+
+bool verbose = false;
 
 #define USE_PROCINFO
 
@@ -33,14 +44,14 @@ static void __eat_cpuinfo_space(char *buf)
 	while (*tmp && isspace(*tmp))
 		tmp++;
 	if (tmp != buf)
-		memmove(buf, tmp, strlen(tmp)+1);
+		memmove(buf, tmp, strlen(tmp) + 1);
 }
 
 static int __linux_procinfo (int x, char *fstr, size_t s)
 {
 	FILE *fp;
 
-	struct {
+	static struct {
 		const char *arch;
 		const char *processor;
 		const char *platform;
@@ -68,7 +79,7 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 	const char *procinfo_keys[] = { "", "" };
 	int i;
 
-	for (i=0; i<sizeof(procinfo_keys_all)/sizeof(*procinfo_keys_all); ++i)
+	for (i = 0; i < ARRAY_SIZE(procinfo_keys_all); ++i)
 		if (!strncmp(filename, procinfo_keys_all[i].arch, strlen(procinfo_keys_all[i].arch))) {
 			procinfo_keys[PROCINFO_PROCESSOR] = procinfo_keys_all[i].processor;
 			procinfo_keys[PROCINFO_HARDWARE_PLATFORM] = procinfo_keys_all[i].platform;
@@ -79,7 +90,7 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 
 	if ((fp = fopen(filename, "r")) != NULL) {
 		char key[65], value[257], eol, *ret = NULL;
- 
+
 		while (fscanf(fp, CPUINFO_FORMAT, key, value, &eol) != EOF) {
 			__eat_cpuinfo_space(key);
 			if (verbose)
@@ -118,9 +129,9 @@ int main(int argc, char *argv[])
 	static char hardware_platform[257];
 	int i;
 
-	for (i=1; i<argc; ++i) {
+	for (i = 1; i < argc; ++i) {
 		if (!strcmp(argv[i], "-v"))
-			++verbose;
+			verbose = true;
 		else {
 			filename = argv[1];
 			printf(">>> Parsing data out of %s\n", filename);
