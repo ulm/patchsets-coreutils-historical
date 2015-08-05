@@ -153,41 +153,25 @@ static bool procinfo_init(void)
 	return false;
 }
 
-int main(int argc, char *argv[])
+static bool process_file(const char *file)
 {
 	static char processor[257];
 	static char hardware_platform[257];
-	int i;
+	bool ret = true;
 
-	while ((i = getopt(argc, argv, "v")) != -1) {
-		switch (i) {
-		case 'v':
-			verbose = true;
-			break;
-		default:
- usage:
-			errx(1, "Usage: uname-test [-v] <file>");
-		}
-	}
-	if (optind + 1 != argc)
-		goto usage;
-
-	filename = argv[optind];
+	filename = file;
 	printf(">>> Parsing data out of %s\n", filename);
-
 	if (!procinfo_init())
-		return 1;
-
-	i = 0;
+		return false;
 
 	if (0 > __linux_procinfo (PROCINFO_PROCESSOR, processor, sizeof processor)) {
 		strcpy(processor, "failed");
-		++i;
+		ret = false;
 	}
 
 	if (0 > __linux_procinfo (PROCINFO_HARDWARE_PLATFORM, hardware_platform, sizeof hardware_platform)) {
 		strcpy(hardware_platform, "failed");
-		++i;
+		ret = false;
 	}
 
 	printf(">>> Results from %s:\n", filename);
@@ -196,5 +180,30 @@ int main(int argc, char *argv[])
 
 	printf("\n");
 
-	return i;
+	return ret;
+}
+
+int main(int argc, char *argv[])
+{
+	int i, ret;
+
+	while ((i = getopt(argc, argv, "v")) != -1) {
+		switch (i) {
+		case 'v':
+			verbose = true;
+			break;
+		default:
+ usage:
+			errx(1, "Usage: uname-test [-v] <file> [files]");
+		}
+	}
+	if (optind == argc)
+		goto usage;
+
+	ret = 0;
+	for (i = optind; i < argc; ++i)
+		if (!process_file(argv[i]))
+			ret = 1;
+
+	return ret;
 }
