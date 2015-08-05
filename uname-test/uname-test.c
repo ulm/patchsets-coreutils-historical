@@ -112,6 +112,26 @@ static bool startswith(const char *s, const char *prefix)
 	return strncmp(s, prefix, strlen(prefix)) == 0 ? true : false;
 }
 
+static const char *procinfo_guess_arch(const char *file)
+{
+	if (startswith(file, "blackfin"))
+		return "bfin";
+
+	if (startswith(file, "x86"))
+		return "i386";
+
+	if (startswith(file, "parisc"))
+		return "hppa";
+
+	if (startswith(file, "ppc64"))
+		return "powerpc64";
+
+	if (startswith(file, "ppc"))
+		return "powerpc";
+
+	return file;
+}
+
 static bool procinfo_init(void)
 {
 	static const struct {
@@ -133,17 +153,16 @@ static bool procinfo_init(void)
 		{ "m68k",      "CPU",          "MMU" },
 		{ "mips",      "cpu model",    "system type" },
 		{ "powerpc",   "cpu",          "machine" },
-		{ "powerpc64", "cpu",          "machine" },
 		{ "s390",      "Type",         "Manufacturer" },
-		{ "s390x",     "Type",         "Manufacturer" },
 		{ "sh",        "cpu type",     "machine" },
 		{ "sparc",     "type",         "cpu" },
 		{ "vax",       "cpu type",     "cpu" },
 	};
 
 	size_t i;
+	const char *arch = procinfo_guess_arch(filename);
 	for (i = 0; i < ARRAY_SIZE(procinfo_keys_all); ++i)
-		if (startswith(filename, procinfo_keys_all[i].arch)) {
+		if (startswith(arch, procinfo_keys_all[i].arch)) {
 			procinfo_processor = procinfo_keys_all[i].processor;
 			procinfo_platform = procinfo_keys_all[i].platform;
 			return true;
