@@ -1,3 +1,6 @@
+1.1		[pending]
+	U 003_all_coreutils-gentoo-uname.patch
+
 1.0		06 Jul 2015
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 010_all_coreutils-tests.patch

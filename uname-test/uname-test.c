@@ -157,6 +157,7 @@ static bool procinfo_init(void)
 		{ "ia64",      "family",       "vendor" },
 		{ "hppa",      "cpu",          "model" },
 		{ "m68k",      "CPU",          "MMU" },
+		{ "microblaze","CPU-Ver",      "FPGA-Arch" },
 		{ "mips",      "cpu model",    "system type" },
 		{ "powerpc",   "cpu",          "machine" },
 		{ "s390",      "Type",         "Manufacturer" },
