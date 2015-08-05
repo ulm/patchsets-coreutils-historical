@@ -24,7 +24,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
  #include "system.h"
  #include "error.h"
  #include "quote.h"
-@@ -138,6 +144,118 @@
+@@ -138,6 +144,119 @@
    exit (status);
  }
  
@@ -73,7 +73,8 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
 +		#if defined (__alpha__)
 +			"cpu model", "system type"
 +		#elif defined (__arm__)
-+			"Processor", "Hardware"
++			/* linux-3.8+ uses "model name", but older uses "Processor".  */
++			"model name", "Hardware"
 +		#elif defined (__avr32__)
 +			"processor", "cpu family"
 +		#elif defined (__bfin__)
@@ -143,7 +144,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
  /* Print ELEMENT, preceded by a space if something has already been
     printed.  */
  
-@@ -250,10 +368,14 @@ main (int argc, char **argv)
+@@ -250,10 +369,14 @@ main (int argc, char **argv)
    if (toprint & PRINT_PROCESSOR)
      {
        char const *element = unknown;
@@ -159,7 +160,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
            element = processor;
        }
  #endif
-@@ -306,9 +428,13 @@ main (int argc, char **argv)
+@@ -306,9 +429,13 @@ main (int argc, char **argv)
        if (element == unknown)
          {
            static char hardware_platform[257];

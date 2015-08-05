@@ -6,13 +6,9 @@
 >>> processor         = AMD Athlon(tm) 64 Processor 3500+
 >>> hardware_platform = AuthenticAMD
 
->>> Parsing data out of arm-netwinder.data
->>> processor         = StrongARM-110 rev 4 (v4l)
->>> hardware_platform = Rebel-NetWinder
-
->>> Parsing data out of arm-nslu2.data
->>> processor         = XScale-IXP425/IXC1100 rev 1 (v5b)
->>> hardware_platform = Intel IXDP425 Development Platform
+>>> Parsing data out of arm-v3.8-rockchip.data
+>>> processor         = ARMv7 Processor rev 1 (v7l)
+>>> hardware_platform = Rockchip (Device Tree)
 
 >>> Parsing data out of hppa-C360.data
 >>> processor         = PA8500 (PCX-W)

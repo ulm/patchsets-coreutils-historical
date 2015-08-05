@@ -150,7 +150,7 @@ static bool procinfo_init(void)
 		/* cpuname     --processor     --hardware-platform */
 		{ "alpha",     "cpu model",    "system type" },
 		{ "amd64",     "model name",   "vendor_id" },
-		{ "arm",       "Processor",    "Hardware" },
+		{ "arm",       "model name",   "Hardware" },
 		{ "avr32",     "processor",    "cpu family" },
 		{ "bfin",      "CPU",          "BOARD Name" },
 		{ "cris",      "cpu",          "cpu model" },
