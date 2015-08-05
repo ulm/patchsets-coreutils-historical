@@ -1,0 +1,77 @@
+cpu		: UltraSparc T1 (Niagara)
+fpu		: UltraSparc T1 integrated FPU
+pmu		: niagara
+prom		: OBP 4.25.0 2006/11/07 23:24
+type		: sun4v
+ncpus probed	: 32
+ncpus active	: 32
+D$ parity tl1	: 0
+I$ parity tl1	: 0
+cpucaps		: flush,stbar,swap,muldiv,v9,blkinit,mul32,div32,v8plus,ASIBlkInit
+Cpu0ClkTck	: 0000000047868c00
+Cpu1ClkTck	: 0000000047868c00
+Cpu2ClkTck	: 0000000047868c00
+Cpu3ClkTck	: 0000000047868c00
+Cpu4ClkTck	: 0000000047868c00
+Cpu5ClkTck	: 0000000047868c00
+Cpu6ClkTck	: 0000000047868c00
+Cpu7ClkTck	: 0000000047868c00
+Cpu8ClkTck	: 0000000047868c00
+Cpu9ClkTck	: 0000000047868c00
+Cpu10ClkTck	: 0000000047868c00
+Cpu11ClkTck	: 0000000047868c00
+Cpu12ClkTck	: 0000000047868c00
+Cpu13ClkTck	: 0000000047868c00
+Cpu14ClkTck	: 0000000047868c00
+Cpu15ClkTck	: 0000000047868c00
+Cpu16ClkTck	: 0000000047868c00
+Cpu17ClkTck	: 0000000047868c00
+Cpu18ClkTck	: 0000000047868c00
+Cpu19ClkTck	: 0000000047868c00
+Cpu20ClkTck	: 0000000047868c00
+Cpu21ClkTck	: 0000000047868c00
+Cpu22ClkTck	: 0000000047868c00
+Cpu23ClkTck	: 0000000047868c00
+Cpu24ClkTck	: 0000000047868c00
+Cpu25ClkTck	: 0000000047868c00
+Cpu26ClkTck	: 0000000047868c00
+Cpu27ClkTck	: 0000000047868c00
+Cpu28ClkTck	: 0000000047868c00
+Cpu29ClkTck	: 0000000047868c00
+Cpu30ClkTck	: 0000000047868c00
+Cpu31ClkTck	: 0000000047868c00
+MMU Type	: Hypervisor (sun4v)
+MMU PGSZs	: 8K,64K,4MB,256MB
+State:
+CPU0:		online
+CPU1:		online
+CPU2:		online
+CPU3:		online
+CPU4:		online
+CPU5:		online
+CPU6:		online
+CPU7:		online
+CPU8:		online
+CPU9:		online
+CPU10:		online
+CPU11:		online
+CPU12:		online
+CPU13:		online
+CPU14:		online
+CPU15:		online
+CPU16:		online
+CPU17:		online
+CPU18:		online
+CPU19:		online
+CPU20:		online
+CPU21:		online
+CPU22:		online
+CPU23:		online
+CPU24:		online
+CPU25:		online
+CPU26:		online
+CPU27:		online
+CPU28:		online
+CPU29:		online
+CPU30:		online
+CPU31:		online

@@ -1,0 +1,48 @@
+Manufacturer:         IBM             
+Type:                 2098
+Model:                Y03              E10             
+Sequence Code:        0000000000067EE2
+Plant:                02  
+Model Capacity:       Y03              00000202
+Model Perm. Capacity: Y03              00000202
+Model Temp. Capacity: Y03              00000202
+Type 1 Percentage:    0
+Type 2 Percentage:    0
+Type 3 Percentage:    0
+Type 4 Percentage:    0
+Type 5 Percentage:    0
+
+CPUs Total:           10
+CPUs Configured:      3
+CPUs Standby:         0
+CPUs Reserved:        7
+Capability:           1352 2032
+Secondary Capability: 1236
+Adjustment 02-way:    60850 60850
+Adjustment 03-way:    57900 57900
+Adjustment 04-way:    55500 55500
+Adjustment 05-way:    53780 53780
+Adjustment 06-way:    53780 53780
+Adjustment 07-way:    53780 53780
+Adjustment 08-way:    53780 53780
+Adjustment 09-way:    53780 53780
+Adjustment 10-way:    53780 53780
+
+LPAR Number:          0
+LPAR Characteristics: Shared 
+LPAR Name:            LP01    
+LPAR Adjustment:      1000
+LPAR CPUs Total:      10
+LPAR CPUs Configured: 4
+LPAR CPUs Standby:    0
+LPAR CPUs Reserved:   6
+LPAR CPUs Dedicated:  0
+LPAR CPUs Shared:     4
+
+VM00 Name:            LGENTOO4
+VM00 Control Program: z/VM    6.2.0   
+VM00 Adjustment:      500
+VM00 CPUs Total:      2
+VM00 CPUs Configured: 2
+VM00 CPUs Standby:    0
+VM00 CPUs Reserved:   0
