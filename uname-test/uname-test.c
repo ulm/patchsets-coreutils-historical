@@ -123,6 +123,7 @@ static bool procinfo_init(void)
 		{ "alpha",     "cpu model",    "system type" },
 		{ "amd64",     "model name",   "vendor_id" },
 		{ "arm",       "Processor",    "Hardware" },
+		{ "avr32",     "processor",    "cpu family" },
 		{ "bfin",      "CPU",          "BOARD Name" },
 		{ "cris",      "cpu",          "cpu model" },
 		{ "frv",       "CPU-Core",     "System" },
