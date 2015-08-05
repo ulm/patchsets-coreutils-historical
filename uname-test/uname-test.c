@@ -3,6 +3,7 @@
  * Distributed under the terms of the GNU General Public License v2
  */
 
+#define _GNU_SOURCE
 #include <ctype.h>
 #include <err.h>
 #include <stdbool.h>
@@ -114,6 +115,8 @@ static bool startswith(const char *s, const char *prefix)
 
 static const char *procinfo_guess_arch(const char *file)
 {
+	file = basename(filename);
+
 	if (startswith(file, "blackfin"))
 		return "bfin";
 
