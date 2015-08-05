@@ -1,0 +1,60 @@
+>>> Parsing data out of alpha-LX164.data
+>>> Results from alpha-LX164.data:
+>>> processor         = EV56
+>>> hardware_platform = EB164
+
+>>> Parsing data out of amd64-3500+.data
+>>> Results from amd64-3500+.data:
+>>> processor         = AMD Athlon(tm) 64 Processor 3500+
+>>> hardware_platform = AuthenticAMD
+
+>>> Parsing data out of arm-netwinder.data
+>>> Results from arm-netwinder.data:
+>>> processor         = StrongARM-110 rev 4 (v4l)
+>>> hardware_platform = Rebel-NetWinder
+
+>>> Parsing data out of arm-nslu2.data
+>>> Results from arm-nslu2.data:
+>>> processor         = XScale-IXP425/IXC1100 rev 1 (v5b)
+>>> hardware_platform = Intel IXDP425 Development Platform
+
+>>> Parsing data out of hppa-C360.data
+>>> Results from hppa-C360.data:
+>>> processor         = PA8500 (PCX-W)
+>>> hardware_platform = 9000/785/C360
+
+>>> Parsing data out of hppa-C3600.data
+>>> Results from hppa-C3600.data:
+>>> processor         = PA8600 (PCX-W+)
+>>> hardware_platform = 9000/785/C3600
+
+>>> Parsing data out of powerpc64-8231-E2B.data
+>>> Results from powerpc64-8231-E2B.data:
+>>> processor         = POWER7 (architected)
+>>> hardware_platform = CHRP IBM,8231-E2B
+
+>>> Parsing data out of powerpc64-quad-G5.data
+>>> Results from powerpc64-quad-G5.data:
+>>> processor         = PPC970MP, altivec supported
+>>> hardware_platform = PowerMac11,2
+
+>>> Parsing data out of s390-2098-e10.data
+>>> Results from s390-2098-e10.data:
+>>> processor         = 2098
+>>> hardware_platform = IBM
+
+>>> Parsing data out of s390x-2098-e10.data
+>>> Results from s390x-2098-e10.data:
+>>> processor         = 2098
+>>> hardware_platform = IBM
+
+>>> Parsing data out of sh-lantank.data
+>>> Results from sh-lantank.data:
+>>> processor         = SH7751R
+>>> hardware_platform = LANDISK
+
+>>> Parsing data out of sparc-ultrasparc-t1.data
+>>> Results from sparc-ultrasparc-t1.data:
+>>> processor         = sun4v
+>>> hardware_platform = UltraSparc T1 (Niagara)
+
