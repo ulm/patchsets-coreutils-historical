@@ -191,17 +191,19 @@ static bool process_file(const char *file)
 
 	if (0 > __linux_procinfo (PROCINFO_PROCESSOR, processor, sizeof processor)) {
 		strcpy(processor, "failed");
+		printf("!!!");
 		ret = false;
-	}
+	} else
+		printf(">>>");
+	printf(" processor         = %s\n", processor);
 
 	if (0 > __linux_procinfo (PROCINFO_HARDWARE_PLATFORM, hardware_platform, sizeof hardware_platform)) {
 		strcpy(hardware_platform, "failed");
+		printf("!!!");
 		ret = false;
-	}
-
-	printf(">>> Results from %s:\n", filename);
-	printf(">>> processor         = %s\n", processor);
-	printf(">>> hardware_platform = %s\n", hardware_platform);
+	} else
+		printf(">>>");
+	printf(" hardware_platform = %s\n", hardware_platform);
 
 	printf("\n");
 
