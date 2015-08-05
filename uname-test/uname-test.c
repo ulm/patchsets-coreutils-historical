@@ -3,12 +3,14 @@
  * Distributed under the terms of the GNU General Public License v2
  */
 
+#include <ctype.h>
+#include <err.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
+#include <unistd.h>
 
 #ifndef ARRAY_SIZE
 # define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -140,14 +142,21 @@ int main(int argc, char *argv[])
 	static char hardware_platform[257];
 	int i;
 
-	for (i = 1; i < argc; ++i) {
-		if (!strcmp(argv[i], "-v"))
+	while ((i = getopt(argc, argv, "v")) != -1) {
+		switch (i) {
+		case 'v':
 			verbose = true;
-		else {
-			filename = argv[1];
-			printf(">>> Parsing data out of %s\n", filename);
+			break;
+		default:
+ usage:
+			errx(1, "Usage: uname-test [-v] <file>");
 		}
 	}
+	if (optind + 1 != argc)
+		goto usage;
+
+	filename = argv[optind];
+	printf(">>> Parsing data out of %s\n", filename);
 	i = 0;
 
 	if (0 > __linux_procinfo (PROCINFO_PROCESSOR, processor, sizeof processor)) {
