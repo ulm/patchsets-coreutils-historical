@@ -47,17 +47,17 @@ const char *filename = CPUINFO_FILE;
 
 static void __eat_cpuinfo_space (char *buf)
 {
-	/* first eat trailing space */
+	/* First eat trailing space.  */
 	char *tmp = buf + strlen (buf) - 1;
 	while (tmp > buf && isspace (*tmp))
 		*tmp-- = '\0';
-	/* then eat leading space */
+	/* Then eat leading space.  */
 	tmp = buf;
 	while (*tmp && isspace (*tmp))
 		tmp++;
 	if (tmp != buf)
 		memmove (buf, tmp, strlen (tmp) + 1);
-	/* finally collapse whitespace */
+	/* Finally collapse whitespace.  */
 	tmp = buf;
 	while (tmp[0] && tmp[1]) {
 		if (isspace (tmp[0]) && isspace (tmp[1])) {
@@ -93,10 +93,9 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 				break;
 			}
 			if (eol != '\n') {
-				/* we need two fscanf's here in case the previous
-				 * length limit caused us to read right up to the
-				 * newline ... doing "%*[^\n]\n" wont eat the newline
-				 */
+				/* We need two fscanf's here in case the previous length limit
+				 * caused us to read right up to the newline.  Doing something
+				 * like "%*[^\n]\n" won't eat the newline.  */
 				ignore_value (fscanf (fp, "%*[^\n]"));
 				ignore_value (fscanf (fp, "\n"));
 			}
