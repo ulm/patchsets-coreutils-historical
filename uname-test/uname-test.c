@@ -5,6 +5,7 @@
 
 #define _GNU_SOURCE
 #include <ctype.h>
+#include <dirent.h>
 #include <err.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -12,6 +13,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #ifndef ARRAY_SIZE
 # define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -205,6 +208,56 @@ static bool process_file(const char *file)
 	return ret;
 }
 
+static bool process_dir(const char *path)
+{
+	bool ret = true;
+	char *sub_path;
+
+	DIR *dir = opendir(path);
+	if (!dir)
+		err(1, "could not opendir %s", path);
+
+	struct dirent *de;
+	while ((de = readdir(dir)) != NULL) {
+		if (de->d_name[0] == '.')
+			continue;
+
+		asprintf(&sub_path, "%s/%s", path, de->d_name);
+		switch (de->d_type) {
+		case DT_REG:
+			if (!process_file(sub_path))
+				ret = false;
+			break;
+		case DT_DIR:
+			if (!process_dir(sub_path))
+				ret = false;
+			break;
+		}
+		free(sub_path);
+	}
+
+	closedir(dir);
+
+	return ret;
+}
+
+static bool process_one(const char *path)
+{
+	struct stat st;
+
+	if (stat(path, &st)) {
+		warn("could not stat %s", path);
+		return false;
+	}
+
+	if (S_ISREG(st.st_mode))
+		return process_file(path);
+	else if (S_ISDIR(st.st_mode))
+		return process_dir(path);
+	else
+		return false;
+}
+
 int main(int argc, char *argv[])
 {
 	int i, ret;
@@ -216,7 +269,7 @@ int main(int argc, char *argv[])
 			break;
 		default:
  usage:
-			errx(1, "Usage: uname-test [-v] <file> [files]");
+			errx(1, "Usage: uname-test [-v] <file|dir> [more paths]");
 		}
 	}
 	if (optind == argc)
@@ -224,7 +277,7 @@ int main(int argc, char *argv[])
 
 	ret = 0;
 	for (i = optind; i < argc; ++i)
-		if (!process_file(argv[i]))
+		if (!process_one(argv[i]))
 			ret = 1;
 
 	return ret;
