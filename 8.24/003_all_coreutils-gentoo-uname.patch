@@ -67,7 +67,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
 +{
 +	FILE *fp;
 +
-+	char *procinfo_keys[] = {
++	const char * const procinfo_keys[] = {
 +		/* --processor --hardware-platform */
 +		#if defined(__alpha__)
 +			"cpu model", "system type"
