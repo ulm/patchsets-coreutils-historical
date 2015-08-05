@@ -30,6 +30,7 @@ bool verbose = false;
 #  define CPUINFO_FORMAT  "%64[^\t:]\t:%256[^\n]%c"
 # endif
 
+const char *procinfo_processor, *procinfo_platform;
 const char *filename = CPUINFO_FILE;
 #undef CPUINFO_FILE
 #define CPUINFO_FILE filename
@@ -64,39 +65,10 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 {
 	FILE *fp;
 
-	static struct {
-		const char *arch;
-		const char *processor;
-		const char *platform;
-	} procinfo_keys_all[] = {
-		/* cpuname     --processor     --hardware-platform */
-		{ "alpha",     "cpu model",    "system type" },
-		{ "amd64",     "model name",   "vendor_id" },
-		{ "arm",       "Processor",    "Hardware" },
-		{ "bfin",      "CPU",          "BOARD Name" },
-		{ "cris",      "cpu",          "cpu model" },
-		{ "frv",       "CPU-Core",     "System" },
-		{ "i386",      "model name",   "vendor_id" },
-		{ "ia64",      "family",       "vendor" },
-		{ "hppa",      "cpu",          "model" },
-		{ "m68k",      "CPU",          "MMU" },
-		{ "mips",      "cpu model",    "system type" },
-		{ "powerpc",   "cpu",          "machine" },
-		{ "powerpc64", "cpu",          "machine" },
-		{ "s390",      "Type",         "Manufacturer" },
-		{ "s390x",     "Type",         "Manufacturer" },
-		{ "sh",        "cpu type",     "machine" },
-		{ "sparc",     "type",         "cpu" },
-		{ "vax",       "cpu type",     "cpu" },
+	const char * const procinfo_keys[] = {
+		/* --processor --hardware-platform */
+		procinfo_processor, procinfo_platform,
 	};
-	const char *procinfo_keys[] = { "", "" };
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(procinfo_keys_all); ++i)
-		if (!strncmp(filename, procinfo_keys_all[i].arch, strlen(procinfo_keys_all[i].arch))) {
-			procinfo_keys[PROCINFO_PROCESSOR] = procinfo_keys_all[i].processor;
-			procinfo_keys[PROCINFO_HARDWARE_PLATFORM] = procinfo_keys_all[i].platform;
-		}
 
 	if (verbose)
 		printf("### Looking for '%s':\n", procinfo_keys[x]);
@@ -135,6 +107,50 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 
 #endif
 
+static bool startswith(const char *s, const char *prefix)
+{
+	return strncmp(s, prefix, strlen(prefix)) == 0 ? true : false;
+}
+
+static bool procinfo_init(void)
+{
+	static const struct {
+		const char *arch;
+		const char *processor;
+		const char *platform;
+	} procinfo_keys_all[] = {
+		/* cpuname     --processor     --hardware-platform */
+		{ "alpha",     "cpu model",    "system type" },
+		{ "amd64",     "model name",   "vendor_id" },
+		{ "arm",       "Processor",    "Hardware" },
+		{ "bfin",      "CPU",          "BOARD Name" },
+		{ "cris",      "cpu",          "cpu model" },
+		{ "frv",       "CPU-Core",     "System" },
+		{ "i386",      "model name",   "vendor_id" },
+		{ "ia64",      "family",       "vendor" },
+		{ "hppa",      "cpu",          "model" },
+		{ "m68k",      "CPU",          "MMU" },
+		{ "mips",      "cpu model",    "system type" },
+		{ "powerpc",   "cpu",          "machine" },
+		{ "powerpc64", "cpu",          "machine" },
+		{ "s390",      "Type",         "Manufacturer" },
+		{ "s390x",     "Type",         "Manufacturer" },
+		{ "sh",        "cpu type",     "machine" },
+		{ "sparc",     "type",         "cpu" },
+		{ "vax",       "cpu type",     "cpu" },
+	};
+
+	size_t i;
+	for (i = 0; i < ARRAY_SIZE(procinfo_keys_all); ++i)
+		if (startswith(filename, procinfo_keys_all[i].arch)) {
+			procinfo_processor = procinfo_keys_all[i].processor;
+			procinfo_platform = procinfo_keys_all[i].platform;
+			return true;
+		}
+
+	warnx("could not detect arch with %s", filename);
+	return false;
+}
 
 int main(int argc, char *argv[])
 {
@@ -157,6 +173,10 @@ int main(int argc, char *argv[])
 
 	filename = argv[optind];
 	printf(">>> Parsing data out of %s\n", filename);
+
+	if (!procinfo_init())
+		return 1;
+
 	i = 0;
 
 	if (0 > __linux_procinfo (PROCINFO_PROCESSOR, processor, sizeof processor)) {
