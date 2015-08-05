@@ -20,6 +20,9 @@
 # define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
+/* Ignore gcc return value warning.  */
+#define ignore_value(x) do { if (x) {;} } while (0)
+
 bool verbose = false;
 
 #define USE_PROCINFO
@@ -94,8 +97,8 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 				 * length limit caused us to read right up to the
 				 * newline ... doing "%*[^\n]\n" wont eat the newline
 				 */
-				fscanf (fp, "%*[^\n]");
-				fscanf (fp, "\n");
+				ignore_value (fscanf (fp, "%*[^\n]"));
+				ignore_value (fscanf (fp, "\n"));
 			}
 		}
 		fclose (fp);
