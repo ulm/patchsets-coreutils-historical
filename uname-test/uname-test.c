@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2014 Gentoo Foundation
+ * Copyright 2006-2015 Gentoo Foundation
  * Distributed under the terms of the GNU General Public License v2
  */
 
@@ -29,6 +29,8 @@ bool verbose = false;
 # endif
 
 const char *filename = CPUINFO_FILE;
+#undef CPUINFO_FILE
+#define CPUINFO_FILE filename
 
 # define PROCINFO_PROCESSOR      0
 # define PROCINFO_HARDWARE_PLATFORM 1
@@ -44,7 +46,16 @@ static void __eat_cpuinfo_space(char *buf)
 	while (*tmp && isspace(*tmp))
 		tmp++;
 	if (tmp != buf)
-		memmove(buf, tmp, strlen(tmp) + 1);
+		memmove(buf, tmp, strlen(tmp)+1);
+	/* finally collapse whitespace */
+	tmp = buf;
+	while (tmp[0] && tmp[1]) {
+		if (isspace(tmp[0]) && isspace(tmp[1])) {
+			memmove(tmp, tmp+1, strlen(tmp));
+			continue;
+		}
+		++tmp;
+	}
 }
 
 static int __linux_procinfo (int x, char *fstr, size_t s)
@@ -88,7 +99,7 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 	if (verbose)
 		printf("### Looking for '%s':\n", procinfo_keys[x]);
 
-	if ((fp = fopen(filename, "r")) != NULL) {
+	if ((fp = fopen(CPUINFO_FILE, "r")) != NULL) {
 		char key[65], value[257], eol, *ret = NULL;
 
 		while (fscanf(fp, CPUINFO_FORMAT, key, value, &eol) != EOF) {
