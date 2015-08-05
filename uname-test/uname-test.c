@@ -24,9 +24,9 @@ bool verbose = false;
 
 #define USE_PROCINFO
 
-#if defined(USE_PROCINFO)
+#if defined (USE_PROCINFO)
 
-# if defined(__s390__) || defined(__s390x__)
+# if defined (__s390__) || defined (__s390x__)
 #  define CPUINFO_FILE    "/proc/sysinfo"
 #  define CPUINFO_FORMAT  "%64[^\t :]%*[ :]%256[^\n]%c"
 # else
@@ -42,23 +42,23 @@ const char *filename = CPUINFO_FILE;
 # define PROCINFO_PROCESSOR      0
 # define PROCINFO_HARDWARE_PLATFORM 1
 
-static void __eat_cpuinfo_space(char *buf)
+static void __eat_cpuinfo_space (char *buf)
 {
 	/* first eat trailing space */
-	char *tmp = buf + strlen(buf) - 1;
-	while (tmp > buf && isspace(*tmp))
+	char *tmp = buf + strlen (buf) - 1;
+	while (tmp > buf && isspace (*tmp))
 		*tmp-- = '\0';
 	/* then eat leading space */
 	tmp = buf;
-	while (*tmp && isspace(*tmp))
+	while (*tmp && isspace (*tmp))
 		tmp++;
 	if (tmp != buf)
-		memmove(buf, tmp, strlen(tmp)+1);
+		memmove (buf, tmp, strlen (tmp) + 1);
 	/* finally collapse whitespace */
 	tmp = buf;
 	while (tmp[0] && tmp[1]) {
-		if (isspace(tmp[0]) && isspace(tmp[1])) {
-			memmove(tmp, tmp+1, strlen(tmp));
+		if (isspace (tmp[0]) && isspace (tmp[1])) {
+			memmove (tmp, tmp + 1, strlen (tmp));
 			continue;
 		}
 		++tmp;
@@ -75,17 +75,17 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 	};
 
 	if (verbose)
-		printf("### Looking for '%s':\n", procinfo_keys[x]);
+		printf ("### Looking for '%s':\n", procinfo_keys[x]);
 
-	if ((fp = fopen(CPUINFO_FILE, "r")) != NULL) {
+	if ((fp = fopen (CPUINFO_FILE, "r")) != NULL) {
 		char key[65], value[257], eol, *ret = NULL;
 
-		while (fscanf(fp, CPUINFO_FORMAT, key, value, &eol) != EOF) {
-			__eat_cpuinfo_space(key);
+		while (fscanf (fp, CPUINFO_FORMAT, key, value, &eol) != EOF) {
+			__eat_cpuinfo_space (key);
 			if (verbose)
-				printf("### \t%s -> %s\n", key, value);
-			if (!strcmp(key, procinfo_keys[x])) {
-				__eat_cpuinfo_space(value);
+				printf ("### \t%s -> %s\n", key, value);
+			if (!strcmp (key, procinfo_keys[x])) {
+				__eat_cpuinfo_space (value);
 				ret = value;
 				break;
 			}
@@ -94,14 +94,14 @@ static int __linux_procinfo (int x, char *fstr, size_t s)
 				 * length limit caused us to read right up to the
 				 * newline ... doing "%*[^\n]\n" wont eat the newline
 				 */
-				fscanf(fp, "%*[^\n]");
-				fscanf(fp, "\n");
+				fscanf (fp, "%*[^\n]");
+				fscanf (fp, "\n");
 			}
 		}
-		fclose(fp);
+		fclose (fp);
 
 		if (ret) {
-			strncpy(fstr, ret, s);
+			strncpy (fstr, ret, s);
 			return 0;
 		}
 	}
