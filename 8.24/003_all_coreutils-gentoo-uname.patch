@@ -11,7 +11,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
 
 --- coreutils/src/uname.c
 +++ coreutils/src/uname.c
-@@ -50,6 +50,11 @@
+@@ -50,6 +50,12 @@
  # include <mach-o/arch.h>
  #endif
  
@@ -20,10 +20,11 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
 +# define UNAME_HARDWARE_PLATFORM
 +#endif
 +
++#include "ignore-value.h"
  #include "system.h"
  #include "error.h"
  #include "quote.h"
-@@ -138,6 +143,119 @@
+@@ -138,6 +144,119 @@
    exit (status);
  }
  
@@ -123,8 +124,8 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
 +				 * length limit caused us to read right up to the
 +				 * newline ... doing "%*[^\n]\n" wont eat the newline
 +				 */
-+				fscanf (fp, "%*[^\n]");
-+				fscanf (fp, "\n");
++				ignore_value (fscanf (fp, "%*[^\n]"));
++				ignore_value (fscanf (fp, "\n"));
 +			}
 +		}
 +		fclose (fp);
@@ -143,7 +144,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
  /* Print ELEMENT, preceded by a space if something has already been
     printed.  */
  
-@@ -250,10 +368,14 @@ main (int argc, char **argv)
+@@ -250,10 +369,14 @@ main (int argc, char **argv)
    if (toprint & PRINT_PROCESSOR)
      {
        char const *element = unknown;
@@ -159,7 +160,7 @@ func in the linux/arch/<ARCH>/ source tree of the kernel.
            element = processor;
        }
  #endif
-@@ -306,9 +428,13 @@ main (int argc, char **argv)
+@@ -306,9 +429,13 @@ main (int argc, char **argv)
        if (element == unknown)
          {
            static char hardware_platform[257];
