@@ -1,3 +1,6 @@
+1.1		12 Mar 2017
+	+ 060_all_date.patch
+
 1.0		08 Mar 2017
 	+ 003_all_coreutils-gentoo-uname.patch
 	+ 010_all_coreutils-tests.patch
